@@ -56,6 +56,7 @@ export default function Home() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [flagFilter, setFlagFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortBy>("dwt_desc");
+  const [operatorFilter, setOperatorFilter] = useState("");
   const [page, setPage] = useState(1);
   const watchlist = useWatchlist();
 
@@ -84,6 +85,10 @@ export default function Home() {
     }
     if (flagFilter !== "all") {
       result = result.filter((s) => s.flag === flagFilter);
+    }
+    if (operatorFilter.trim()) {
+      const op = operatorFilter.toLowerCase();
+      result = result.filter((s) => (s.operator || "").toLowerCase().includes(op));
     }
     if (sortBy === "name") result.sort((a, b) => a.name.localeCompare(b.name));
     else if (sortBy === "dwt_desc") result.sort((a, b) => b.dwt - a.dwt);
@@ -291,7 +296,7 @@ export default function Home() {
         {/* Filter Bar */}
         <Card className="mb-6 border-blue-500/20">
           <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
@@ -327,6 +332,15 @@ export default function Home() {
                   ))}
                 </SelectContent>
               </Select>
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="Operator / Company..."
+                  value={operatorFilter}
+                  onChange={(e) => { setOperatorFilter(e.target.value); setPage(1); }}
+                  className="bg-white dark:bg-slate-900"
+                />
+              </div>
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortBy)}>
                 <SelectTrigger className="bg-white dark:bg-slate-900">
                   <SelectValue placeholder="Sort By" />
@@ -349,12 +363,13 @@ export default function Home() {
                   {filteredShips.length} of {SHIPS.length} ships
                 </span>
               </div>
-              {(search || typeFilter !== "all" || flagFilter !== "all") && (
+              {(search || typeFilter !== "all" || flagFilter !== "all" || operatorFilter) && (
                 <button
                   onClick={() => {
                     setSearch("");
                     setTypeFilter("all");
                     setFlagFilter("all");
+                    setOperatorFilter("");
                     setPage(1);
                   }}
                   className="text-blue-600 dark:text-cyan-400 hover:underline"

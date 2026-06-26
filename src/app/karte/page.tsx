@@ -1,8 +1,9 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { ArrowLeft, MapPin, Ship as ShipIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, Ship as ShipIcon, Loader2, Search } from "lucide-react";
 import { SHIPS } from "@/data/ships";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +20,12 @@ const WorldMap = dynamic(() => import("@/components/world-map"), {
 
 export default function KartePage() {
   const { t } = useI18n();
+  const [operatorFilter, setOperatorFilter] = useState("");
+  const filteredShips = useMemo(() => {
+    if (!operatorFilter.trim()) return SHIPS;
+    const op = operatorFilter.toLowerCase();
+    return SHIPS.filter((s) => (s.operator || "").toLowerCase().includes(op));
+  }, [operatorFilter]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-blue-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-white">
@@ -44,14 +51,29 @@ export default function KartePage() {
           </p>
         </section>
 
-        <div className="mb-4 flex items-center gap-2">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="border-blue-500/20 text-blue-700 dark:text-cyan-400">
             <ShipIcon className="h-3 w-3 mr-1" />
-            {t("map.shipCount", { count: SHIPS.length })}
+            {filteredShips.length} of {SHIPS.length} ships
           </Badge>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Filter by operator..."
+              value={operatorFilter}
+              onChange={(e) => setOperatorFilter(e.target.value)}
+              className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-blue-500/20 bg-white dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+          {operatorFilter && (
+            <button onClick={() => setOperatorFilter("")} className="text-xs text-blue-600 dark:text-cyan-400 hover:underline">
+              Clear
+            </button>
+          )}
         </div>
 
-        <WorldMap ships={SHIPS} height="600px" />
+        <WorldMap ships={filteredShips} height="600px" />
 
         <Card className="mt-6 border-emerald-500/20 bg-emerald-500/5">
           <CardContent className="p-4">

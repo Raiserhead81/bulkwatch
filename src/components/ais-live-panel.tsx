@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Activity, Ship as ShipIcon, RefreshCw, Radio, Zap } from "lucide-react";
+import { Activity, Ship as ShipIcon, RefreshCw, Radio, Zap, Search } from "lucide-react";
+import { SHIPS } from "@/data/ships";
 
 interface AISShip {
   mmsi: string;
@@ -35,6 +36,8 @@ export default function AISLivePanel() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [operatorSearch, setOperatorSearch] = useState("");
+  const shipByImo = new Map(SHIPS.map((s) => [s.imo, s]));
 
   const fetchData = async () => {
     try {
@@ -134,7 +137,17 @@ export default function AISLivePanel() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-xs">
+        <div className="flex items-center gap-3 text-xs flex-wrap">
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-cyan-400/60" />
+            <input
+              type="text"
+              placeholder="Operator filter..."
+              value={operatorSearch}
+              onChange={(e) => setOperatorSearch(e.target.value)}
+              className="pl-6 pr-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs placeholder:text-cyan-300/40 focus:outline-none focus:ring-1 focus:ring-cyan-500 w-36"
+            />
+          </div>
           <button
             type="button"
             onClick={() => setAutoRefresh(!autoRefresh)}
@@ -180,10 +193,17 @@ export default function AISLivePanel() {
               <th className="text-left py-2 px-3 hidden lg:table-cell">Course</th>
               <th className="text-left py-2 px-3 hidden lg:table-cell">Status</th>
               <th className="text-left py-2 px-3 hidden sm:table-cell">Destination</th>
+              <th className="text-left py-2 px-3 hidden xl:table-cell">Operator</th>
             </tr>
           </thead>
           <tbody>
-            {ships.slice(0, 100).map((ship, i) => (
+            {ships.filter(ship => {
+              if (!operatorSearch.trim()) return true;
+              const op = operatorSearch.toLowerCase();
+              const dbShip = ship.imo ? shipByImo.get(ship.imo) : undefined;
+              const operator = dbShip?.operator || "";
+              return operator.toLowerCase().includes(op) || (ship.name || "").toLowerCase().includes(op);
+            }).slice(0, 100).map((ship, i) => (
               <tr
                 key={ship.mmsi}
                 className={`border-b border-white/5 hover:bg-cyan-500/5 transition-colors ${
@@ -216,6 +236,9 @@ export default function AISLivePanel() {
                 </td>
                 <td className="py-1.5 px-3 hidden sm:table-cell text-white/60 truncate max-w-[100px]">
                   {ship.destination || "—"}
+                </td>
+                <td className="py-1.5 px-3 hidden xl:table-cell text-cyan-300/70 truncate max-w-[120px]">
+                  {(ship.imo ? shipByImo.get(ship.imo)?.operator : undefined) || "—"}
                 </td>
               </tr>
             ))}
