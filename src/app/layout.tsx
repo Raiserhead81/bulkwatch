@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { I18nProvider } from "@/lib/i18n";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,13 +17,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "BulkWatch — Bulk Carrier Intelligence Database",
   description:
-    "Live-Datenbank aller Bulk Carrier weltweit mit Specs, Preis-Schätzungen, Buy/Hold/Sell Empfehlungen und Routen-Tracking.",
+    "Live database of bulk carriers worldwide with specs, price estimates, Buy/Hold/Sell recommendations and route tracking.",
   keywords: [
     "Bulk Carrier",
-    "Schifffahrt",
-    "AIS",
     "Maritime",
-    "Frachtschiffe",
+    "AIS",
+    "Shipping",
     "Capesize",
     "Panamax",
     "Handysize",
@@ -46,8 +46,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        {children}
-        <Toaster />
+        <I18nProvider>
+          {children}
+          <Toaster />
+        </I18nProvider>
       </body>
     </html>
   );

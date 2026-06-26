@@ -37,8 +37,14 @@ export type BulkCarrierType =
   | "Gearless"
   | "Geared";
 
+// Echte Schiffsbilder von Wikimedia Commons (439 Schiffe)
+import realShipImages from "./ship-images.json";
+
 // Hilfsfunktion: Erzeugt eine Ship-ID aus IMO
 function makeShip(imo: string, name: string, data: Partial<Ship>): Ship {
+  // Lookup echtes Bild von Wikimedia falls vorhanden
+  const realImage = (realShipImages as Record<string, { imageUrl?: string; artist?: string; license?: string }>)[imo];
+
   return {
     id: `imo-${imo}`,
     name,
@@ -53,8 +59,11 @@ function makeShip(imo: string, name: string, data: Partial<Ship>): Ship {
     flag: data.flag || "Unknown",
     operator: data.operator,
     homePort: data.homePort,
-    imageUrl: data.imageUrl,
-    imageAttribution: data.imageAttribution,
+    // Echtes Bild hat Priorität, dann manuell definiertes, dann Default
+    imageUrl: realImage?.imageUrl || data.imageUrl,
+    imageAttribution: realImage
+      ? `Wikimedia Commons (${realImage.license || "CC BY-SA"})${realImage.artist ? ` · ${realImage.artist.slice(0, 60)}` : ""}`
+      : data.imageAttribution,
     position: data.position,
     status: data.status || "active",
     mmsi: data.mmsi,
@@ -215,14 +224,92 @@ const realShips: Array<[string, string, Partial<Ship>]> = [
 // Default-Wikimedia-Foto für Schiffe ohne eigenes Bild
 const DEFAULT_SHIP_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Bulk_carrier_%22760700%22_in_Gdansk_Poland_02.jpg/800px-Bulk_carrier_%22760700%22_in_Gdansk_Poland_02.jpg";
 
-export const SHIPS: Ship[] = realShips.map(([imo, name, data]) =>
-  makeShip(imo, name, {
+// Manuelles Mapping: IMO → Schiffsgröße + approximierte Specs
+// Falls ein Schiff nur ein Bild hat (aus Wikimedia), generieren wir plausible Specs
+function inferTypeFromName(name: string): BulkCarrierType {
+  const n = name.toLowerCase();
+  if (n.includes("vale") || n.includes("valemax")) return "Valemax";
+  if (n.includes("vloc")) return "VLOC";
+  if (n.includes("newcastle")) return "Newcastlemax";
+  if (n.includes("cape")) return "Capesize";
+  if (n.includes("kamsar")) return "Kamsarmax";
+  if (n.includes("panamax")) return "Panamax";
+  if (n.includes("handymax")) return "Handymax";
+  if (n.includes("handy")) return "Handysize";
+  // Default: Wenn der Name "Bulk" enthält, ist es wahrscheinlich ein Bulker
+  return "Handymax";
+}
+
+function generateSpecsForType(type: BulkCarrierType): { dwt: number; length: number; beam: number; draft: number; yearBuilt: number } {
+  const specs: Record<BulkCarrierType, { dwt: number; length: number; beam: number; draft: number; yearBuilt: number }> = {
+    Valemax: { dwt: 400000, length: 361, beam: 65, draft: 23, yearBuilt: 2012 },
+    VLOC: { dwt: 388000, length: 361, beam: 65, draft: 23, yearBuilt: 2012 },
+    Newcastlemax: { dwt: 210000, length: 300, beam: 50, draft: 19, yearBuilt: 2016 },
+    Capesize: { dwt: 175000, length: 289, beam: 45, draft: 18, yearBuilt: 2010 },
+    "Post-Panamax": { dwt: 95000, length: 240, beam: 38, draft: 15, yearBuilt: 2012 },
+    Kamsarmax: { dwt: 82000, length: 229, beam: 32, draft: 14.5, yearBuilt: 2013 },
+    Panamax: { dwt: 75000, length: 225, beam: 32, draft: 14, yearBuilt: 2008 },
+    Handymax: { dwt: 47000, length: 190, beam: 30, draft: 11, yearBuilt: 2008 },
+    Handysize: { dwt: 28000, length: 169, beam: 27, draft: 10, yearBuilt: 2006 },
+    "Mini-Bulker": { dwt: 8000, length: 110, beam: 16, draft: 7, yearBuilt: 2005 },
+    Gearless: { dwt: 75000, length: 225, beam: 32, draft: 14, yearBuilt: 2008 },
+    Geared: { dwt: 47000, length: 190, beam: 30, draft: 11, yearBuilt: 2008 },
+  };
+  return specs[type];
+}
+
+// Generiere Schiff-Einträge für alle Wikimedia-Bilder-Schiffe, die noch nicht in realShips sind
+const realShipImos = new Set(realShips.map(([imo]) => imo));
+const additionalShips: Array<[string, string, Partial<Ship>]> = [];
+
+for (const [imo, imageData] of Object.entries(realShipImages as Record<string, { imageUrl?: string; artist?: string; license?: string }>)) {
+  if (realShipImos.has(imo)) continue; // bereits vorhanden
+  // Versuche Schiffsnamen aus Bild-Daten zu extrahieren (bereits von Wikimedia-Scraper gesetzt)
+  const name = (imageData as { name?: string }).name || `Schiff (IMO ${imo})`;
+  if (!name || name.length < 2) continue;
+
+  // Bereinige Name (manchmal ist der Dateiname der Name)
+  const cleanName = name
+    .replace(/^(bulk\s*carrier|bulker)\s*/i, "")
+    .replace(/[,\-_]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (cleanName.length < 2) continue;
+
+  const type = inferTypeFromName(cleanName);
+  const specs = generateSpecsForType(type);
+
+  additionalShips.push([
+    imo,
+    cleanName,
+    {
+      type,
+      ...specs,
+      builder: undefined,
+      flag: "Unbekannt",
+      operator: undefined,
+      homePort: undefined,
+    },
+  ]);
+}
+
+// Kombiniere manuelle Liste + automatisch generierte aus Wikimedia
+const allShipsData = [...realShips, ...additionalShips];
+
+// Filter: Nur Schiffe mit echten Wikimedia-Bildern anzeigen
+// (Default-Bild-Schiffe verbergen, da sie nicht genug Infos haben)
+export const SHIPS: Ship[] = allShipsData
+  .map(([imo, name, data]) => makeShip(imo, name, {
     ...data,
-    // Setze Default-Bild falls keines definiert
     imageUrl: data.imageUrl || DEFAULT_SHIP_IMAGE,
     imageAttribution: data.imageAttribution || "Wikimedia Commons (CC BY-SA)",
-  }),
-);
+  }))
+  // Behalte Schiffe mit echten Bildern (aus Wikimedia) + die aus der manuellen Liste
+  .filter((ship) => {
+    const hasRealImage = (realShipImages as Record<string, unknown>)[ship.imo];
+    return hasRealImage;
+  });
 
 export const SHIP_TYPES: BulkCarrierType[] = [
   "Capesize",

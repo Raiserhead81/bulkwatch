@@ -1,0 +1,12 @@
+{
+  "name": "ais-streamer",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --hot index.ts",
+    "start": "bun index.ts"
+  },
+  "dependencies": {
+    "ws": "^8.21.0"
+  }
+}

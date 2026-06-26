@@ -149,9 +149,15 @@ export default function Home() {
             </div>
           </Link>
 
-          <nav className="flex items-center gap-1 sm:gap-2 text-xs">
+          <nav className="flex items-center gap-1 sm:gap-2 text-xs flex-wrap">
             <Link href="/" className="px-2.5 py-1.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-cyan-400 font-medium">
               Schiffe
+            </Link>
+            <Link
+              href="/top-picks"
+              className="px-2.5 py-1.5 rounded-md hover:bg-amber-500/10 transition-colors text-amber-700 dark:text-amber-400"
+            >
+              🏆 Top Picks
             </Link>
             <Link
               href="/survey-haefen"
@@ -175,9 +181,8 @@ export default function Home() {
               href="/watchlist"
               className="px-2.5 py-1.5 rounded-md hover:bg-slate-500/10 transition-colors text-slate-700 dark:text-white/70"
             >
-              ⭐ Watchlist
-              {watchlist.length > 0 && (
-                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px]">
+              ⭐ {watchlist.length > 0 && (
+                <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px]">
                   {watchlist.length}
                 </span>
               )}
