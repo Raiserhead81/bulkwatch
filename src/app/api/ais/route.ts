@@ -135,7 +135,7 @@ export async function GET() {
   const cache = getCache();
   const now = Date.now();
   const recent = Array.from(cache.values())
-    .filter((s) => now - s.timestamp < CACHE_TTL_SEC * 1000 && s.lat && s.lon)
+    .filter((s) => now - s.timestamp < CACHE_TTL_SEC * 1000 && s.lat && s.lon && (s.shipType == null || (s.shipType >= 70 && s.shipType <= 79)))
     .sort((a, b) => b.timestamp - a.timestamp);
 
   return NextResponse.json({

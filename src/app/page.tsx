@@ -111,7 +111,7 @@ export default function Home() {
       );
 
     return result;
-  }, [search, typeFilter, flagFilter, sortBy]);
+  }, [search, typeFilter, flagFilter, sortBy, operatorFilter]);
 
   const paginatedShips = filteredShips.slice(
     (page - 1) * SHIPS_PER_PAGE,
