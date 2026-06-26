@@ -1,0 +1,22 @@
+[Unit]
+Description=SnapGuide AI — Travel Guide App (travelguide.gemivo.de)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/travelguide
+EnvironmentFile=/opt/travelguide/.env.production
+Environment=NODE_ENV=production
+Environment=PORT=3092
+Environment=HOSTNAME=127.0.0.1
+# Increase payload limit for image uploads (default 1MB is too small)
+Environment=BODY_SIZE_LIMIT=15728640
+ExecStart=/usr/bin/bun /opt/travelguide/.next/standalone/server.js
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

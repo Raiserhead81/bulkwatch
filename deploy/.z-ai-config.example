@@ -1,0 +1,6 @@
+{
+  "baseUrl": "https://YOUR-API-BASE-URL/v1",
+  "apiKey": "YOUR-API-KEY",
+  "chatId": "OPTIONAL_CHAT_ID",
+  "userId": "OPTIONAL_USER_ID"
+}
