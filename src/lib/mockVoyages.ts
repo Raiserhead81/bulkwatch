@@ -195,21 +195,21 @@ export type VoyageStatus =
 
 export function getCargoDescription(cargo: CargoType): string {
   const descriptions: Record<CargoType, string> = {
-    iron_ore: "Eisenerz",
-    coal: "Kohle",
-    grain: "Getreide",
-    bauxite: "Bauxit",
-    alumina: "Aluminiumoxid",
-    cement: "Zement",
-    fertilizer: "Düngemittel",
-    steel: "Stahlprodukte",
-    scrap: "Schrott",
-    sulfur: "Schwefel",
-    salt: "Salz",
-    lumber: "Holz",
-    empty: "Ballastfahrt (leer)",
+    iron_ore: "Iron Ore",
+    coal: "Coal",
+    grain: "Grain",
+    bauxite: "Bauxite",
+    alumina: "Alumina",
+    cement: "Cement",
+    fertilizer: "Fertilizer",
+    steel: "Steel Products",
+    scrap: "Scrap Metal",
+    sulfur: "Sulfur",
+    salt: "Salt",
+    lumber: "Lumber",
+    empty: "Ballast Voyage (empty)",
   };
-  return descriptions[cargo] || "Unbekannt";
+  return descriptions[cargo] || "Unknown";
 }
 
 // Haversine-Formel für Distanz zwischen zwei Koordinaten
@@ -265,7 +265,7 @@ export function generateMockVoyage(ship: Ship): MockVoyage {
       from: port,
       to: port,
       cargo: "empty",
-      cargoDescription: "Im Hafen",
+      cargoDescription: "In Port",
       cargoLoadPercent: 0,
       currentStatus: "in_port",
       currentPosition: { lat: port.lat, lon: port.lon },
@@ -275,7 +275,7 @@ export function generateMockVoyage(ship: Ship): MockVoyage {
       departureDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
       durationDays: 0,
       distanceNm: 0,
-      vesselActivity: `Liegt im Hafen von ${port.name}`,
+      vesselActivity: `In port at ${port.name}`,
     };
   }
 
@@ -306,19 +306,19 @@ export function generateMockVoyage(ship: Ship): MockVoyage {
     status = "moored_loading";
     cargoLoadPercent = Math.round(progressPercent * 20); // 0-100% while loading
     speedKnots = 0;
-    vesselActivity = `Wird in ${fromPort.name} beladen`;
+    vesselActivity = `Loading at ${fromPort.name}`;
     departureDate = new Date(Date.now() - 6 * 60 * 60 * 1000); // 6h ago
   } else if (progressPercent > 95) {
     status = "moored_discharging";
     cargoLoadPercent = Math.round((100 - progressPercent) * 20);
     speedKnots = 0;
-    vesselActivity = `Wird in ${toPort.name} entladen`;
+    vesselActivity = `Discharging at ${toPort.name}`;
     departureDate = new Date(Date.now() - durationDays * 24 * 60 * 60 * 1000);
   } else {
     status = "under_way_loaded";
     cargoLoadPercent = 95; // fast voll
     speedKnots = 11 + Math.round(seededRandom(ship.imo + "speed") * 4); // 11-15 kn
-    vesselActivity = `Unterwegs von ${fromPort.name} nach ${toPort.name}`;
+    vesselActivity = `Under way from ${fromPort.name} to ${toPort.name}`;
     departureDate = new Date(
       Date.now() - (progressPercent / 100) * durationDays * 24 * 60 * 60 * 1000,
     );
@@ -375,16 +375,16 @@ export function getStatusColor(status: VoyageStatus): string {
 export function getStatusLabel(status: VoyageStatus): string {
   switch (status) {
     case "under_way_loaded":
-      return "Unterwegs (beladen)";
+      return "Under Way (Loaded)";
     case "under_way_ballast":
-      return "Unterwegs (Ballast)";
+      return "Under Way (Ballast)";
     case "at_anchor":
-      return "Auf Reede";
+      return "At Anchor";
     case "moored_loading":
-      return "Beladung";
+      return "Loading";
     case "moored_discharging":
-      return "Entladung";
+      return "Discharging";
     case "in_port":
-      return "Im Hafen";
+      return "In Port";
   }
 }

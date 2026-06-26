@@ -53,10 +53,10 @@ export default function KartePage() {
 
         <WorldMap ships={SHIPS} height="600px" />
 
-        <Card className="mt-6 border-amber-500/20 bg-amber-500/5">
+        <Card className="mt-6 border-emerald-500/20 bg-emerald-500/5">
           <CardContent className="p-4">
-            <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-              {t("voyage.mockNote")}
+            <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
+              {t("voyage.liveNote")}
             </p>
           </CardContent>
         </Card>

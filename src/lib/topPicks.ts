@@ -82,21 +82,21 @@ function getBuyReason(ship: Ship, price: ReturnType<typeof estimatePrice>): stri
   const pricePerDwt = price.estimatedValueUSD / ship.dwt;
 
   if (age <= 5 && price.recommendation === "BUY") {
-    return `Junges Schiff (${age} Jahre), Marktpreis attraktiv. Preis/DWT: $${pricePerDwt.toFixed(0)}. Hohe Restlebensdauer, gute Rendite-Aussichten.`;
+    return `Young ship (${age} yrs), attractive market price. Price/DWT: $${pricePerDwt.toFixed(0)}. High remaining lifespan, good return prospects.`;
   }
   if (age <= 10 && ship.dwt > 100000) {
-    return `Großes Schiff (${ship.dwt.toLocaleString("de-DE")} DWT) in der besten Lebensphase. Hohe Frachtraten für Capesize/VLOCs sorgen für schnelle Amortisation.`;
+    return `Large ship (${ship.dwt.toLocaleString("en-US")} DWT) in prime life phase. High freight rates for Capesize/VLOCs enable fast payback.`;
   }
   if (age > 20 && ship.status === "active") {
-    return `Altes Schiff (${age} Jahre), aber aktiv. Schrottwert-Strategie: Bei weiterer Nutzung 2-3 Jahre Rendite, dann Verschrottung zum Stahlpreis (~$500/t).`;
+    return `Older ship (${age} yrs) but still active. Scrap strategy: 2-3 more years of returns, then scrapping at steel price (~$500/t).`;
   }
   if (pricePerDwt < 300) {
-    return `Ausgezeichneter Preis/DWT-Quotient ($${pricePerDwt.toFixed(0)}). Vergleichbarer Marktwert liegt höher — potenzieller Wertgewinn.`;
+    return `Excellent price/DWT ratio ($${pricePerDwt.toFixed(0)}). Comparable market value is higher — potential capital gain.`;
   }
   if (price.recommendation === "BUY") {
-    return `Buy-Empfehlung basierend auf Marktlage und Schiffsprofil. Konfidenz ${price.confidenceScore}%.`;
+    return `Buy recommendation based on market conditions and ship profile. Confidence ${price.confidenceScore}%.`;
   }
-  return `Solide Investment-Option mit ausgewogenem Risiko-Profil.`;
+  return `Solid investment option with balanced risk profile.`;
 }
 
 /**
@@ -147,9 +147,9 @@ export function getAllTopPicks(): TopPicksByType[] {
       shipsOfType.reduce((sum, s) => sum + (new Date().getFullYear() - s.yearBuilt), 0) /
       shipsOfType.length;
 
-    const marketSummary = `${shipsOfType.length} Schiffe verfügbar · Ø ${formatPrice(
+    const marketSummary = `${shipsOfType.length} ships available · Avg ${formatPrice(
       avgPrice,
-    )} · Ø ${(avgDwt / 1000).toFixed(0)}K DWT · Ø ${avgAge.toFixed(1)} Jahre alt`;
+    )} · Avg ${(avgDwt / 1000).toFixed(0)}K DWT · Avg ${avgAge.toFixed(1)} yrs old`;
 
     result.push({ type, picks, marketSummary });
   }

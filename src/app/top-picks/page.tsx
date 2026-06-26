@@ -53,11 +53,11 @@ export default function TopPicksPage() {
       <header className="sticky top-0 z-20 border-b border-blue-500/10 backdrop-blur-md bg-white/80 dark:bg-slate-950/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2 text-sm hover:text-blue-600 dark:hover:text-cyan-400">
-            <ArrowLeft className="h-4 w-4" /> Zurück
+            <ArrowLeft className="h-4 w-4" /> Back
           </Link>
           <h1 className="font-bold text-sm sm:text-base flex items-center gap-2">
             <Trophy className="h-4 w-4 text-amber-500" />
-            Top Kauf-Empfehlungen
+            Top Buy Recommendations
           </h1>
         </div>
       </header>
@@ -72,13 +72,13 @@ export default function TopPicksPage() {
           <h1 className="text-3xl sm:text-5xl font-bold tracking-tight mb-2">
             Top 3{" "}
             <span className="bg-gradient-to-r from-amber-600 to-orange-500 bg-clip-text text-transparent">
-              Kauf-Empfehlungen
+              Buy Recommendations
             </span>{" "}
-            pro Schiffsgröße
+            by Ship Size
           </h1>
           <p className="text-sm sm:text-base text-slate-600 dark:text-white/50 leading-relaxed max-w-2xl">
-            KI-basierte Analyse aller Bulk Carrier — bewertet nach Alter, Preis pro DWT,
-            Marktstatus und Reederei-Qualität. Pro Schiffsgröße die 3 besten Kauf-Kandidaten.
+            AI-based analysis of all bulk carriers — rated by age, price per DWT,
+            market conditions and operator quality. Top 3 buy candidates per ship size.
           </p>
         </section>
 
@@ -93,7 +93,7 @@ export default function TopPicksPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span className="text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300 font-semibold">
-                      🏆 Gesamt-Top-Pick
+                      🏆 Overall Top Pick
                     </span>
                     <Badge className={`${getRecommendationColor(overallTop.price.recommendation)} border`}>
                       {getRecommendationEmoji(overallTop.price.recommendation)} {getRecommendationLabel(overallTop.price.recommendation)}
@@ -112,7 +112,7 @@ export default function TopPicksPage() {
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
                     <div>
-                      <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Geschätzter Wert</p>
+                      <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Est. Value</p>
                       <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
                         {formatPrice(overallTop.price.estimatedValueUSD)}
                       </p>
@@ -122,7 +122,7 @@ export default function TopPicksPage() {
                       <p className="text-lg font-bold">{(overallTop.ship.dwt / 1000).toFixed(0)}K DWT</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Baujahr</p>
+                      <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Year Built</p>
                       <p className="text-lg font-bold">{overallTop.ship.yearBuilt}</p>
                     </div>
                     <div>
@@ -138,7 +138,7 @@ export default function TopPicksPage() {
                   <div className="mt-3 flex gap-2">
                     <Link href={`/schiff/${overallTop.ship.imo}`}>
                       <Button size="sm" className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white">
-                        Details ansehen
+                        View Details
                       </Button>
                     </Link>
                     <Button
@@ -148,9 +148,9 @@ export default function TopPicksPage() {
                       className="border-amber-500/30"
                     >
                       {watchlist.includes(overallTop.ship.imo) ? (
-                        <><Star className="h-4 w-4 mr-1 text-amber-500 fill-amber-500" /> Auf Watchlist</>
+                        <><Star className="h-4 w-4 mr-1 text-amber-500 fill-amber-500" /> On Watchlist</>
                       ) : (
-                        <><StarOff className="h-4 w-4 mr-1" /> Zur Watchlist</>
+                        <><StarOff className="h-4 w-4 mr-1" /> Add to Watchlist</>
                       )}
                     </Button>
                   </div>
@@ -165,10 +165,10 @@ export default function TopPicksPage() {
           <CardContent className="p-4">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="bg-white dark:bg-slate-900 max-w-md">
-                <SelectValue placeholder="Schiffsgröße" />
+                <SelectValue placeholder="Ship Size" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Alle Schiffsgrößen</SelectItem>
+                <SelectItem value="all">All Ship Sizes</SelectItem>
                 {SHIP_TYPES.map((t) => (
                   <SelectItem key={t} value={t}>{t}</SelectItem>
                 ))}
@@ -190,7 +190,7 @@ export default function TopPicksPage() {
                   <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">{marketSummary}</p>
                 </div>
                 <Badge variant="outline" className="border-blue-500/20 text-blue-700 dark:text-cyan-400">
-                  {picks.length} Top-Picks
+                  {picks.length} Top Picks
                 </Badge>
               </div>
 
@@ -213,7 +213,7 @@ export default function TopPicksPage() {
             <CardContent className="p-12 text-center">
               <Trophy className="h-12 w-12 mx-auto text-slate-300 dark:text-white/20 mb-4" />
               <p className="text-slate-600 dark:text-white/60">
-                Keine Top-Picks für diesen Schiffstyp
+                No top picks for this ship type
               </p>
             </CardContent>
           </Card>
@@ -223,12 +223,12 @@ export default function TopPicksPage() {
         <Card className="mt-8 border-amber-500/20 bg-amber-500/5">
           <CardContent className="p-4">
             <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-              ⚠️ <strong>Wichtiger Hinweis:</strong> Diese Empfehlungen basieren auf
-              öffentlich verfügbaren Daten und einer KI-gestützten Analyse. Sie stellen
-              keine Anlageberatung dar. Vor jedem Schiffskauf ist eine professionelle
-              Pre-Purchase Survey durch einen zertifizierten Superintendenten erforderlich.
-              Siehe <Link href="/survey-haefen" className="underline">Survey-Häfen</Link> für
-              empfohlene Inspektionshäfen.
+              ⚠️ <strong>Important Notice:</strong> These recommendations are based on
+              publicly available data and AI analysis. They do not constitute
+              investment advice. A professional pre-purchase survey by a certified
+              superintendent is required before any ship purchase.
+              See <Link href="/survey-haefen" className="underline">Survey Ports</Link> for
+              recommended inspection ports.
             </p>
           </CardContent>
         </Card>
@@ -261,7 +261,7 @@ function TopPickCard({ pick, rank, isWatched }: { pick: TopPick; rank: number; i
         <button
           onClick={() => toggleWatch(ship.imo)}
           className="absolute top-2 right-2 rounded-full bg-black/50 hover:bg-black/70 p-1.5 backdrop-blur-sm transition-colors"
-          aria-label="Zur Watchlist hinzufügen"
+          aria-label="Add to Watchlist"
         >
           {isWatched ? (
             <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
@@ -291,11 +291,11 @@ function TopPickCard({ pick, rank, isWatched }: { pick: TopPick; rank: number; i
             <p className="text-sm font-bold tabular-nums">{(ship.dwt / 1000).toFixed(0)}K</p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Baujahr</p>
+            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Year Built</p>
             <p className="text-sm font-bold tabular-nums">{ship.yearBuilt}</p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Wert</p>
+            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Value</p>
             <p className="text-sm font-bold text-blue-600 dark:text-cyan-400 tabular-nums">
               {formatPrice(price.estimatedValueUSD)}
             </p>
@@ -314,7 +314,7 @@ function TopPickCard({ pick, rank, isWatched }: { pick: TopPick; rank: number; i
 
         <Link href={`/schiff/${ship.imo}`}>
           <Button variant="outline" size="sm" className="w-full border-blue-500/30 text-blue-700 dark:text-cyan-400">
-            Details ansehen <ArrowRight className="h-3 w-3 ml-1" />
+            View Details <ArrowRight className="h-3 w-3 ml-1" />
           </Button>
         </Link>
       </CardContent>

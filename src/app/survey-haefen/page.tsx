@@ -78,11 +78,11 @@ export default function SurveyPortsPage() {
       <header className="sticky top-0 z-20 border-b border-blue-500/10 backdrop-blur-md bg-white/80 dark:bg-slate-950/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2 text-sm hover:text-blue-600 dark:hover:text-cyan-400">
-            <ArrowLeft className="h-4 w-4" /> Zurück
+            <ArrowLeft className="h-4 w-4" /> Back
           </Link>
           <h1 className="font-bold text-sm sm:text-base flex items-center gap-2">
             <Stethoscope className="h-4 w-4 text-purple-600 dark:text-purple-300" />
-            Survey-Häfen
+            Survey Ports
           </h1>
         </div>
       </header>
@@ -93,15 +93,15 @@ export default function SurveyPortsPage() {
             <Award className="h-3 w-3" /> Pre-Purchase Survey
           </div>
           <h1 className="text-3xl sm:text-5xl font-bold tracking-tight mb-2">
-            Beste Häfen für{" "}
+            Best Ports for{" "}
             <span className="bg-gradient-to-r from-purple-600 to-fuchsia-500 bg-clip-text text-transparent">
-              Schiffsinspektion
+              Ship Inspection
             </span>
           </h1>
           <p className="text-sm sm:text-base text-slate-600 dark:text-white/50 leading-relaxed max-w-2xl">
-            Bevor ein Superintendent ein Schiff vor dem Kauf inspiziert, braucht es den
-            richtigen Hafen. Hier sind die weltweit besten Survey-Häfen mit Drydock,
-            Taucher-Teams und Klassifikationsgesellschaften.
+            Before a superintendent inspects a ship prior to purchase, the right port matters.
+            Here are the world's best survey ports with drydocks,
+            diving teams and classification societies.
           </p>
         </section>
 
@@ -112,20 +112,20 @@ export default function SurveyPortsPage() {
                 <Stethoscope className="h-5 w-5 text-purple-600 dark:text-purple-300" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-semibold text-sm">Was passiert bei einer Schiffsinspektion?</h3>
+                <h3 className="font-semibold text-sm">What happens during a ship inspection?</h3>
                 <p className="text-xs text-slate-600 dark:text-white/60 leading-relaxed">
-                  Ein <strong>Superintendent</strong> (erfahrener Kapitän oder Schiffbauingenieur)
-                  inspiziert das Schiff vor dem Kauf. Er prüft:
+                  A <strong>superintendent</strong> (experienced captain or naval architect)
+                  inspects the ship before purchase. They check:
                 </p>
                 <ul className="text-xs text-slate-600 dark:text-white/60 ml-4 space-y-0.5 list-disc">
-                  <li>Hüllenzustand (UT-Dickenmessung per Taucher oder Drydock)</li>
-                  <li>Maschinenraum und Antrieb</li>
-                  <li>Tankzustand (Reinigung + Inspektion)</li>
-                  <li>Sicherheitsausrüstung und Zertifikate</li>
-                  <li>Ladungsumschlags-Systeme</li>
+                  <li>Hull condition (UT thickness measurement by diver or drydock)</li>
+                  <li>Engine room and propulsion</li>
+                  <li>Tank condition (cleaning + inspection)</li>
+                  <li>Safety equipment and certificates</li>
+                  <li>Cargo handling systems</li>
                 </ul>
                 <p className="text-xs text-slate-600 dark:text-white/60 leading-relaxed pt-1">
-                  Dauer: 3-5 Tage. Kosten: $20K-$100K je nach Hafen und Schiffgröße.
+                  Duration: 3-5 days. Cost: $20K-$100K depending on port and ship size.
                 </p>
               </div>
             </div>
@@ -139,34 +139,34 @@ export default function SurveyPortsPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
                   type="text"
-                  placeholder="Hafen, Land, Stichwort..."
+                  placeholder="Port, country, keyword..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-9 bg-white dark:bg-slate-900"
                 />
               </div>
               <Select value={facilityFilter} onValueChange={setFacilityFilter}>
-                <SelectTrigger className="bg-white dark:bg-slate-900"><SelectValue placeholder="Einrichtung" /></SelectTrigger>
+                <SelectTrigger className="bg-white dark:bg-slate-900"><SelectValue placeholder="Facility" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Alle Einrichtungen</SelectItem>
+                  <SelectItem value="all">All Facilities</SelectItem>
                   {allFacilities.map((f) => (
                     <SelectItem key={f} value={f}>{FACILITY_ICONS[f]} {FACILITY_LABELS[f]}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-                <SelectTrigger className="bg-white dark:bg-slate-900"><SelectValue placeholder="Sortierung" /></SelectTrigger>
+                <SelectTrigger className="bg-white dark:bg-slate-900"><SelectValue placeholder="Sort By" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="rating">Bewertung (beste zuerst)</SelectItem>
-                  <SelectItem value="cost_low">Kosten (niedrig zuerst)</SelectItem>
-                  <SelectItem value="cost_high">Kosten (hoch zuerst)</SelectItem>
-                  <SelectItem value="duration">Dauer (schnellste zuerst)</SelectItem>
+                  <SelectItem value="rating">Rating (best first)</SelectItem>
+                  <SelectItem value="cost_low">Cost (low first)</SelectItem>
+                  <SelectItem value="cost_high">Cost (high first)</SelectItem>
+                  <SelectItem value="duration">Duration (fastest first)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="mt-3 flex items-center gap-2 text-xs text-slate-500 dark:text-white/50">
               <Filter className="h-3.5 w-3.5" />
-              <span>{filteredPorts.length} von {SURVEY_PORTS.length} Häfen</span>
+              <span>{filteredPorts.length} of {SURVEY_PORTS.length} ports</span>
             </div>
           </CardContent>
         </Card>
@@ -176,7 +176,7 @@ export default function SurveyPortsPage() {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Award className="h-5 w-5 text-amber-600" />
-                <h3 className="font-bold text-sm">🏆 Top 3 Survey-Häfen weltweit</h3>
+                <h3 className="font-bold text-sm">🏆 Top 3 Survey Ports Worldwide</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {filteredPorts.slice(0, 3).map((port, i) => (
@@ -205,8 +205,8 @@ export default function SurveyPortsPage() {
           <Card className="border-blue-500/20">
             <CardContent className="p-12 text-center">
               <Anchor className="h-12 w-12 mx-auto text-slate-300 dark:text-white/20 mb-4" />
-              <p className="text-slate-600 dark:text-white/60 mb-2">Keine Häfen gefunden</p>
-              <p className="text-xs text-slate-500 dark:text-white/40">Versuche andere Suchbegriffe oder Filter</p>
+              <p className="text-slate-600 dark:text-white/60 mb-2">No ports found</p>
+              <p className="text-xs text-slate-500 dark:text-white/40">Try different search terms or filters</p>
             </CardContent>
           </Card>
         )}
@@ -239,19 +239,19 @@ function SurveyPortCard({ port }: { port: SurveyPort }) {
 
         <div className="grid grid-cols-3 gap-2 text-center py-2 border-y border-slate-200 dark:border-white/10">
           <div>
-            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Kosten</p>
+            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Cost</p>
             <p className="text-sm font-semibold text-purple-600 dark:text-purple-400">
               {formatSurveyCost(port.typicalSurveyCost)}
             </p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Dauer</p>
+            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Duration</p>
             <p className="text-sm font-semibold flex items-center justify-center gap-1">
-              <Clock className="h-3 w-3" />{port.typicalDuration} Tage
+              <Clock className="h-3 w-3" />{port.typicalDuration} days
             </p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Flughafen</p>
+            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Airport</p>
             <p className="text-sm font-semibold flex items-center justify-center gap-1">
               <Plane className="h-3 w-3" />{port.airport}
             </p>
@@ -259,7 +259,7 @@ function SurveyPortCard({ port }: { port: SurveyPort }) {
         </div>
 
         <div>
-          <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase mb-1.5">Einrichtungen</p>
+          <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase mb-1.5">Facilities</p>
           <div className="flex flex-wrap gap-1.5">
             {port.facilities.map((f) => (
               <Badge key={f} variant="outline" className="text-[10px] py-0.5 border-blue-500/20 bg-blue-500/5">
@@ -270,7 +270,7 @@ function SurveyPortCard({ port }: { port: SurveyPort }) {
         </div>
 
         <div>
-          <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase mb-1.5">Klassifikationsgesellschaften</p>
+          <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase mb-1.5">Class Societies</p>
           <div className="flex flex-wrap gap-1.5">
             {port.certifications.map((c) => (
               <Badge key={c} className="text-[10px] py-0.5 bg-stone-700 text-white border-0">{c}</Badge>
@@ -282,18 +282,18 @@ function SurveyPortCard({ port }: { port: SurveyPort }) {
           onClick={() => setExpanded(!expanded)}
           className="text-xs text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-1"
         >
-          {expanded ? "Weniger anzeigen" : "Mehr Details"} {expanded ? "▲" : "▼"}
+          {expanded ? "Show Less" : "More Details"} {expanded ? "▲" : "▼"}
         </button>
 
         {expanded && (
           <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-white/10">
             <div>
-              <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase mb-1">Notizen</p>
+              <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase mb-1">Notes</p>
               <p className="text-xs text-slate-700 dark:text-white/70 leading-relaxed">{port.notes}</p>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-white/60">
               <MapPin className="h-3 w-3" />
-              <span>{port.lat.toFixed(3)}, {port.lon.toFixed(3)} · {port.airportDistance} km zum Flughafen {port.airport}</span>
+              <span>{port.lat.toFixed(3)}, {port.lon.toFixed(3)} · {port.airportDistance} km to airport {port.airport}</span>
             </div>
             {port.contactInfo?.website && (
               <a href={port.contactInfo.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-cyan-400 hover:underline">
@@ -302,7 +302,7 @@ function SurveyPortCard({ port }: { port: SurveyPort }) {
             )}
             <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-white/40">
               <DollarSign className="h-3 w-3" />
-              <span>Geschätzte Kosten: {formatSurveyCost(port.typicalSurveyCost)} USD</span>
+              <span>Estimated cost: {formatSurveyCost(port.typicalSurveyCost)} USD</span>
             </div>
           </div>
         )}

@@ -2,10 +2,10 @@
 
 export function formatUSD(amount: number): string {
   if (amount >= 1_000_000_000) {
-    return `$${(amount / 1_000_000_000).toFixed(2)} Mrd`;
+    return `$${(amount / 1_000_000_000).toFixed(2)}B`;
   }
   if (amount >= 1_000_000) {
-    return `$${(amount / 1_000_000).toFixed(1)} Mio`;
+    return `$${(amount / 1_000_000).toFixed(1)}M`;
   }
   if (amount >= 1_000) {
     return `$${(amount / 1_000).toFixed(0)}K`;
@@ -29,11 +29,11 @@ export function formatDWT(dwt: number): string {
 }
 
 export function formatNumber(n: number): string {
-  return new Intl.NumberFormat("de-DE").format(n);
+  return new Intl.NumberFormat("en-US").format(n);
 }
 
 export function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat("de-DE", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -49,10 +49,10 @@ export function timeAgo(iso: string): string {
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
 
-  if (days > 0) return `vor ${days} Tag${days === 1 ? "" : "en"}`;
-  if (hours > 0) return `vor ${hours} Std.`;
-  if (minutes > 0) return `vor ${minutes} Min.`;
-  return "gerade eben";
+  if (days > 0) return `${days} day${days === 1 ? "" : "s"} ago`;
+  if (hours > 0) return `${hours} hr${hours === 1 ? "" : "s"} ago`;
+  if (minutes > 0) return `${minutes} min ago`;
+  return "just now";
 }
 
 // Carrier class → human readable label
@@ -70,30 +70,30 @@ export const CLASS_LABELS: Record<string, string> = {
 };
 
 export const CLASS_DESCRIPTIONS: Record<string, string> = {
-  VLOC: "Very Large Ore Carrier — über 200.000 DWT, hauptsächlich für Eisenerz-Transport zwischen Brasilien/Australien und China",
-  Capesize: "100.000–200.000 DWT, zu groß für Suez- und Panama-Kanal. Fährt ums Kap der Guten Hoffnung oder Kap Hoorn",
-  Newcastlemax: "Maximalgröße für den Hafen Newcastle (Australien) — ca. 210.000 DWT",
-  "Post-Panamax": "80.000–100.000 DWT, zu groß für alte Panama-Schleusen",
-  Panamax: "60.000–80.000 DWT, maximale Größe für alte Panama-Kanal-Schleusen",
-  Kamsarmax: "Ca. 82.000 DWT, maximale Größe für Port Kamsar (Guinea, Bauxit-Export)",
-  Supramax: "50.000–60.000 DWT, mit eigenem Kran (geared) — flexibel einsetzbar",
-  Ultramax: "60.000–65.000 DWT, moderne Supramax-Variante mit besserer Effizienz",
-  Handymax: "40.000–50.000 DWT, mit Kran, für kleinere Häfen",
-  Handysize: "15.000–40.000 DWT, mit Kran, sehr flexibel für kleine Häfen",
+  VLOC: "Very Large Ore Carrier — over 200,000 DWT, mainly for iron ore transport between Brazil/Australia and China",
+  Capesize: "100,000–200,000 DWT, too large for Suez and Panama Canal. Routes around Cape of Good Hope or Cape Horn",
+  Newcastlemax: "Maximum size for Newcastle port (Australia) — approx. 210,000 DWT",
+  "Post-Panamax": "80,000–100,000 DWT, too large for the old Panama Canal locks",
+  Panamax: "60,000–80,000 DWT, maximum size for the old Panama Canal locks",
+  Kamsarmax: "Approx. 82,000 DWT, maximum size for Port Kamsar (Guinea, bauxite export)",
+  Supramax: "50,000–60,000 DWT, with own cranes (geared) — flexible deployment",
+  Ultramax: "60,000–65,000 DWT, modern Supramax variant with improved efficiency",
+  Handymax: "40,000–50,000 DWT, with cranes, for smaller ports",
+  Handysize: "15,000–40,000 DWT, with cranes, very flexible for small ports",
 };
 
 export const STATUS_LABELS: Record<string, string> = {
-  active: "Aktiv",
-  laid_up: "Aufgelegt",
-  scrapped: "Verschrottet",
-  under_construction: "Im Bau",
+  active: "Active",
+  laid_up: "Laid Up",
+  scrapped: "Scrapped",
+  under_construction: "Under Construction",
 };
 
 export const CARGO_STATUS_LABELS: Record<string, string> = {
-  loaded: "Beladen",
+  loaded: "Loaded",
   in_ballast: "In Ballast",
-  loading: "Beladung",
-  discharging: "Löschen",
+  loading: "Loading",
+  discharging: "Discharging",
 };
 
 export const RECOMMENDATION_COLORS: Record<string, string> = {
@@ -103,7 +103,7 @@ export const RECOMMENDATION_COLORS: Record<string, string> = {
 };
 
 export const RECOMMENDATION_LABELS: Record<string, string> = {
-  BUY: "KAUFEN",
-  HOLD: "HALTEN",
-  SELL: "VERKAUFEN",
+  BUY: "BUY",
+  HOLD: "HOLD",
+  SELL: "SELL",
 };

@@ -1,5 +1,5 @@
 // Preis-Schätzungslogik für Bulk Carrier
-// Basierend auf typischen Marktwerten für gebrauchte Schiffe (Stand 2024)
+// Basierend auf typischen Marktwerten für gebrauchte Schiffe (Stand 2026)
 
 import type { Ship, BulkCarrierType } from "@/data/ships";
 
@@ -35,8 +35,8 @@ const BASE_PRICES: Record<BulkCarrierType, number> = {
 
 // Marktfaktoren (z.B. Baltic Dry Index, könnte später dynamisch sein)
 const MARKET_FACTORS = {
-  bdiCurrent: 1500, // Baltic Dry Index (Approximation)
-  bdiTrend: "stable" as "rising" | "stable" | "falling",
+  bdiCurrent: 2524, // Baltic Dry Index (Stand June 2026 — tradingeconomics.com)
+  bdiTrend: "falling" as "rising" | "stable" | "falling", // -19% in 4 weeks
   freightRateMultiplier: 1.0,
 };
 
@@ -59,53 +59,55 @@ export function estimatePrice(ship: Ship): PriceEstimate {
 
   // 1. Alter (größter Faktor)
   const currentYear = new Date().getFullYear();
-  const age = currentYear - ship.yearBuilt;
+  // yearBuilt=0 means unknown — treat conservatively as mid-age (10 years)
+  const effectiveYear = ship.yearBuilt > 1900 ? ship.yearBuilt : currentYear - 10;
+  const age = currentYear - effectiveYear;
   let ageMultiplier = 1.0;
   if (age <= 2) {
     ageMultiplier = 1.05;
     factors.push({
-      label: "Alter",
-      value: `${age} Jahre (fast neu)`,
+      label: "Age",
+      value: `${age} yrs (nearly new)`,
       impact: "positive",
       weight: 30,
     });
   } else if (age <= 5) {
     ageMultiplier = 1.0;
     factors.push({
-      label: "Alter",
-      value: `${age} Jahre (jung)`,
+      label: "Age",
+      value: `${age} yrs (young)`,
       impact: "positive",
       weight: 25,
     });
   } else if (age <= 10) {
     ageMultiplier = 0.85;
     factors.push({
-      label: "Alter",
-      value: `${age} Jahre (mittel)`,
+      label: "Age",
+      value: `${age} yrs (mid-age)`,
       impact: "neutral",
       weight: 20,
     });
   } else if (age <= 15) {
     ageMultiplier = 0.65;
     factors.push({
-      label: "Alter",
-      value: `${age} Jahre (älter)`,
+      label: "Age",
+      value: `${age} yrs (older)`,
       impact: "negative",
       weight: 25,
     });
   } else if (age <= 20) {
     ageMultiplier = 0.45;
     factors.push({
-      label: "Alter",
-      value: `${age} Jahre (alt)`,
+      label: "Age",
+      value: `${age} yrs (old)`,
       impact: "negative",
       weight: 30,
     });
   } else if (age <= 25) {
     ageMultiplier = 0.30;
     factors.push({
-      label: "Alter",
-      value: `${age} Jahre (sehr alt)`,
+      label: "Age",
+      value: `${age} yrs (very old)`,
       impact: "negative",
       weight: 35,
     });
@@ -113,8 +115,8 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   } else {
     ageMultiplier = 0.15;
     factors.push({
-      label: "Alter",
-      value: `${age} Jahre (verschrottungsreif)`,
+      label: "Age",
+      value: `${age} yrs (scrap-ready)`,
       impact: "negative",
       weight: 40,
     });
@@ -128,14 +130,14 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   if (dwtBonusPercent > 0.1) {
     factors.push({
       label: "Tonnage",
-      value: `${ship.dwt.toLocaleString("de-DE")} DWT (groß)`,
+      value: `${ship.dwt.toLocaleString("en-US")} DWT (large)`,
       impact: "positive",
       weight: 15,
     });
   } else if (dwtBonusPercent > 0.05) {
     factors.push({
       label: "Tonnage",
-      value: `${ship.dwt.toLocaleString("de-DE")} DWT`,
+      value: `${ship.dwt.toLocaleString("en-US")} DWT`,
       impact: "neutral",
       weight: 10,
     });
@@ -157,14 +159,14 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   if (reputableFlags.includes(ship.flag)) {
     priceMultiplier *= 1.02;
     factors.push({
-      label: "Flagge",
+      label: "Flag",
       value: `${ship.flag} (Premium)`,
       impact: "positive",
       weight: 8,
     });
   } else if (flagCompliant.includes(ship.flag)) {
     factors.push({
-      label: "Flagge",
+      label: "Flag",
       value: `${ship.flag} (Standard)`,
       impact: "neutral",
       weight: 5,
@@ -172,8 +174,8 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   } else if (flagLowCost.includes(ship.flag)) {
     priceMultiplier *= 0.95;
     factors.push({
-      label: "Flagge",
-      value: `${ship.flag} (Billigflagge)`,
+      label: "Flag",
+      value: `${ship.flag} (Flag of Convenience)`,
       impact: "negative",
       weight: 10,
     });
@@ -185,7 +187,7 @@ export function estimatePrice(ship: Ship): PriceEstimate {
     priceMultiplier *= 0.20;
     factors.push({
       label: "Status",
-      value: "Verschrottet (Schrottwert)",
+      value: "Scrapped (scrap value)",
       impact: "negative",
       weight: 50,
     });
@@ -194,7 +196,7 @@ export function estimatePrice(ship: Ship): PriceEstimate {
     priceMultiplier *= 0.70;
     factors.push({
       label: "Status",
-      value: "Stillgelegt",
+      value: "Laid Up",
       impact: "negative",
       weight: 15,
     });
@@ -202,7 +204,7 @@ export function estimatePrice(ship: Ship): PriceEstimate {
     priceMultiplier *= 0;
     factors.push({
       label: "Status",
-      value: "Verloren (Totalverlust)",
+      value: "Lost (total loss)",
       impact: "negative",
       weight: 100,
     });
@@ -210,7 +212,7 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   } else {
     factors.push({
       label: "Status",
-      value: "Aktiv im Einsatz",
+      value: "Active in Service",
       impact: "positive",
       weight: 10,
     });
@@ -228,7 +230,7 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   if (ship.builder && premiumBuilders.includes(ship.builder)) {
     priceMultiplier *= 1.03;
     factors.push({
-      label: "Bauwerft",
+      label: "Shipyard",
       value: `${ship.builder} (Premium)`,
       impact: "positive",
       weight: 7,
@@ -239,14 +241,14 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   if (MARKET_FACTORS.bdiCurrent > 2000) {
     priceMultiplier *= 1.10;
     factors.push({
-      label: "Marktlage",
-      value: `BDI ${MARKET_FACTORS.bdiCurrent} (hoch)`,
+      label: "Market",
+      value: `BDI ${MARKET_FACTORS.bdiCurrent} (high)`,
       impact: "positive",
       weight: 15,
     });
   } else if (MARKET_FACTORS.bdiCurrent > 1000) {
     factors.push({
-      label: "Marktlage",
+      label: "Market",
       value: `BDI ${MARKET_FACTORS.bdiCurrent} (normal)`,
       impact: "neutral",
       weight: 8,
@@ -254,17 +256,18 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   } else {
     priceMultiplier *= 0.85;
     factors.push({
-      label: "Marktlage",
-      value: `BDI ${MARKET_FACTORS.bdiCurrent} (niedrig)`,
+      label: "Market",
+      value: `BDI ${MARKET_FACTORS.bdiCurrent} (low)`,
       impact: "negative",
       weight: 12,
     });
   }
 
   // Endpreis berechnen
-  const estimatedValueUSD = Math.round(
-    (basePrice + dwtBonus) * priceMultiplier,
-  );
+  // Scrap value as floor: ~$450/LDT, LDT ≈ 0.35 * DWT for bulk carriers
+  const scrapValueUSD = Math.round(ship.dwt * 0.35 * 450);
+  const rawEstimate = Math.round((basePrice + dwtBonus) * priceMultiplier);
+  const estimatedValueUSD = Math.max(rawEstimate, ship.status === "active" ? scrapValueUSD : 0);
 
   // Konfidenz-Score anpassen
   confidenceScore = Math.max(20, Math.min(95, confidenceScore));
@@ -276,47 +279,47 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   if (ship.status === "lost") {
     recommendation = "SELL";
     recommendationReasoning =
-      "Schiff ist verloren — kein Wiederverkaufswert. Schrottwert der Versicherung beachten.";
+      "Ship is lost — no resale value. Check insurance scrap value.";
   } else if (ship.status === "scrapped") {
     recommendation = "SELL";
     recommendationReasoning =
-      "Schiff ist bereits verschrottet. Schrottwert notiert, kein Investment.";
+      "Ship already scrapped. Scrap value noted, not an investment.";
   } else if (age > 25) {
     recommendation = "SELL";
     recommendationReasoning =
-      "Verschrottungsreif. Verkauf vor weiteren Wertverlusten. Stahlpreis (~$500/t) als Minimum beachten.";
-  } else if (age > 18 && MARKET_FACTORS.bdiCurrent > 1500) {
+      "Scrap-ready. Sell before further depreciation. Steel price (~$500/t) as minimum reference.";
+  } else if (age > 15 && MARKET_FACTORS.bdiCurrent > 2000) {
     recommendation = "SELL";
     recommendationReasoning =
-      "Hohes Alter bei aktuell gutem Markt — optimaler Verkaufszeitpunkt vor nächstem Abschwung.";
+      "BDI elevated (2,500+) but trending down — sell window is now. Age factor compounds risk.";
   } else if (age <= 5 && MARKET_FACTORS.bdiCurrent > 1500) {
     recommendation = "HOLD";
     recommendationReasoning =
-      "Junges Schiff in gutem Markt — Wertsteigerung wahrscheinlich. Verkauf in 2-3 Jahren könnte besser sein.";
-  } else if (age <= 5 && MARKET_FACTORS.bdiCurrent < 1200) {
+      "Young ship in a good market — value appreciation likely. Selling in 2-3 years may be better.";
+  } else if (age <= 5 && MARKET_FACTORS.bdiTrend === "falling") {
     recommendation = "BUY";
     recommendationReasoning =
-      "Junges Schiff, aber Markt ist schwach — Einstiegschance zu reduziertem Preis. Markt wird sich erholen.";
+      "Young ship with BDI declining — prices softening. Entry opportunity before next freight cycle upturn.";
   } else if (age <= 10 && ship.dwt > 100000) {
     recommendation = "BUY";
     recommendationReasoning =
-      "Großes Schiff in der besten Lebensphase. Capesize/VLOCs profitieren stark von Erzfracht-Nachfrage.";
+      "Large ship in prime life phase. Capesize/VLOCs benefit strongly from ore freight demand.";
   } else if (ship.dwt < 40000 && MARKET_FACTORS.bdiCurrent < 1000) {
     recommendation = "SELL";
     recommendationReasoning =
-      "Kleines Schiff in schwachem Markt — Handysize-Schiffe sind am empfindlichsten für Frachtraten-Schwankungen.";
+      "Small ship in weak market — Handysize vessels are most sensitive to freight rate fluctuations.";
   } else if (ship.type === "Valemax" || ship.type === "VLOC") {
     recommendation = "HOLD";
     recommendationReasoning =
-      "Spezialisierte VLOCs haben langfristige Verträge mit Vale — stabile Einnahmen, aber eingeschränkter Käuferkreis.";
+      "Specialized VLOCs have long-term contracts with Vale — stable income but limited buyer pool.";
   } else {
     recommendation = "HOLD";
     recommendationReasoning =
-      "Ausgewogene Risiko-Rendite. Marktbeobachtung empfohlen, je nach Frachtraten-Entwicklung.";
+      "Balanced risk-return. Market monitoring recommended depending on freight rate developments.";
   }
 
   // Reasoning-Text für Preis
-  const reasoning = `Geschätzt basierend auf ${ship.type}-Basispreis von $${(basePrice / 1_000_000).toFixed(1)}M, Alter ${age} Jahre (${Math.round(ageMultiplier * 100)}% Multiplikator), Tonnage-Bonus von $${(dwtBonus / 1_000_000).toFixed(2)}M für ${ship.dwt.toLocaleString("de-DE")} DWT, und Marktlage (BDI ${MARKET_FACTORS.bdiCurrent}). Konfidenz: ${confidenceScore}%.`;
+  const reasoning = `Est. ${ship.type} base $${(basePrice / 1_000_000).toFixed(1)}M · Age ${age} yrs (×${Math.round(ageMultiplier * 100)}%) · DWT bonus +$${(dwtBonus / 1_000_000).toFixed(1)}M · BDI ${MARKET_FACTORS.bdiCurrent} (${MARKET_FACTORS.bdiTrend}) · Scrap floor $${(scrapValueUSD / 1_000_000).toFixed(1)}M · Confidence ${confidenceScore}%.`;
 
   return {
     estimatedValueUSD,
@@ -366,10 +369,10 @@ export function getRecommendationEmoji(rec: "BUY" | "HOLD" | "SELL"): string {
 export function getRecommendationLabel(rec: "BUY" | "HOLD" | "SELL"): string {
   switch (rec) {
     case "BUY":
-      return "KAUFEN";
+      return "BUY";
     case "HOLD":
-      return "HALTEN";
+      return "HOLD";
     case "SELL":
-      return "VERKAUFEN";
+      return "SELL";
   }
 }

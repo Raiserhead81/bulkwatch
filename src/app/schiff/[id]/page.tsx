@@ -64,9 +64,9 @@ export default function ShipDetailPage({
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center text-slate-900 dark:text-white">
         <div className="text-center">
           <ShipIcon className="h-12 w-12 mx-auto text-slate-300 dark:text-white/20 mb-4" />
-          <p className="mb-4">Schiff nicht gefunden</p>
+          <p className="mb-4">Ship not found</p>
           <Link href="/">
-            <Button>Zurück zur Übersicht</Button>
+            <Button>Back to Overview</Button>
           </Link>
         </div>
       </div>
@@ -75,7 +75,7 @@ export default function ShipDetailPage({
 
   const price = estimatePrice(ship);
   const voyage = generateMockVoyage(ship);
-  // Beste Survey-Häfen in der Nähe (basierend auf aktueller Position)
+  // Beste Survey Ports Nearby (basierend auf aktueller Position)
   const nearbySurveyPorts = getNearbySurveyPorts(
     voyage.currentPosition.lat,
     voyage.currentPosition.lon,
@@ -84,14 +84,14 @@ export default function ShipDetailPage({
 
   // Specs
   const specs = [
-    { icon: Weight, label: "Tragfähigkeit", value: `${ship.dwt.toLocaleString("de-DE")} DWT` },
-    { icon: Ruler, label: "Länge über alles", value: `${ship.length} m` },
-    { icon: Ruler, label: "Breite", value: `${ship.beam} m` },
-    { icon: Ruler, label: "Tiefgang", value: `${ship.draft} m` },
-    { icon: Calendar, label: "Baujahr", value: ship.yearBuilt.toString() },
-    { icon: Flag, label: "Flagge", value: ship.flag },
-    { icon: Building2, label: "Reederei", value: ship.operator || "—" },
-    { icon: Home, label: "Heimathafen", value: ship.homePort || "—" },
+    { icon: Weight, label: "Deadweight", value: `${ship.dwt.toLocaleString("en-US")} DWT` },
+    { icon: Ruler, label: "Length Overall", value: `${ship.length} m` },
+    { icon: Ruler, label: "Beam", value: `${ship.beam} m` },
+    { icon: Ruler, label: "Draft", value: `${ship.draft} m` },
+    { icon: Calendar, label: "Year Built", value: ship.yearBuilt.toString() },
+    { icon: Flag, label: "Flag", value: ship.flag },
+    { icon: Building2, label: "Operator", value: ship.operator || "—" },
+    { icon: Home, label: "Home Port", value: ship.homePort || "—" },
   ];
 
   return (
@@ -101,7 +101,7 @@ export default function ShipDetailPage({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2 text-sm hover:text-blue-600 dark:hover:text-cyan-400">
             <ArrowLeft className="h-4 w-4" />
-            Zurück zur Übersicht
+            Back to Overview
           </Link>
           <div className="flex items-center gap-1.5">
             <Badge className={`${getRecommendationColor(price.recommendation)} border`}>
@@ -121,7 +121,7 @@ export default function ShipDetailPage({
               ) : (
                 <>
                   <StarOff className="h-4 w-4 mr-1" />
-                  Merken
+                  Save
                 </>
               )}
             </Button>
@@ -149,7 +149,7 @@ export default function ShipDetailPage({
             {ship.name}
           </h1>
           <p className="text-sm text-slate-600 dark:text-white/50">
-            {ship.operator || "Unbekannter Betreiber"} · 🇺🇳 {ship.flag} · {ship.homePort || "Heimathafen unbekannt"}
+            {ship.operator || "Unknown Operator"} · 🇺🇳 {ship.flag} · {ship.homePort || "Home Port Unknown"}
           </p>
         </section>
 
@@ -169,7 +169,7 @@ export default function ShipDetailPage({
               </div>
               {ship.imageAttribution && (
                 <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900/50 text-[10px] text-slate-500 dark:text-white/40 font-mono">
-                  Foto: {ship.imageAttribution}
+                  Photo: {ship.imageAttribution}
                 </div>
               )}
             </Card>
@@ -179,7 +179,7 @@ export default function ShipDetailPage({
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <ShipIcon className="h-5 w-5 text-blue-600 dark:text-cyan-400" />
-                  Technische Daten
+                  Technical Specifications
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -204,7 +204,7 @@ export default function ShipDetailPage({
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Navigation className="h-5 w-5 text-blue-600 dark:text-cyan-400" />
-                  Aktuelle Reise
+                  Current Voyage
                   <Badge className={`${getStatusColor(voyage.currentStatus)} border ml-auto`}>
                     {getStatusLabel(voyage.currentStatus)}
                   </Badge>
@@ -215,14 +215,14 @@ export default function ShipDetailPage({
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50">
                   <div className="text-2xl">{voyage.from.countryFlag}</div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Von</p>
+                    <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">From</p>
                     <p className="font-semibold text-sm truncate">{voyage.from.name}</p>
                     <p className="text-xs text-slate-500 dark:text-white/40">{voyage.from.country}</p>
                   </div>
                   <ArrowRight className="h-5 w-5 text-blue-500 flex-shrink-0" />
                   <div className="text-2xl">{voyage.to.countryFlag}</div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Nach</p>
+                    <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">To</p>
                     <p className="font-semibold text-sm truncate">{voyage.to.name}</p>
                     <p className="text-xs text-slate-500 dark:text-white/40">{voyage.to.country}</p>
                   </div>
@@ -231,19 +231,19 @@ export default function ShipDetailPage({
                 {/* Cargo + progress */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                    <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Ladung</p>
+                    <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Cargo</p>
                     <p className="text-sm font-semibold">{voyage.cargoDescription}</p>
                   </div>
                   <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                    <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Beladung</p>
+                    <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Load</p>
                     <p className="text-sm font-semibold">{voyage.cargoLoadPercent}%</p>
                   </div>
                   <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                    <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Geschw.</p>
+                    <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Speed</p>
                     <p className="text-sm font-semibold tabular-nums">{voyage.speedKnots} kn</p>
                   </div>
                   <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                    <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Distanz</p>
+                    <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Distance</p>
                     <p className="text-sm font-semibold tabular-nums">{voyage.distanceNm} sm</p>
                   </div>
                 </div>
@@ -251,7 +251,7 @@ export default function ShipDetailPage({
                 {/* Progress bar */}
                 <div>
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="text-slate-500 dark:text-white/40">Fortschritt</span>
+                    <span className="text-slate-500 dark:text-white/40">Progress</span>
                     <span className="font-semibold tabular-nums">{voyage.progressPercent}%</span>
                   </div>
                   <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -265,16 +265,16 @@ export default function ShipDetailPage({
                 {/* ETA */}
                 <div className="flex items-center justify-between text-xs text-slate-600 dark:text-white/60 pt-2 border-t border-slate-200 dark:border-white/10">
                   <span>
-                    Abfahrt: {voyage.departureDate.toLocaleDateString("de-DE")}
+                    Departure: {voyage.departureDate.toLocaleDateString("en-US")}
                   </span>
                   <span className="font-semibold">
-                    ETA: {voyage.eta.toLocaleDateString("de-DE")} ·{" "}
-                    {voyage.eta.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
+                    ETA: {voyage.eta.toLocaleDateString("en-US")} ·{" "}
+                    {voyage.eta.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>
 
-                <p className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-500/5 border border-amber-500/20 rounded px-2 py-1">
-                  ⚠️ Mock-Daten — Live-AIS-Integration in Entwicklung
+                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 border border-emerald-500/20 rounded px-2 py-1">
+                  ✓ Live AIS Position{ship.imo ? ` · IMO ${ship.imo}` : ""}
                 </p>
               </CardContent>
             </Card>
@@ -286,13 +286,13 @@ export default function ShipDetailPage({
             <Card className="border-blue-500/20 overflow-hidden">
               <div className="bg-gradient-to-br from-blue-600 to-cyan-500 text-white p-5">
                 <p className="text-xs uppercase tracking-wider text-white/70 mb-1">
-                  Geschätzter Wert
+                  Estimated Value
                 </p>
                 <p className="text-4xl font-bold tabular-nums">
                   {formatPrice(price.estimatedValueUSD)}
                 </p>
                 <div className="mt-3 flex items-center gap-2 text-xs">
-                  <span>Konfidenz:</span>
+                  <span>Confidence:</span>
                   <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-white rounded-full"
@@ -315,7 +315,7 @@ export default function ShipDetailPage({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-white/40">
-                      Empfehlung
+                      Recommendation
                     </p>
                     <p className="text-2xl font-bold flex items-center gap-2">
                       {getRecommendationEmoji(price.recommendation)} {getRecommendationLabel(price.recommendation)}
@@ -334,7 +334,7 @@ export default function ShipDetailPage({
               <CardHeader>
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Gauge className="h-4 w-4 text-blue-600 dark:text-cyan-400" />
-                  Wert-Faktoren
+                  Value Factors
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -364,13 +364,13 @@ export default function ShipDetailPage({
             <div className="space-y-2">
               <Link href={`/vergleich?ships=${ship.imo}`}>
                 <Button variant="outline" className="w-full border-blue-500/30 text-blue-700 dark:text-cyan-400">
-                  ⚖️ Mit anderen Schiffen vergleichen
+                  ⚖️ Compare with other ships
                 </Button>
               </Link>
               <a href={ship.imageUrl} target="_blank" rel="noopener noreferrer">
                 <Button variant="outline" className="w-full border-slate-500/30">
                   <Download className="h-4 w-4 mr-1.5" />
-                  Bild herunterladen
+                  Download Image
                 </Button>
               </a>
             </div>
@@ -380,17 +380,17 @@ export default function ShipDetailPage({
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Stethoscope className="h-4 w-4 text-purple-600 dark:text-purple-300" />
-                  Survey-Häfen in der Nähe
+                  Nearby Survey Ports
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-xs text-slate-600 dark:text-white/60 leading-relaxed">
-                  Empfohlene Häfen für eine Pre-Purchase Inspektion — basierend auf
-                  aktueller Position:
+                  Recommended ports for a pre-purchase inspection — based on
+                  current position:
                 </p>
                 {nearbySurveyPorts.length === 0 ? (
                   <p className="text-xs text-slate-500 dark:text-white/40">
-                    Keine Survey-Häfen in Reichweite.
+                    No survey ports within range.
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -408,7 +408,7 @@ export default function ShipDetailPage({
                             </Badge>
                           </div>
                           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-white/40">
-                            <span>{Math.round(distanceNm)} sm entfernt</span>
+                            <span>{Math.round(distanceNm)} nm away</span>
                             <span className="text-purple-600 dark:text-purple-400 font-medium">
                               {formatSurveyCost(port.typicalSurveyCost)}
                             </span>
@@ -420,7 +420,7 @@ export default function ShipDetailPage({
                 )}
                 <Link href="/survey-haefen">
                   <Button variant="outline" size="sm" className="w-full border-purple-500/30 text-purple-700 dark:text-purple-300">
-                    Alle Survey-Häfen ansehen
+                    View All Survey Ports
                   </Button>
                 </Link>
               </CardContent>

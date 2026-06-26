@@ -39,6 +39,8 @@ export type BulkCarrierType =
 
 // Echte Schiffsbilder von Wikimedia Commons (439 Schiffe)
 import realShipImages from "./ship-images.json";
+import wikidataShipsRaw from "./wikidata-ships.json";
+import aisShipsRaw from "./ais-ships.json";
 
 // Hilfsfunktion: Erzeugt eine Ship-ID aus IMO
 function makeShip(imo: string, name: string, data: Partial<Ship>): Ship {
@@ -201,6 +203,33 @@ const realShips: Array<[string, string, Partial<Ship>]> = [
   ["9551230", "Oldendorff Power", { type: "Capesize", dwt: 180000, length: 295, beam: 46, draft: 18, yearBuilt: 2015, builder: "China Shipbuilding", flag: "Liberia", operator: "Oldendorff Carriers", homePort: "Monrovia" }],
   ["9551242", "Oldendorff Pioneer", { type: "Capesize", dwt: 180000, length: 295, beam: 46, draft: 18, yearBuilt: 2015, builder: "China Shipbuilding", flag: "Liberia", operator: "Oldendorff Carriers", homePort: "Monrovia" }],
   ["9551254", "Oldendorff Explorer", { type: "Capesize", dwt: 180000, length: 295, beam: 46, draft: 18, yearBuilt: 2016, builder: "China Shipbuilding", flag: "Liberia", operator: "Oldendorff Carriers", homePort: "Monrovia" }],
+  ["9718375", "Hermine Oldendorff", { type: "Capesize", dwt: 209330, length: 300, beam: 50, draft: 18, yearBuilt: 2017, builder: "DSME", flag: "Portugal", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9702596", "Georg Oldendorff", { type: "Kamsarmax", dwt: 80000, length: 229, beam: 32, draft: 14, yearBuilt: 2015, builder: "COSCO Zhoushan", flag: "Portugal", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9731602", "Hubertus Oldendorff", { type: "Kamsarmax", dwt: 82000, length: 229, beam: 32, draft: 14, yearBuilt: 2017, builder: "COSCO Zhoushan", flag: "Portugal", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9727596", "Gebe Oldendorff", { type: "Kamsarmax", dwt: 80943, length: 229, beam: 32, draft: 14, yearBuilt: 2016, builder: "COSCO Zhoushan", flag: "Portugal", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9676606", "Emma Oldendorff", { type: "Handysize", dwt: 38649, length: 180, beam: 30, draft: 10, yearBuilt: 2014, builder: "Mitsui", flag: "Malta", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9676618", "Eibe Oldendorff", { type: "Handysize", dwt: 38649, length: 180, beam: 30, draft: 10, yearBuilt: 2014, builder: "Mitsui", flag: "Malta", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9681950", "Gerdt Oldendorff", { type: "Handymax", dwt: 52000, length: 190, beam: 32, draft: 12, yearBuilt: 2014, builder: "Yangzhou Dayang", flag: "Liberia", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9678795", "Mina Oldendorff", { type: "Handysize", dwt: 38695, length: 180, beam: 30, draft: 10, yearBuilt: 2013, builder: "Mitsui", flag: "Malta", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9537898", "Christine Oldendorff", { type: "Panamax", dwt: 74000, length: 225, beam: 32, draft: 14, yearBuilt: 2009, builder: "Universal Shipbuilding", flag: "Liberia", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9537903", "Conrad Oldendorff", { type: "Panamax", dwt: 74000, length: 225, beam: 32, draft: 14, yearBuilt: 2009, builder: "Universal Shipbuilding", flag: "Liberia", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9540871", "Paul Oldendorff", { type: "Panamax", dwt: 76000, length: 254, beam: 43, draft: 14, yearBuilt: 2012, builder: "Tsuneishi", flag: "Liberia", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9540869", "Philipp Oldendorff", { type: "Panamax", dwt: 76000, length: 254, beam: 43, draft: 14, yearBuilt: 2012, builder: "Tsuneishi", flag: "Liberia", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9464663", "Peter Oldendorff", { type: "Handymax", dwt: 52000, length: 190, beam: 32, draft: 12, yearBuilt: 2012, builder: "Yangfan", flag: "Marshall Islands", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9464675", "Pia Oldendorff", { type: "Handymax", dwt: 52000, length: 190, beam: 32, draft: 12, yearBuilt: 2013, builder: "Yangfan", flag: "Marshall Islands", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9463671", "Rex Oldendorff", { type: "Handymax", dwt: 52000, length: 190, beam: 32, draft: 12, yearBuilt: 2011, builder: "Yangfan", flag: "Marshall Islands", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9463633", "Roland Oldendorff", { type: "Handymax", dwt: 52000, length: 190, beam: 32, draft: 12, yearBuilt: 2011, builder: "Yangfan", flag: "Marshall Islands", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9600425", "Max Oldendorff", { type: "Kamsarmax", dwt: 82000, length: 229, beam: 32, draft: 14, yearBuilt: 2014, builder: "Jiangmen Nanyang", flag: "Liberia", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9889265", "Friedrich Oldendorff", { type: "Handymax", dwt: 63000, length: 199, beam: 32, draft: 13, yearBuilt: 2020, builder: "Chengxi", flag: "Marshall Islands", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9863091", "Kirsten Oldendorff", { type: "Handymax", dwt: 63000, length: 199, beam: 32, draft: 13, yearBuilt: 2020, builder: "Chengxi", flag: "Marshall Islands", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9952402", "Kuno Oldendorff", { type: "Handymax", dwt: 63000, length: 199, beam: 32, draft: 13, yearBuilt: 2022, builder: "Chengxi", flag: "Marshall Islands", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9342889", "Tete Oldendorff", { type: "Handysize", dwt: 32000, length: 175, beam: 29, draft: 10, yearBuilt: 2006, builder: "Jiangsu Hantong", flag: "Liberia", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9120334", "Harmen Oldendorff", { type: "Handymax", dwt: 45000, length: 185, beam: 31, draft: 12, yearBuilt: 1998, builder: "Kanasashi", flag: "Liberia", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["9225005", "John Oldendorff", { type: "Panamax", dwt: 70000, length: 225, beam: 32, draft: 13, yearBuilt: 2001, builder: "Namura", flag: "Liberia", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["8015697", "Hedwig Oldendorff", { type: "Handysize", dwt: 25000, length: 165, beam: 26, draft: 10, yearBuilt: 1982, builder: "Lübecker Flender-Werke", flag: "Liberia", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["6926086", "Caroline Oldendorff", { type: "Handysize", dwt: 18000, length: 155, beam: 22, draft: 9, yearBuilt: 1969, builder: "A.G. Weser", flag: "Germany", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["7341893", "Catharina Oldendorff", { type: "Handysize", dwt: 20000, length: 160, beam: 24, draft: 9, yearBuilt: 1975, builder: "Flensburger Schiffbau", flag: "Germany", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
+  ["5150678", "Hille Oldendorff", { type: "Handysize", dwt: 12000, length: 140, beam: 20, draft: 8, yearBuilt: 1965, builder: "Lübecker Flender-Werke", flag: "Germany", operator: "Oldendorff Carriers", homePort: "Lübeck" }],
 
   // === Klavenes ===
   ["9484525", "Cape Environmental", { type: "Panamax", dwt: 80000, length: 229, beam: 32, draft: 14.5, yearBuilt: 2013, builder: "Imabari Shipbuilding", flag: "Norway", operator: "Klaveness Combination Carriers", homePort: "Oslo" }],
@@ -287,7 +316,7 @@ for (const [imo, imageData] of Object.entries(realShipImages as Record<string, {
       type,
       ...specs,
       builder: undefined,
-      flag: "Unbekannt",
+      flag: "Unknown",
       operator: undefined,
       homePort: undefined,
     },
@@ -295,7 +324,26 @@ for (const [imo, imageData] of Object.entries(realShipImages as Record<string, {
 }
 
 // Kombiniere manuelle Liste + automatisch generierte aus Wikimedia
-const allShipsData = [...realShips, ...additionalShips];
+const wikidataShips: Array<[string, string, Partial<Ship>]> = (wikidataShipsRaw as {imo:string;name:string;type:string;yearBuilt:number;flag:string}[])
+  .filter(s => s.imo && s.imo.length === 7 && !realShipImos.has(s.imo))
+  .map(s => {
+    const validTypes: BulkCarrierType[] = ["Capesize","Newcastlemax","VLOC","Valemax","Panamax","Post-Panamax","Kamsarmax","Handymax","Handysize","Mini-Bulker","Gearless","Geared"];
+    const t: BulkCarrierType = validTypes.includes(s.type as BulkCarrierType) ? (s.type as BulkCarrierType) : "Handymax";
+    const specs = generateSpecsForType(t);
+    return [s.imo, s.name, { type: t, ...specs, yearBuilt: s.yearBuilt || specs.yearBuilt, flag: s.flag || "Unknown" }] as [string, string, Partial<Ship>];
+  });
+
+
+// AIS-Stream Bulk Carriers (Echtzeit-Persistenz, wächst täglich)
+const aisShips: Array<[string, string, Partial<Ship>]> = Object.values(
+  aisShipsRaw as Record<string, {imo: string; name: string; mmsi?: string}>
+)
+  .filter((s) => s.imo && s.imo.length === 7 && s.name && s.name.length > 1 && !realShipImos.has(s.imo))
+  .map((s) => {
+    return [s.imo, s.name, { type: "Handymax" as BulkCarrierType, dwt: 47000, length: 190, beam: 30, draft: 11, yearBuilt: 0, flag: "Unknown" }];
+  });
+
+const allShipsData = [...realShips, ...additionalShips, ...wikidataShips, ...aisShips];
 
 // Filter: Nur Schiffe mit echten Wikimedia-Bildern anzeigen
 // (Default-Bild-Schiffe verbergen, da sie nicht genug Infos haben)
@@ -305,11 +353,11 @@ export const SHIPS: Ship[] = allShipsData
     imageUrl: data.imageUrl || DEFAULT_SHIP_IMAGE,
     imageAttribution: data.imageAttribution || "Wikimedia Commons (CC BY-SA)",
   }))
-  // Behalte Schiffe mit echten Bildern (aus Wikimedia) + die aus der manuellen Liste
-  .filter((ship) => {
-    const hasRealImage = (realShipImages as Record<string, unknown>)[ship.imo];
-    return hasRealImage;
-  });
+  // Show all ships — with real Wikimedia photo or type placeholder
+  .filter((ship, index, arr) =>
+    ship.imo && ship.imo.length >= 7 && ship.name && ship.name.length > 1 &&
+    arr.findIndex(s => s.imo === ship.imo) === index
+  );
 
 export const SHIP_TYPES: BulkCarrierType[] = [
   "Capesize",

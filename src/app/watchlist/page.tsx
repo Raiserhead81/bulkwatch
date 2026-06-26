@@ -71,7 +71,7 @@ export default function WatchlistPage() {
           <>
             <div className="mb-4 flex items-center justify-between">
               <Badge variant="outline" className="border-amber-500/20 text-amber-700 dark:text-amber-300">
-                {watchedShips.length} {watchedShips.length === 1 ? "Schiff" : "Schiffe"}
+                {watchedShips.length} {watchedShips.length === 1 ? "Ship" : "Ships"}
               </Badge>
               <Button
                 variant="outline"

@@ -1,5 +1,5 @@
-// Häfen für Schiffsinspektionen (Pre-Purchase Surveys)
-// Diese Häfen haben:
+// ports für Schiffsinspektionen (Pre-Purchase Surveys)
+// Diese ports haben:
 // - Drydock / Slipway Zugang
 // - Zertifizierte Marine Surveyors
 // - Taucher-Teams für Unterwasserinspektion
@@ -58,7 +58,7 @@ export const FACILITY_LABELS: Record<SurveyFacility, string> = {
   anchor_in_sheltered_water: "Geschützter Ankerplatz",
   warehousing: "Lagerhaus",
   laboratory: "Labor",
-  class_society_office: "Klassifikationsgesellschaft",
+  class_society_office: "Class Society Office",
   fresh_water: "Süßwasser",
   bunkering: "Bunkering",
   crew_change: "Crew Change",
@@ -83,7 +83,7 @@ export const FACILITY_ICONS: Record<SurveyFacility, string> = {
   helipad: "🚁",
 };
 
-// Top Häfen für Schiffs-Surveys weltweit (echte Survey-Hubs)
+// Top ports für Schiffs-Surveys weltweit (echte Survey-Hubs)
 export const SURVEY_PORTS: SurveyPort[] = [
   // === Singapore — Weltweit #1 für Schiffs-Surveys ===
   {
@@ -114,7 +114,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
       website: "https://www.mpa.gov.sg",
     },
     notes:
-      "Weltweit führend für Schiffs-Surveys. Sheltered waters, erfahrene Taucher-Teams, alle Klassifikationsgesellschaften vor Ort. Sehr effizient — Standard-Survey in 3-5 Tagen abgeschlossen.",
+      "World-leading for ship surveys. Sheltered waters, experienced diving teams, all classification societies on site. Very efficient — standard survey completed in 3-5 days.",
     airport: "SIN",
     airportDistance: 25,
   },
@@ -144,7 +144,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 30000, max: 75000, currency: "USD" },
     typicalDuration: 4,
     notes:
-      "Ausgezeichnet für Asien-Pazifik-Trades. Gute Taucher-Teams, moderate Kosten. Sheltered anchorage bei Lamma Island.",
+      "Excellent for Asia-Pacific trades. Good diving teams, moderate costs. Sheltered anchorage at Lamma Island.",
     airport: "HKG",
     airportDistance: 35,
   },
@@ -176,7 +176,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 38000, max: 95000, currency: "USD" },
     typicalDuration: 5,
     notes:
-      "Größter Hafen Europas, exzellente Infrastruktur. Drydock-Zugang im Hafen. Höhere Kosten als Asien, aber hohe Qualität.",
+      "Largest port in Europe, excellent infrastructure. Drydock access within the port. Higher costs than Asia, but high quality.",
     airport: "AMS",
     airportDistance: 70,
   },
@@ -207,7 +207,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 28000, max: 70000, currency: "USD" },
     typicalDuration: 4,
     notes:
-      "Wichtigster Hub für Middle East-Geschäfte. Sehr gut für Tanker, aber auch Bulker-Surveys. Gulf of Oman ist sheltered.",
+      "Most important hub for Middle East business. Very good for tanker and bulker surveys alike. Gulf of Oman is sheltered.",
     airport: "DXB",
     airportDistance: 130,
   },
@@ -238,7 +238,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 32000, max: 80000, currency: "USD" },
     typicalDuration: 5,
     notes:
-      "Korea ist führend im Schiffbau — exzellente Werften für ausführliche Inspektionen. Auch Drydock-Surveys möglich. NK (Nippon Kaiji Kyokai) hat hier Hauptsitz.",
+      "Korea is a leader in shipbuilding — excellent yards for thorough inspections. Drydock surveys also available. NK (Nippon Kaiji Kyokai) is headquartered here.",
     airport: "PUS",
     airportDistance: 15,
   },
@@ -268,7 +268,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 22000, max: 55000, currency: "USD" },
     typicalDuration: 5,
     notes:
-      "Kostengünstigste Option in Asien. Gute Infrastruktur, aber Sprachbarriere möglich. Yangshan ist sheltered.",
+      "Most cost-effective option in Asia. Good infrastructure, but language barrier possible. Yangshan anchorage is sheltered.",
     airport: "PVG",
     airportDistance: 100,
   },
@@ -300,7 +300,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 40000, max: 100000, currency: "USD" },
     typicalDuration: 5,
     notes:
-      "Top für US-Gulf-Trades. ABS hat hier eine Niederlassung. Galveston Bay ist sheltered, gut für Anker-Surveys.",
+      "Top choice for US Gulf trades. ABS has a branch office here. Galveston Bay is sheltered, good for anchor surveys.",
     airport: "IAH",
     airportDistance: 50,
   },
@@ -329,7 +329,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 28000, max: 65000, currency: "USD" },
     typicalDuration: 5,
     notes:
-      "Wichtig für Brasilien-Handel (Eisenerz-Exporte). Mittlere Qualität, moderate Kosten. BV ist hier stark vertreten.",
+      "Important for Brazil trades (iron ore exports). Mid-tier quality, moderate costs. BV has a strong presence here.",
     airport: "GRU",
     airportDistance: 90,
   },
@@ -361,7 +361,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 30000, max: 70000, currency: "USD" },
     typicalDuration: 4,
     notes:
-      "Strategischer Punkt zwischen Europa, Afrika und Südamerika. Sheltered harbor, ideal für Transit-Surveys.",
+      "Strategic position between Europe, Africa and South America. Sheltered harbor, ideal for transit surveys.",
     airport: "LPA",
     airportDistance: 25,
   },
@@ -391,7 +391,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 26000, max: 60000, currency: "USD" },
     typicalDuration: 5,
     notes:
-      "Wichtig für Südafrika-Routen (Kohle/Eisenerz-Exporte). Table Bay ist teilweise sheltered, kann bei Südwest-Wind rau sein.",
+      "Important for South Africa routes (coal/iron ore exports). Table Bay is partly sheltered, can be rough in south-westerly winds.",
     airport: "CPT",
     airportDistance: 20,
   },
@@ -421,7 +421,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 30000, max: 70000, currency: "USD" },
     typicalDuration: 4,
     notes:
-      "Wichtiger Bunkering-Hub. Algeciras Bay ist sheltered, sehr gut für Anker-Surveys. Schnelle Abwicklung.",
+      "Important bunkering hub. Algeciras Bay is sheltered, very good for anchor surveys. Fast turnaround.",
     airport: "GIB",
     airportDistance: 10,
   },
@@ -453,7 +453,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 24000, max: 55000, currency: "USD" },
     typicalDuration: 5,
     notes:
-      "Tuzla-Werften sind gut ausgestattet und kostengünstig. Viele erfahrene Surveyors. Marmara-Meer ist sheltered.",
+      "Tuzla yards are well-equipped and cost-effective. Many experienced surveyors available. Sea of Marmara is sheltered.",
     airport: "IST",
     airportDistance: 60,
   },
@@ -483,7 +483,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 20000, max: 50000, currency: "USD" },
     typicalDuration: 5,
     notes:
-      "Indische Register (IRS) hat hier Hauptsitz. Kostengünstig, aber Monsunzeit (Jun-Sep) kann Survey erschweren.",
+      "Indian Register of Shipping (IRS) is headquartered here. Cost-effective, but monsoon season (Jun-Sep) can complicate surveys.",
     airport: "BOM",
     airportDistance: 25,
   },
@@ -511,7 +511,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 22000, max: 55000, currency: "USD" },
     typicalDuration: 4,
     notes:
-      "Beliebt für transit-Surveys auf Ost-West-Routen. Kostengünstig, effizient. Gute Taucher-Teams.",
+      "Popular for transit surveys on east-west routes. Cost-effective and efficient. Good diving teams.",
     airport: "CMB",
     airportDistance: 35,
   },
@@ -539,7 +539,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 25000, max: 60000, currency: "USD" },
     typicalDuration: 4,
     notes:
-      "Strategisch am Suez-Kanal. Wird oft für schnelle Surveys vor Kanal-Transit genutzt. Mittlere Qualität.",
+      "Strategically located at the Suez Canal. Often used for quick surveys before canal transit. Mid-tier quality.",
     airport: "CAI",
     airportDistance: 220,
   },
@@ -571,7 +571,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 36000, max: 88000, currency: "USD" },
     typicalDuration: 5,
     notes:
-      "Zweitgrößter Hafen Europas. Sehr gute Werften (z.B. Ship Repair). Hohe Qualität, aber teuer.",
+      "Second largest port in Europe. Very good shipyards (e.g. Ship Repair). High quality, but expensive.",
     airport: "BRU",
     airportDistance: 50,
   },
@@ -601,7 +601,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 28000, max: 65000, currency: "USD" },
     typicalDuration: 4,
     notes:
-      "Wichtig für Trans-Pazifik- und Atlantik-Trades. Wird oft für Survey vor/ nach Kanal-Transit genutzt.",
+      "Important for trans-Pacific and Atlantic trades. Often used for surveys before/after canal transit.",
     airport: "PTY",
     airportDistance: 40,
   },
@@ -633,7 +633,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 38000, max: 92000, currency: "USD" },
     typicalDuration: 5,
     notes:
-      "Germanischer Lloyd (DNV) hat Wurzeln hier. Sehr hohe Qualität, aber auch hohe Kosten. BRIDGE-Werft für Drydock.",
+      "Germanischer Lloyd (DNV) has its roots here. Very high quality, but also high costs. BRIDGE yard for drydock.",
     airport: "HAM",
     airportDistance: 12,
   },
@@ -662,7 +662,7 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 35000, max: 80000, currency: "USD" },
     typicalDuration: 5,
     notes:
-      "Wichtigster Kohle-Export-Hafen der Welt. Gute Survey-Infrastruktur für Capesize-Bulker. Hohe australische Standards.",
+      "World's largest coal export port. Good survey infrastructure for Capesize bulkers. High Australian standards.",
     airport: "NTL",
     airportDistance: 25,
   },
@@ -691,18 +691,18 @@ export const SURVEY_PORTS: SurveyPort[] = [
     typicalSurveyCost: { min: 25000, max: 60000, currency: "USD" },
     typicalDuration: 4,
     notes:
-      "Alternative zu Singapore zu niedrigeren Kosten. Gute Survey-Infrastruktur, aber weniger ervahren als Singapore.",
+      "Lower-cost alternative to Singapore. Good survey infrastructure, but less experienced than Singapore.",
     airport: "KUL",
     airportDistance: 50,
   },
 ];
 
-// Hilfsfunktion: Beste Survey-Häfen nach Bewertung sortieren
+// Hilfsfunktion: Beste Survey-ports nach Bewertung sortieren
 export function getTopSurveyPorts(limit = 10): SurveyPort[] {
   return [...SURVEY_PORTS].sort((a, b) => b.rating - a.rating).slice(0, limit);
 }
 
-// Hilfsfunktion: Häfen in der Nähe einer Position finden
+// Hilfsfunktion: ports in der Nähe einer Position finden
 export function getNearbySurveyPorts(
   lat: number,
   lon: number,

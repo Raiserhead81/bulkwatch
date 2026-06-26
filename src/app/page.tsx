@@ -151,7 +151,7 @@ export default function Home() {
 
           <nav className="flex items-center gap-1 sm:gap-2 text-xs flex-wrap">
             <Link href="/" className="px-2.5 py-1.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-cyan-400 font-medium">
-              Schiffe
+              Ships
             </Link>
             <Link
               href="/top-picks"
@@ -163,19 +163,29 @@ export default function Home() {
               href="/survey-haefen"
               className="px-2.5 py-1.5 rounded-md hover:bg-slate-500/10 transition-colors text-slate-700 dark:text-white/70"
             >
-              🔬 Survey-Häfen
+              🔬 Survey Ports
             </Link>
             <Link
               href="/karte"
               className="px-2.5 py-1.5 rounded-md hover:bg-slate-500/10 transition-colors text-slate-700 dark:text-white/70"
             >
-              🗺️ Karte
+              🗺️ Map
+            </Link>
+            <Link
+              href="/live"
+              className="px-2.5 py-1.5 rounded-md hover:bg-slate-500/10 transition-colors text-slate-700 dark:text-white/70 flex items-center gap-1.5"
+            >
+              <span className="relative">
+                📡
+                <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              </span>
+              Live
             </Link>
             <Link
               href="/vergleich"
               className="px-2.5 py-1.5 rounded-md hover:bg-slate-500/10 transition-colors text-slate-700 dark:text-white/70"
             >
-              ⚖️ Vergleich
+              ⚖️ Compare
             </Link>
             <Link
               href="/watchlist"
@@ -196,23 +206,23 @@ export default function Home() {
         <section className="mb-8">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-700 dark:text-cyan-300 border border-blue-500/20 mb-3">
             <Globe className="h-3 w-3" />
-            Bulk Carrier Datenbank
+            Bulk Carrier Database
           </div>
           <h1 className="text-3xl sm:text-5xl font-bold tracking-tight mb-2">
-            Alle{" "}
+            All{" "}
             <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-              Bulk Carrier
+              Bulk Carriers
             </span>{" "}
-            der Welt
+            Worldwide
           </h1>
           <p className="text-sm sm:text-base text-slate-600 dark:text-white/50 leading-relaxed max-w-2xl">
-            Live-Positionen, Specs, Preis-Schätzungen und Buy/Hold/Sell Empfehlungen für{" "}
+            Live positions, specs, price estimates and Buy/Hold/Sell recommendations for{" "}
             <strong className="text-slate-900 dark:text-white">
               {stats.total} Bulk Carrier
             </strong>{" "}
-            weltweit. Gesamtkapazität:{" "}
+            worldwide. Total capacity:{" "}
             <strong className="text-slate-900 dark:text-white">
-              {(stats.totalDwt / 1_000_000).toFixed(2)} Mio. DWT
+              {(stats.totalDwt / 1_000_000).toFixed(2)} M DWT
             </strong>
             .
           </p>
@@ -225,11 +235,11 @@ export default function Home() {
               <div className="flex items-center gap-2 mb-1">
                 <ShipIcon className="h-4 w-4 text-blue-600 dark:text-cyan-400" />
                 <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-white/40 font-mono">
-                  Gesamt
+                  Total
                 </p>
               </div>
               <p className="text-2xl font-bold tabular-nums">{stats.total}</p>
-              <p className="text-xs text-slate-500 dark:text-white/40">Schiffe</p>
+              <p className="text-xs text-slate-500 dark:text-white/40">Ships</p>
             </CardContent>
           </Card>
           <Card className="border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-teal-500/5">
@@ -237,11 +247,11 @@ export default function Home() {
               <div className="flex items-center gap-2 mb-1">
                 <Anchor className="h-4 w-4 text-emerald-600" />
                 <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-white/40 font-mono">
-                  Aktiv
+                  Active
                 </p>
               </div>
               <p className="text-2xl font-bold tabular-nums">{stats.active}</p>
-              <p className="text-xs text-slate-500 dark:text-white/40">Im Einsatz</p>
+              <p className="text-xs text-slate-500 dark:text-white/40">In Service</p>
             </CardContent>
           </Card>
           <Card className="border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-fuchsia-500/5">
@@ -256,7 +266,7 @@ export default function Home() {
                 {(stats.totalDwt / stats.total / 1000).toFixed(0)}K
               </p>
               <p className="text-xs text-slate-500 dark:text-white/40">
-                Tonnage pro Schiff
+                Tonnage per Ship
               </p>
             </CardContent>
           </Card>
@@ -265,14 +275,14 @@ export default function Home() {
               <div className="flex items-center gap-2 mb-1">
                 <Calendar className="h-4 w-4 text-amber-600" />
                 <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-white/40 font-mono">
-                  Ø Wert
+                  Ø Value
                 </p>
               </div>
               <p className="text-2xl font-bold tabular-nums">
                 {formatPrice(stats.avgValue)}
               </p>
               <p className="text-xs text-slate-500 dark:text-white/40">
-                Schätzwert pro Schiff
+                Est. Value per Ship
               </p>
             </CardContent>
           </Card>
@@ -286,7 +296,7 @@ export default function Home() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
                   type="text"
-                  placeholder="Name, IMO, Reederei..."
+                  placeholder="Name, IMO, operator..."
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
@@ -297,10 +307,10 @@ export default function Home() {
               </div>
               <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setPage(1); }}>
                 <SelectTrigger className="bg-white dark:bg-slate-900">
-                  <SelectValue placeholder="Schiffstyp" />
+                  <SelectValue placeholder="Ship Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Alle Typen</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   {SHIP_TYPES.map((t) => (
                     <SelectItem key={t} value={t}>{t}</SelectItem>
                   ))}
@@ -308,10 +318,10 @@ export default function Home() {
               </Select>
               <Select value={flagFilter} onValueChange={(v) => { setFlagFilter(v); setPage(1); }}>
                 <SelectTrigger className="bg-white dark:bg-slate-900">
-                  <SelectValue placeholder="Flagge" />
+                  <SelectValue placeholder="Flag" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Alle Flaggen</SelectItem>
+                  <SelectItem value="all">All Flags</SelectItem>
                   {allFlags.map((f) => (
                     <SelectItem key={f} value={f}>{f}</SelectItem>
                   ))}
@@ -319,15 +329,15 @@ export default function Home() {
               </Select>
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortBy)}>
                 <SelectTrigger className="bg-white dark:bg-slate-900">
-                  <SelectValue placeholder="Sortierung" />
+                  <SelectValue placeholder="Sort By" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="dwt_desc">Tonnage (groß→klein)</SelectItem>
-                  <SelectItem value="dwt_asc">Tonnage (klein→groß)</SelectItem>
-                  <SelectItem value="year_new">Baujahr (neu→alt)</SelectItem>
-                  <SelectItem value="year_old">Baujahr (alt→neu)</SelectItem>
-                  <SelectItem value="value_high">Wert (hoch→niedrig)</SelectItem>
-                  <SelectItem value="value_low">Wert (niedrig→hoch)</SelectItem>
+                  <SelectItem value="dwt_desc">Tonnage (high→low)</SelectItem>
+                  <SelectItem value="dwt_asc">Tonnage (low→high)</SelectItem>
+                  <SelectItem value="year_new">Year Built (new→old)</SelectItem>
+                  <SelectItem value="year_old">Year Built (old→new)</SelectItem>
+                  <SelectItem value="value_high">Value (high→low)</SelectItem>
+                  <SelectItem value="value_low">Value (low→high)</SelectItem>
                   <SelectItem value="name">Name (A-Z)</SelectItem>
                 </SelectContent>
               </Select>
@@ -336,7 +346,7 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <Filter className="h-3.5 w-3.5" />
                 <span>
-                  {filteredShips.length} von {SHIPS.length} Schiffen
+                  {filteredShips.length} of {SHIPS.length} ships
                 </span>
               </div>
               {(search || typeFilter !== "all" || flagFilter !== "all") && (
@@ -349,7 +359,7 @@ export default function Home() {
                   }}
                   className="text-blue-600 dark:text-cyan-400 hover:underline"
                 >
-                  Filter zurücksetzen
+                  Reset Filters
                 </button>
               )}
             </div>
@@ -384,7 +394,7 @@ export default function Home() {
                     <button
                       onClick={() => toggleWatch(ship.imo)}
                       className="rounded-full bg-black/50 hover:bg-black/70 p-1.5 backdrop-blur-sm transition-colors"
-                      aria-label={isWatched ? "Von Watchlist entfernen" : "Zur Watchlist hinzufügen"}
+                      aria-label={isWatched ? "Remove from Watchlist" : "Add to Watchlist"}
                     >
                       {isWatched ? (
                         <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
@@ -439,13 +449,13 @@ export default function Home() {
                     </div>
                     <div>
                       <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">
-                        Baujahr
+                        Built
                       </p>
                       <p className="text-sm font-bold tabular-nums">{ship.yearBuilt}</p>
                     </div>
                     <div>
                       <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">
-                        Wert
+                        Value
                       </p>
                       <p className="text-sm font-bold tabular-nums text-blue-600 dark:text-cyan-400">
                         {formatPrice(price.estimatedValueUSD)}
@@ -459,13 +469,13 @@ export default function Home() {
                       {getRecommendationEmoji(price.recommendation)} {getRecommendationLabel(price.recommendation)}
                     </Badge>
                     <span className="text-[10px] text-slate-500 dark:text-white/40">
-                      Konfidenz: {price.confidenceScore}%
+                      Confidence: {price.confidenceScore}%
                     </span>
                   </div>
 
                   <Link href={`/schiff/${ship.imo}`}>
                     <Button variant="outline" size="sm" className="w-full border-blue-500/30 text-blue-700 dark:text-cyan-400 hover:bg-blue-500/10">
-                      Details ansehen
+                      View Details
                     </Button>
                   </Link>
                 </CardContent>
@@ -484,10 +494,10 @@ export default function Home() {
               onClick={() => setPage((p) => p - 1)}
               className="border-blue-500/30"
             >
-              ← Zurück
+              ← Previous
             </Button>
             <span className="text-sm text-slate-600 dark:text-white/60 px-3">
-              Seite <strong>{page}</strong> / {totalPages}
+              Page <strong>{page}</strong> / {totalPages}
             </span>
             <Button
               variant="outline"
@@ -496,7 +506,7 @@ export default function Home() {
               onClick={() => setPage((p) => p + 1)}
               className="border-blue-500/30"
             >
-              Weiter →
+              Next →
             </Button>
           </div>
         )}
@@ -506,10 +516,10 @@ export default function Home() {
             <CardContent className="p-12 text-center">
               <ShipIcon className="h-12 w-12 mx-auto text-slate-300 dark:text-white/20 mb-4" />
               <p className="text-slate-600 dark:text-white/60 mb-2">
-                Keine Schiffe gefunden
+                No ships found
               </p>
               <p className="text-xs text-slate-500 dark:text-white/40">
-                Versuche andere Suchbegriffe oder Filter
+                Try different search terms or filters
               </p>
             </CardContent>
           </Card>
@@ -519,8 +529,8 @@ export default function Home() {
       <footer className="border-t border-blue-500/10 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 text-center text-xs text-slate-500 dark:text-white/40">
           <p>
-            BulkWatch · Daten aus öffentlichen Quellen · Preis-Schätzungen KI-basiert ·{" "}
-            <span className="text-amber-600 dark:text-amber-400">Mock-AIS</span> (Live-AIS in Entwicklung)
+            BulkWatch · Data from public sources · Price estimates AI-based ·{" "}
+            <span className="text-emerald-600 dark:text-emerald-400">Live-AIS</span> (via AISStream.io)
           </p>
         </div>
       </footer>

@@ -13,7 +13,7 @@ interface I18nContextValue {
 const I18nContext = createContext<I18nContextValue | null>(null);
 
 // Module-level state (avoids setState-in-effect lint rule)
-let currentLang: Language = "de";
+let currentLang: Language = "en";
 let langSubscribers: Array<() => void> = [];
 let langInitialized = false;
 
@@ -50,7 +50,7 @@ function getLang(): Language {
 }
 
 function getServerLang(): Language {
-  return "de";
+  return "en";
 }
 
 function setLangInternal(newLang: Language) {
@@ -165,7 +165,7 @@ const translations: Record<Language, Record<string, string>> = {
     "voyage.progress": "Fortschritt",
     "voyage.departure": "Abfahrt",
     "voyage.eta": "ETA",
-    "voyage.mockNote": "⚠️ Mock-Daten — Live-AIS-Integration in Entwicklung",
+    "voyage.liveNote": "✓ Live-AIS aktiv — Echte Schiffspositionen in Echtzeit via AISStream.io. Grüne Marker = Live, Blaue Marker = BulkWatch-Datenbank.",
 
     // Status
     "status.under_way_loaded": "Unterwegs (beladen)",
@@ -234,6 +234,15 @@ const translations: Record<Language, Record<string, string>> = {
     "map.loading": "Karte wird geladen...",
     "map.shipCount": "{count} Schiffe auf der Karte",
     "map.clickForDetails": "Klick für Details",
+    "map.status": "Status",
+    "map.value": "Geschätzter Wert",
+    "map.recommendation": "Empfehlung",
+    "map.position": "Position",
+    "map.speed": "Geschwindigkeit",
+    "map.course": "Kurs",
+    "map.destination": "Ziel",
+    "map.lastSignal": "Letztes Signal",
+    "map.liveShips": "Live Schiffe",
 
     // Compare
     "compare.title": "⚖️ Schiffs-Vergleich",
@@ -370,7 +379,7 @@ const translations: Record<Language, Record<string, string>> = {
     "voyage.progress": "Progress",
     "voyage.departure": "Departure",
     "voyage.eta": "ETA",
-    "voyage.mockNote": "⚠️ Mock data — Live-AIS integration in development",
+    "voyage.liveNote": "✓ Live-AIS active — Real ship positions in real-time via AISStream.io. Green markers = live, blue markers = BulkWatch database.",
 
     // Status
     "status.under_way_loaded": "Under Way (Loaded)",
@@ -439,6 +448,15 @@ const translations: Record<Language, Record<string, string>> = {
     "map.loading": "Loading map...",
     "map.shipCount": "{count} ships on map",
     "map.clickForDetails": "Click for details",
+    "map.status": "Status",
+    "map.value": "Est. Value",
+    "map.recommendation": "Recommendation",
+    "map.position": "Position",
+    "map.speed": "Speed",
+    "map.course": "Course",
+    "map.destination": "Destination",
+    "map.lastSignal": "Last signal",
+    "map.liveShips": "Live ships",
 
     // Compare
     "compare.title": "⚖️ Ship Comparison",
@@ -483,7 +501,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   };
 
   const t = (key: string, params?: Record<string, string | number>): string => {
-    let text = translations[lang]?.[key] ?? translations.de[key] ?? key;
+    let text = translations[lang]?.[key] ?? translations.en[key] ?? key;
     if (params) {
       for (const [k, v] of Object.entries(params)) {
         text = text.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
