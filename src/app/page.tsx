@@ -394,13 +394,39 @@ export default function Home() {
               >
                 {/* Ship Image */}
                 <div className="relative aspect-video bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                  {/* Ship photo */}
-                  <img
-                    src={ship.imageUrl || ""}
-                    alt={ship.name}
-                    loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                  {/* Gradient always shown — image overlays if it loads */}
+                  <div
+                    className="absolute inset-0 flex flex-col items-center justify-center gap-2"
+                    style={{
+                      background: ship.type === "Capesize" || ship.type === "Newcastlemax" || ship.type === "Valemax" || ship.type === "VLOC"
+                        ? "linear-gradient(135deg,#0f2744 0%,#1a3d6e 50%,#0f2744 100%)"
+                        : ship.type === "Panamax" || ship.type === "Kamsarmax" || ship.type === "Post-Panamax"
+                        ? "linear-gradient(135deg,#0f3320 0%,#1a5c38 50%,#0f3320 100%)"
+                        : "linear-gradient(135deg,#2a1f0f 0%,#5c4020 50%,#2a1f0f 100%)"
+                    }}
+                  >
+                    <svg viewBox="0 0 80 45" width="90" height="50" fill="none" xmlns="http://www.w3.org/2000/svg" opacity="0.45">
+                      <path d="M5 35 L75 35 L70 42 L10 42Z" fill="#60a5fa"/>
+                      <rect x="28" y="20" width="24" height="15" rx="1" fill="#3b82f6" opacity="0.8"/>
+                      <path d="M15 35 L65 35 L65 28 L55 20 L25 20 L15 28Z" fill="#1d4ed8" opacity="0.6"/>
+                      <line x1="40" y1="8" x2="40" y2="20" stroke="#60a5fa" strokeWidth="1.5"/>
+                      <line x1="28" y1="13" x2="52" y2="13" stroke="#60a5fa" strokeWidth="1"/>
+                    </svg>
+                    <div className="text-center px-3">
+                      <div className="text-xs font-bold text-blue-200 tracking-widest uppercase">{ship.type}</div>
+                      <div className="text-xs text-blue-300/60 mt-0.5">{ship.dwt.toLocaleString("en-US")} DWT</div>
+                    </div>
+                  </div>
+                  {/* Real photo overlays the gradient if it loads */}
+                  {ship.imageUrl ? (
+                    <img
+                      src={ship.imageUrl}
+                      alt={ship.name}
+                      loading="lazy"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                    />
+                  ) : null}
                   {/* Top overlay: Type + Watchlist */}
                   <div className="absolute top-2 left-2 right-2 flex items-start justify-between gap-2">
                     <Badge className="bg-blue-600 hover:bg-blue-600 text-white border-0 backdrop-blur-sm">

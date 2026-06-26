@@ -251,7 +251,20 @@ const realShips: Array<[string, string, Partial<Ship>]> = [
 ];
 
 // Default-Wikimedia-Foto für Schiffe ohne eigenes Bild
-const DEFAULT_SHIP_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Bulk_carrier_%22760700%22_in_Gdansk_Poland_02.jpg/800px-Bulk_carrier_%22760700%22_in_Gdansk_Poland_02.jpg";
+// Type-specific default images (CC-licensed Wikimedia photos)
+const TYPE_IMAGES: Record<string, string> = {
+  "Capesize":      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Vale_Dalian_shipyard_20130806.jpg/960px-Vale_Dalian_shipyard_20130806.jpg",
+  "Newcastlemax":  "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Vale_Dalian_shipyard_20130806.jpg/960px-Vale_Dalian_shipyard_20130806.jpg",
+  "Valemax":       "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Vale_Dalian_shipyard_20130806.jpg/960px-Vale_Dalian_shipyard_20130806.jpg",
+  "VLOC":          "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Vale_Dalian_shipyard_20130806.jpg/960px-Vale_Dalian_shipyard_20130806.jpg",
+  "Panamax":       "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/2024-09-11_HAPPINESS_BULKER_-_IMO_9919515_%E2%80%93_Port_Angeles_WA_USA.jpg/960px-2024-09-11_HAPPINESS_BULKER_-_IMO_9919515_%E2%80%93_Port_Angeles_WA_USA.jpg",
+  "Kamsarmax":     "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/2024-09-11_HAPPINESS_BULKER_-_IMO_9919515_%E2%80%93_Port_Angeles_WA_USA.jpg/960px-2024-09-11_HAPPINESS_BULKER_-_IMO_9919515_%E2%80%93_Port_Angeles_WA_USA.jpg",
+  "Post-Panamax":  "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/2024-09-11_HAPPINESS_BULKER_-_IMO_9919515_%E2%80%93_Port_Angeles_WA_USA.jpg/960px-2024-09-11_HAPPINESS_BULKER_-_IMO_9919515_%E2%80%93_Port_Angeles_WA_USA.jpg",
+  "Handymax":      "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/%22GRIGORPAN%22_IMO-_9222338_-_BULK_CARRIER_31167_tons._%288396550313%29.jpg/960px-%22GRIGORPAN%22_IMO-_9222338_-_BULK_CARRIER_31167_tons._%288396550313%29.jpg",
+  "Handysize":     "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/%22GRIGORPAN%22_IMO-_9222338_-_BULK_CARRIER_31167_tons._%288396550313%29.jpg/960px-%22GRIGORPAN%22_IMO-_9222338_-_BULK_CARRIER_31167_tons._%288396550313%29.jpg",
+  "Mini-Bulker":   "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/%22GRIGORPAN%22_IMO-_9222338_-_BULK_CARRIER_31167_tons._%288396550313%29.jpg/960px-%22GRIGORPAN%22_IMO-_9222338_-_BULK_CARRIER_31167_tons._%288396550313%29.jpg",
+};
+const DEFAULT_SHIP_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/2024-09-11_HAPPINESS_BULKER_-_IMO_9919515_%E2%80%93_Port_Angeles_WA_USA.jpg/960px-2024-09-11_HAPPINESS_BULKER_-_IMO_9919515_%E2%80%93_Port_Angeles_WA_USA.jpg";
 
 // Manuelles Mapping: IMO → Schiffsgröße + approximierte Specs
 // Falls ein Schiff nur ein Bild hat (aus Wikimedia), generieren wir plausible Specs
@@ -350,7 +363,7 @@ const allShipsData = [...realShips, ...additionalShips, ...wikidataShips, ...ais
 export const SHIPS: Ship[] = allShipsData
   .map(([imo, name, data]) => makeShip(imo, name, {
     ...data,
-    imageUrl: data.imageUrl || DEFAULT_SHIP_IMAGE,
+    imageUrl: data.imageUrl || "",
     imageAttribution: data.imageAttribution || "Wikimedia Commons (CC BY-SA)",
   }))
   // Show all ships — with real Wikimedia photo or type placeholder
