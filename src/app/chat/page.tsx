@@ -19,12 +19,12 @@ const SUGGESTIONS_DE = [
 ];
 
 const SUGGESTIONS_EN = [
-  { icon: "\u{1F4CA}", label: "Market Overview", prompt: "Give me an overview of the current shipping market. BDI, freight rates, trends and outlook." },
-  { icon: "\u{1F6A2}", label: "Where are ships?", prompt: "Show me ships currently in key waterways: Suez Canal, Singapore, Rotterdam area." },
-  { icon: "\u{1F4B0}", label: "Top Investments", prompt: "Which ships are the best investment right now? Show top 10 by price/DWT ratio with age and recommendation." },
-  { icon: "\u{1F30D}", label: "Route Calculator", prompt: "Calculate cost and duration for a bulk carrier voyage from Australia to China with iron ore. Which ship type is most economical?" },
-  { icon: "\u{2693}", label: "Compare Operators", prompt: "Which are the largest operators in the database? Compare fleet size, average age and ship types." },
-  { icon: "\u{1F3D7}", label: "Newbuilds & Yards", prompt: "Which ships are currently under construction? Group by type and show yard, operator and delivery date." },
+  { icon: "\u{1F4CA}", label: "Market Intelligence", prompt: "Analyze the current dry bulk market: BDI trend, Capesize vs Panamax rates, fleet utilization, and your 3-month outlook. Include specific $/day TCE rates." },
+  { icon: "\u{1F6A2}", label: "Live Ship Tracker", prompt: "Which ships are currently near the Suez Canal, Strait of Malacca, and Singapore? Show their names, types, DWT and likely cargo." },
+  { icon: "\u{1F4B0}", label: "Best Buys Now", prompt: "Find the top 10 undervalued ships right now: young age, large DWT, low price per DWT. Show estimated value, age, type and why each is a good buy." },
+  { icon: "\u{1F30D}", label: "Voyage Economics", prompt: "Compare the economics of shipping iron ore from Port Hedland to Qingdao with a Capesize vs Kamsarmax. Include fuel cost, canal fees, TCE, and break-even freight rate." },
+  { icon: "\u{2693}", label: "Fleet Analysis", prompt: "Rank the top 10 operators by total fleet value. For each show: number of ships, total DWT, average age, most common type, and estimated fleet value." },
+  { icon: "\u{1F3D7}", label: "Orderbook", prompt: "Show the complete newbuilding orderbook: how many ships are under construction by type? Which yards are building them? When are they delivering? What is the total orderbook value?" },
 ];
 
 interface Message {
@@ -45,7 +45,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [lang, setLang] = useState<"de"|"en">("de");
+  const [lang, setLang] = useState<"de"|"en">("en");
   const SUGGESTIONS = lang === "de" ? SUGGESTIONS_DE : SUGGESTIONS_EN;
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
