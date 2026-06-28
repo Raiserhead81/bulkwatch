@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BulkWatch — Bulk Carrier Intelligence Database",
+  title: "Vessel Database — Global Ship Intelligence",
   description:
-    "Live database of bulk carriers worldwide with specs, price estimates, Buy/Hold/Sell recommendations and route tracking.",
+    "Global database of vessels worldwide with specs, AIS tracking, price estimates and Buy/Hold/Sell recommendations.",
   keywords: [
     "Bulk Carrier",
     "Maritime",
@@ -28,10 +28,10 @@ export const metadata: Metadata = {
     "Handysize",
     "Valemax",
   ],
-  authors: [{ name: "BulkWatch" }],
+  authors: [{ name: "Vessel Database" }],
   openGraph: {
-    title: "BulkWatch",
-    description: "Bulk Carrier Intelligence Database",
+    title: "Vessel Database",
+    description: "Global Ship Intelligence Database",
     type: "website",
   },
 };

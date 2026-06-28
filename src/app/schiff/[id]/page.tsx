@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -24,7 +24,7 @@ import {
   ArrowRight,
   Stethoscope,
 } from "lucide-react";
-import { SHIPS, type Ship } from "@/data/ships";
+import { type Ship } from "@/data/ships";
 import {
   estimatePrice,
   formatPrice,
@@ -44,20 +44,35 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
-// Synchronous ship lookup
-function useShip(imo: string): Ship | null {
-  return SHIPS.find((s) => s.imo === imo) ?? null;
-}
-
 export default function ShipDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const ship = useShip(id);
+  const [ship, setShip] = useState<Ship | null>(null);
+  const [loading, setLoading] = useState(true);
   const watchlist = useWatchlist();
+
+  useEffect(() => {
+    fetch(`/api/ships/${id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { setShip(data); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [id]);
+
   const isWatched = ship ? watchlist.includes(ship.imo) : false;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center text-slate-900 dark:text-white">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-slate-500">Loading ship data...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!ship) {
     return (
@@ -75,20 +90,18 @@ export default function ShipDetailPage({
 
   const price = estimatePrice(ship);
   const voyage = generateMockVoyage(ship);
-  // Beste Survey Ports Nearby (basierend auf aktueller Position)
   const nearbySurveyPorts = getNearbySurveyPorts(
     voyage.currentPosition.lat,
     voyage.currentPosition.lon,
-    3000, // max 3000 sm
+    3000,
   ).slice(0, 3);
 
-  // Specs
   const specs = [
-    { icon: Weight, label: "Deadweight", value: `${ship.dwt.toLocaleString("en-US")} DWT` },
-    { icon: Ruler, label: "Length Overall", value: `${ship.length} m` },
-    { icon: Ruler, label: "Beam", value: `${ship.beam} m` },
-    { icon: Ruler, label: "Draft", value: `${ship.draft} m` },
-    { icon: Calendar, label: "Year Built", value: ship.yearBuilt.toString() },
+    { icon: Weight, label: "Deadweight", value: ship.dwt > 0 ? `${ship.dwt.toLocaleString("en-US")} DWT` : "—" },
+    { icon: Ruler, label: "Length Overall", value: ship.length > 0 ? `${ship.length} m` : "—" },
+    { icon: Ruler, label: "Beam", value: ship.beam > 0 ? `${ship.beam} m` : "—" },
+    { icon: Ruler, label: "Draft", value: ship.draft > 0 ? `${ship.draft} m` : "—" },
+    { icon: Calendar, label: "Year Built", value: ship.yearBuilt > 0 ? ship.yearBuilt.toString() : "—" },
     { icon: Flag, label: "Flag", value: ship.flag },
     { icon: Building2, label: "Operator", value: ship.operator || "—" },
     { icon: Home, label: "Home Port", value: ship.homePort || "—" },
@@ -110,7 +123,7 @@ export default function ShipDetailPage({
             <Button
               variant="outline"
               size="sm"
-              onClick={toggleWatch}
+              onClick={() => toggleWatch(ship.imo)}
               className="border-amber-500/30"
             >
               {isWatched ? (
@@ -160,12 +173,18 @@ export default function ShipDetailPage({
             {/* Ship Image */}
             <Card className="overflow-hidden border-blue-500/20">
               <div className="aspect-video bg-slate-200 dark:bg-slate-800">
-                {/* Ship photo */}
-                <img
-                  src={ship.imageUrl}
-                  alt={ship.name}
-                  className="w-full h-full object-cover"
-                />
+                {ship.imageUrl ? (
+                  <img
+                    src={ship.imageUrl}
+                    alt={ship.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ShipIcon className="h-16 w-16 text-slate-300 dark:text-white/20" />
+                  </div>
+                )}
               </div>
               {ship.imageAttribution && (
                 <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900/50 text-[10px] text-slate-500 dark:text-white/40 font-mono">
@@ -211,7 +230,6 @@ export default function ShipDetailPage({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Route visualization */}
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50">
                   <div className="text-2xl">{voyage.from.countryFlag}</div>
                   <div className="flex-1 min-w-0">
@@ -228,7 +246,6 @@ export default function ShipDetailPage({
                   </div>
                 </div>
 
-                {/* Cargo + progress */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
                     <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Cargo</p>
@@ -248,7 +265,6 @@ export default function ShipDetailPage({
                   </div>
                 </div>
 
-                {/* Progress bar */}
                 <div>
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-slate-500 dark:text-white/40">Progress</span>
@@ -262,11 +278,8 @@ export default function ShipDetailPage({
                   </div>
                 </div>
 
-                {/* ETA */}
                 <div className="flex items-center justify-between text-xs text-slate-600 dark:text-white/60 pt-2 border-t border-slate-200 dark:border-white/10">
-                  <span>
-                    Departure: {voyage.departureDate.toLocaleDateString("en-US")}
-                  </span>
+                  <span>Departure: {voyage.departureDate.toLocaleDateString("en-US")}</span>
                   <span className="font-semibold">
                     ETA: {voyage.eta.toLocaleDateString("en-US")} ·{" "}
                     {voyage.eta.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
@@ -282,83 +295,64 @@ export default function ShipDetailPage({
 
           {/* Right: Price + Recommendation */}
           <div className="space-y-6">
-            {/* Price Estimation */}
-            <Card className="border-blue-500/20 overflow-hidden">
-              <div className="bg-gradient-to-br from-blue-600 to-cyan-500 text-white p-5">
-                <p className="text-xs uppercase tracking-wider text-white/70 mb-1">
-                  Estimated Value
-                </p>
-                <p className="text-4xl font-bold tabular-nums">
-                  {formatPrice(price.estimatedValueUSD)}
-                </p>
-                <div className="mt-3 flex items-center gap-2 text-xs">
-                  <span>Confidence:</span>
-                  <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-white rounded-full"
-                      style={{ width: `${price.confidenceScore}%` }}
-                    />
-                  </div>
-                  <span className="font-semibold">{price.confidenceScore}%</span>
-                </div>
-              </div>
-              <CardContent className="p-4">
-                <p className="text-xs text-slate-600 dark:text-white/60 leading-relaxed">
-                  {price.reasoning}
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Recommendation */}
-            <Card className={`border-2 ${getRecommendationColor(price.recommendation).split(" ").find((c) => c.startsWith("border-"))}`}>
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-white/40">
-                      Recommendation
-                    </p>
-                    <p className="text-2xl font-bold flex items-center gap-2">
-                      {getRecommendationEmoji(price.recommendation)} {getRecommendationLabel(price.recommendation)}
-                    </p>
-                  </div>
-                </div>
-                <Separator />
-                <p className="text-xs text-slate-700 dark:text-white/70 leading-relaxed">
-                  {price.recommendationReasoning}
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Price Factors */}
-            <Card className="border-blue-500/20">
-              <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Gauge className="h-4 w-4 text-blue-600 dark:text-cyan-400" />
-                  Value Factors
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {price.factors.map((f, i) => (
-                  <div key={i} className="flex items-center justify-between gap-2 text-xs">
-                    <span className="text-slate-500 dark:text-white/60">
-                      {f.label}
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-medium text-right">{f.value}</span>
-                      <div
-                        className={`w-2 h-2 rounded-full ${
-                          f.impact === "positive"
-                            ? "bg-emerald-500"
-                            : f.impact === "negative"
-                              ? "bg-rose-500"
-                              : "bg-slate-400"
-                        }`}
-                      />
+            {ship.dwt > 0 && (
+              <>
+                {/* Price Estimation */}
+                <Card className="border-blue-500/20 overflow-hidden">
+                  <div className="bg-gradient-to-br from-blue-600 to-cyan-500 text-white p-5">
+                    <p className="text-xs uppercase tracking-wider text-white/70 mb-1">Estimated Value</p>
+                    <p className="text-4xl font-bold tabular-nums">{formatPrice(price.estimatedValueUSD)}</p>
+                    <div className="mt-3 flex items-center gap-2 text-xs">
+                      <span>Confidence:</span>
+                      <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                        <div className="h-full bg-white rounded-full" style={{ width: `${price.confidenceScore}%` }} />
+                      </div>
+                      <span className="font-semibold">{price.confidenceScore}%</span>
                     </div>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
+                  <CardContent className="p-4">
+                    <p className="text-xs text-slate-600 dark:text-white/60 leading-relaxed">{price.reasoning}</p>
+                  </CardContent>
+                </Card>
+
+                {/* Recommendation */}
+                <Card className={`border-2 ${getRecommendationColor(price.recommendation).split(" ").find((c) => c.startsWith("border-"))}`}>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-white/40">Recommendation</p>
+                        <p className="text-2xl font-bold flex items-center gap-2">
+                          {getRecommendationEmoji(price.recommendation)} {getRecommendationLabel(price.recommendation)}
+                        </p>
+                      </div>
+                    </div>
+                    <Separator />
+                    <p className="text-xs text-slate-700 dark:text-white/70 leading-relaxed">{price.recommendationReasoning}</p>
+                  </CardContent>
+                </Card>
+
+                {/* Price Factors */}
+                <Card className="border-blue-500/20">
+                  <CardHeader>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Gauge className="h-4 w-4 text-blue-600 dark:text-cyan-400" />
+                      Value Factors
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {price.factors.map((f, i) => (
+                      <div key={i} className="flex items-center justify-between gap-2 text-xs">
+                        <span className="text-slate-500 dark:text-white/60">{f.label}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium text-right">{f.value}</span>
+                          <div className={`w-2 h-2 rounded-full ${f.impact === "positive" ? "bg-emerald-500" : f.impact === "negative" ? "bg-rose-500" : "bg-slate-400"}`} />
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </>
+            )}
 
             {/* Actions */}
             <div className="space-y-2">
@@ -367,12 +361,14 @@ export default function ShipDetailPage({
                   ⚖️ Compare with other ships
                 </Button>
               </Link>
-              <a href={ship.imageUrl} target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" className="w-full border-slate-500/30">
-                  <Download className="h-4 w-4 mr-1.5" />
-                  Download Image
-                </Button>
-              </a>
+              {ship.imageUrl && (
+                <a href={ship.imageUrl} target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" className="w-full border-slate-500/30">
+                    <Download className="h-4 w-4 mr-1.5" />
+                    Download Image
+                  </Button>
+                </a>
+              )}
             </div>
 
             {/* Nearby Survey Ports */}
@@ -385,20 +381,14 @@ export default function ShipDetailPage({
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-xs text-slate-600 dark:text-white/60 leading-relaxed">
-                  Recommended ports for a pre-purchase inspection — based on
-                  current position:
+                  Recommended ports for a pre-purchase inspection — based on current position:
                 </p>
                 {nearbySurveyPorts.length === 0 ? (
-                  <p className="text-xs text-slate-500 dark:text-white/40">
-                    No survey ports within range.
-                  </p>
+                  <p className="text-xs text-slate-500 dark:text-white/40">No survey ports within range.</p>
                 ) : (
                   <div className="space-y-2">
                     {nearbySurveyPorts.map(({ port, distanceNm }) => (
-                      <div
-                        key={port.id}
-                        className="flex items-center gap-3 p-2 rounded-lg bg-white/50 dark:bg-slate-900/50 hover:bg-white/80 dark:hover:bg-slate-900/80 transition-colors"
-                      >
+                      <div key={port.id} className="flex items-center gap-3 p-2 rounded-lg bg-white/50 dark:bg-slate-900/50 hover:bg-white/80 dark:hover:bg-slate-900/80 transition-colors">
                         <span className="text-2xl flex-shrink-0">{port.countryFlag}</span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
@@ -409,9 +399,7 @@ export default function ShipDetailPage({
                           </div>
                           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-white/40">
                             <span>{Math.round(distanceNm)} nm away</span>
-                            <span className="text-purple-600 dark:text-purple-400 font-medium">
-                              {formatSurveyCost(port.typicalSurveyCost)}
-                            </span>
+                            <span className="text-purple-600 dark:text-purple-400 font-medium">{formatSurveyCost(port.typicalSurveyCost)}</span>
                           </div>
                         </div>
                       </div>

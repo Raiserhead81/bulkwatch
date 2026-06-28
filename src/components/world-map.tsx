@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 import type { Ship } from "@/data/ships";
 import { estimatePrice, formatPrice, getRecommendationEmoji } from "@/lib/priceEstimator";
 import { useI18n } from "@/lib/i18n";
-import { useAllLiveShips, type LiveAISShip } from "@/lib/use-live-ais";
+import { useAllLiveShips } from "@/lib/use-live-ais";
 
 interface WorldMapProps {
   ships: Ship[];
@@ -17,7 +17,7 @@ export default function WorldMap({ ships, height = "600px" }: WorldMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const liveLayerRef = useRef<L.LayerGroup | null>(null);
-  const staticLayerRef = useRef<L.LayerGroup | null>(null);
+  const clusterGroupRef = useRef<L.LayerGroup | null>(null);
   const { t, lang } = useI18n();
   const { ships: liveShips, stats } = useAllLiveShips(30000);
   const [showLive, setShowLive] = useState(true);
@@ -31,31 +31,44 @@ export default function WorldMap({ ships, height = "600px" }: WorldMapProps) {
       center: [20, 0],
       zoom: 2,
       minZoom: 2,
-      maxZoom: 10,
+      maxZoom: 14,
       worldCopyJump: true,
       attributionControl: true,
     });
 
+    // Base OSM layer
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19,
     }).addTo(map);
 
-    liveLayerRef.current = L.layerGroup().addTo(map);
-    staticLayerRef.current = L.layerGroup().addTo(map);
+    // OpenSeaMap nautical overlay
+    L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png", {
+      attribution: '<a href="http://www.openseamap.org">OpenSeaMap</a>',
+      opacity: 0.7,
+      maxZoom: 19,
+    }).addTo(map);
 
+    // Cluster group for DB ships
+    const clusterGroup = L.layerGroup();
+    map.addLayer(clusterGroup);
+    clusterGroupRef.current = clusterGroup;
+
+    liveLayerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
 
     return () => {
       map.remove();
       mapRef.current = null;
+      clusterGroupRef.current = null;
     };
   }, []);
 
-  // Update static markers (ships from database)
+  // Update static clustered markers (ships from database)
   useEffect(() => {
-    if (!staticLayerRef.current) return;
-    staticLayerRef.current.clearLayers();
+    if (!clusterGroupRef.current || !mapRef.current) return;
+    const clusterGroup = clusterGroupRef.current;
+    clusterGroup.clearLayers();
     if (!showStatic) return;
 
     const staticIcon = L.divIcon({
@@ -85,32 +98,42 @@ export default function WorldMap({ ships, height = "600px" }: WorldMapProps) {
       const popupHtml = `
         <div style="min-width: 220px; font-family: system-ui, sans-serif;">
           <div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${ship.name}</div>
-          <div style="font-size: 11px; color: #666; margin-bottom: 8px;">
-            ${ship.type} · IMO: ${ship.imo} · ${ship.flag || ""}
+          <div style="font-size: 11px; color: #666; margin-bottom: 6px;">
+            ${ship.type} &middot; IMO: ${ship.imo} &middot; ${ship.flag || ""}
+          </div>
+          <div style="font-size: 11px; margin-bottom: 2px;">
+            <strong>Position:</strong> ${pos.lat.toFixed(4)}&deg;, ${pos.lon.toFixed(4)}&deg;
+          </div>
+          <div style="font-size: 11px; margin-bottom: 2px;">
+            <strong>Status:</strong> ${ship.status}
           </div>
           <div style="font-size: 11px; margin-bottom: 4px;">
-            <strong>${t("map.status")}:</strong> ${ship.status}
-          </div>
-          <div style="font-size: 11px; margin-bottom: 4px;">
-            <strong>${t("map.value", { default: "Est. Value" })}:</strong> ${priceStr}
-          </div>
-          <div style="font-size: 11px; margin-bottom: 8px;">
-            <strong>${t("map.recommendation", { default: "Recommendation" })}:</strong> ${recEmoji} ${price.recommendation}
+            <strong>Est. Value:</strong> ${priceStr} &nbsp; ${recEmoji} ${price.recommendation}
           </div>
           <a href="/schiff/${ship.imo}" style="
             display: inline-block;
             background: #2563eb; color: white;
             padding: 4px 12px; border-radius: 6px;
             text-decoration: none; font-size: 11px;
-          ">${t("common.details", { default: "Details" })} →</a>
+          ">Details &rarr;</a>
         </div>
       `;
 
       const marker = L.marker([pos.lat, pos.lon], { icon: staticIcon })
         .bindPopup(popupHtml);
-      staticLayerRef.current.addLayer(marker);
+      clusterGroup.addLayer(marker);
     }
   }, [ships, showStatic, t, lang]);
+
+  // Toggle cluster group visibility
+  useEffect(() => {
+    if (!mapRef.current || !clusterGroupRef.current) return;
+    if (showStatic) {
+      mapRef.current.addLayer(clusterGroupRef.current);
+    } else {
+      mapRef.current.removeLayer(clusterGroupRef.current);
+    }
+  }, [showStatic]);
 
   // Update live markers (real AIS positions)
   useEffect(() => {
@@ -118,8 +141,7 @@ export default function WorldMap({ ships, height = "600px" }: WorldMapProps) {
     liveLayerRef.current.clearLayers();
     if (!showLive) return;
 
-    // Limit to first 500 for performance
-    const limit = liveShips.slice(0, 500);
+    const limit = liveShips.slice(0, 2000);
 
     const liveIcon = L.divIcon({
       className: "live-ship-marker",
@@ -140,7 +162,7 @@ export default function WorldMap({ ships, height = "600px" }: WorldMapProps) {
       if (ship.lat === 0 && ship.lon === 0) continue;
 
       const speed = ship.sog !== undefined ? `${ship.sog.toFixed(1)} kn` : "—";
-      const course = ship.cog !== undefined ? `${ship.cog.toFixed(0)}°` : "—";
+      const course = ship.cog !== undefined ? `${ship.cog.toFixed(0)}&deg;` : "—";
       const lastSeen = new Date(ship.timestamp).toLocaleTimeString(lang === "de" ? "de-DE" : "en-US");
       const name = ship.name || ship.shipName || `MMSI ${ship.mmsi}`;
 
@@ -151,17 +173,17 @@ export default function WorldMap({ ships, height = "600px" }: WorldMapProps) {
             <strong style="font-size: 14px;">${name}</strong>
           </div>
           <div style="font-size: 11px; color: #666; margin-bottom: 6px;">
-            MMSI: ${ship.mmsi}${ship.imo ? ` · IMO: ${ship.imo}` : ""}
+            MMSI: ${ship.mmsi}${ship.imo ? ` &middot; IMO: ${ship.imo}` : ""}
           </div>
           <div style="font-size: 11px; margin-bottom: 2px;">
-            <strong>${t("map.position", { default: "Position" })}:</strong> ${ship.lat.toFixed(4)}, ${ship.lon.toFixed(4)}
+            <strong>Position:</strong> ${ship.lat.toFixed(4)}&deg;, ${ship.lon.toFixed(4)}&deg;
           </div>
           <div style="font-size: 11px; margin-bottom: 2px;">
-            <strong>${t("map.speed", { default: "Speed" })}:</strong> ${speed} · <strong>${t("map.course", { default: "Course" })}:</strong> ${course}
+            <strong>Speed:</strong> ${speed} &nbsp; <strong>Course:</strong> ${course}
           </div>
-          ${ship.destination ? `<div style="font-size: 11px; margin-bottom: 2px;"><strong>${t("map.destination", { default: "Destination" })}:</strong> ${ship.destination}</div>` : ""}
+          ${ship.destination ? `<div style="font-size: 11px; margin-bottom: 2px;"><strong>Destination:</strong> ${ship.destination}</div>` : ""}
           <div style="font-size: 10px; color: #888; margin-top: 4px;">
-            ${t("map.lastSignal", { default: "Last signal" })}: ${lastSeen}
+            Last signal: ${lastSeen}
           </div>
         </div>
       `;
@@ -186,8 +208,12 @@ export default function WorldMap({ ships, height = "600px" }: WorldMapProps) {
         </div>
         <div className="text-xs space-y-1 mb-2">
           <div className="flex justify-between">
-            <span className="text-slate-500 dark:text-white/50">{t("map.liveShips", { default: "Live Ships" })}:</span>
+            <span className="text-slate-500 dark:text-white/50">Live Ships:</span>
             <span className="font-semibold tabular-nums text-slate-900 dark:text-white">{stats?.activeShips ?? 0}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-500 dark:text-white/50">DB Positions:</span>
+            <span className="font-semibold tabular-nums text-slate-900 dark:text-white">{ships.length}</span>
           </div>
         </div>
         <div className="flex flex-col gap-1 text-[11px]">
@@ -218,9 +244,13 @@ export default function WorldMap({ ships, height = "600px" }: WorldMapProps) {
           <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
           <span className="text-slate-700 dark:text-white/70">Live AIS (real-time)</span>
         </div>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="w-2 h-2 inline-block rounded-sm" style={{ background: "linear-gradient(135deg, #2563eb, #06b6d4)" }} />
+          <span className="text-slate-700 dark:text-white/70">Vessel Database</span>
+        </div>
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 inline-block" style={{ background: "linear-gradient(135deg, #2563eb, #06b6d4)" }} />
-          <span className="text-slate-700 dark:text-white/70">BulkWatch Database</span>
+          <span className="text-slate-400">⚓</span>
+          <span className="text-slate-700 dark:text-white/70">OpenSeaMap overlay</span>
         </div>
       </div>
     </div>

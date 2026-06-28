@@ -1,65 +1,52 @@
-#!/usr/bin/env python3
-"""
-AIS-Stream Persistenz fuer BulkWatch — FIXED VERSION
-Liest vom echten /api/ais Endpoint (gibt ships[] zurueck).
-"""
+import sqlite3
+import requests
+import time
 
-import json, os, time, urllib.request
+DB_PATH = "/opt/bulkwatch/db/ships.db"
+API_URL = "http://localhost:3099/api/ais"
 
-AIS_API = "http://localhost:3099/api/ais"
-OUT = "/opt/bulkwatch/src/data/ais-ships.json"
-BULK_TYPES = set(range(70, 80))
+try:
+    resp = requests.get(API_URL, timeout=10)
+    data = resp.json()
+    ships = data.get("ships", []) if isinstance(data, dict) else data
+    if not ships and isinstance(data, dict):
+        ships = list(data.values())
 
-def main():
-    existing = {}
-    if os.path.exists(OUT):
-        try:
-            existing = json.load(open(OUT))
-        except:
-            existing = {}
-
-    try:
-        req = urllib.request.Request(AIS_API, headers={"Accept": "application/json"})
-        with urllib.request.urlopen(req, timeout=30) as r:
-            data = json.loads(r.read())
-    except Exception as e:
-        print(f"AIS API error: {e}")
-        return
-
-    ships = data.get("ships", [])
-    print(f"AIS cache: {len(ships)} ships total")
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
 
     added = 0
+    updated = 0
     for ship in ships:
-        stype = ship.get("shipType", 0)
-        if stype not in BULK_TYPES:
+        imo = str(ship.get("imo", "")).strip()
+        if not imo or len(imo) < 5 or not imo.isdigit():
             continue
-        imo = (ship.get("imo") or "").strip()
-        name = (ship.get("name") or "").strip()
+        name = str(ship.get("name", "")).strip()
+        mmsi = str(ship.get("mmsi", "")) or None
+        lat = ship.get("lat")
+        lon = ship.get("lon")
+        last_seen = ship.get("lastSeen") or int(time.time())
 
-        if not imo or len(imo) != 7 or not imo.isdigit():
-            continue
-        if not name or name.upper() in ("", "UNKNOWN", "N/A", "0"):
-            continue
+        cur.execute("SELECT imo FROM ships WHERE imo = ?", (imo,))
+        exists = cur.fetchone()
 
-        now = int(time.time())
-        if imo not in existing:
-            existing[imo] = {
-                "imo": imo,
-                "name": name,
-                "mmsi": ship.get("mmsi", ""),
-                "lastSeen": now,
-                "lat": ship.get("lat"),
-                "lon": ship.get("lon"),
-            }
-            added += 1
+        if exists:
+            cur.execute(
+                "UPDATE ships SET lat=?, lon=?, last_seen=?, mmsi=COALESCE(mmsi,?) WHERE imo=?",
+                (lat, lon, last_seen, mmsi, imo)
+            )
+            updated += 1
         else:
-            existing[imo]["lastSeen"] = now
+            if name:
+                cur.execute(
+                    "INSERT OR IGNORE INTO ships (imo, name, mmsi, type, flag, lat, lon, last_seen, source) VALUES (?, ?, ?, 'Bulk Carrier', 'Unknown', ?, ?, ?, 'ais')",
+                    (imo, name, mmsi, lat, lon, last_seen)
+                )
+                added += 1
 
-    print(f"New AIS bulk carriers added: {added}, total: {len(existing)}")
-    with open(OUT, "w") as f:
-        json.dump(existing, f, ensure_ascii=False)
-    print(f"Saved {OUT}")
+    conn.commit()
+    conn.close()
+    print(f"AIS update: {added} added, {updated} positions updated")
 
-if __name__ == "__main__":
-    main()
+except Exception as e:
+    print(f"Error: {e}")

@@ -20,14 +20,14 @@ let langInitialized = false;
 function initLang() {
   if (langInitialized || typeof window === "undefined") return;
   langInitialized = true;
-  const stored = localStorage.getItem("bulkwatch-lang");
+  const stored = localStorage.getItem("vesseldb-lang");
   if (stored === "en" || stored === "de") {
     currentLang = stored;
   }
   // Listen for cross-tab changes
   window.addEventListener("storage", (e) => {
-    if (e.key === "bulkwatch-lang") {
-      const s = localStorage.getItem("bulkwatch-lang");
+    if (e.key === "vesseldb-lang") {
+      const s = localStorage.getItem("vesseldb-lang");
       if (s === "en" || s === "de") {
         currentLang = s;
         langSubscribers.forEach((fn) => fn());
@@ -56,7 +56,7 @@ function getServerLang(): Language {
 function setLangInternal(newLang: Language) {
   if (typeof window === "undefined") return;
   currentLang = newLang;
-  localStorage.setItem("bulkwatch-lang", newLang);
+  localStorage.setItem("vesseldb-lang", newLang);
   langSubscribers.forEach((fn) => fn());
   window.dispatchEvent(new Event("storage"));
 }
@@ -123,7 +123,7 @@ const translations: Record<Language, Record<string, string>> = {
     "pagination.page": "Seite",
 
     // Footer
-    "footer.text": "BulkWatch · Daten aus öffentlichen Quellen · Preis-Schätzungen KI-basiert",
+    "footer.text": "Vessel Database · Daten aus öffentlichen Quellen · Preis-Schätzungen KI-basiert",
     "footer.mockAis": "Mock-AIS",
     "footer.liveAis": "Live-AIS",
     "footer.liveAisNote": "Live-AIS in Entwicklung",
@@ -165,7 +165,7 @@ const translations: Record<Language, Record<string, string>> = {
     "voyage.progress": "Fortschritt",
     "voyage.departure": "Abfahrt",
     "voyage.eta": "ETA",
-    "voyage.liveNote": "✓ Live-AIS aktiv — Echte Schiffspositionen in Echtzeit via AISStream.io. Grüne Marker = Live, Blaue Marker = BulkWatch-Datenbank.",
+    "voyage.liveNote": "✓ Live-AIS aktiv — Echte Schiffspositionen in Echtzeit via AISStream.io. Grüne Marker = Live, Blaue Marker = Vessel-Database.",
 
     // Status
     "status.under_way_loaded": "Unterwegs (beladen)",
@@ -226,7 +226,7 @@ const translations: Record<Language, Record<string, string>> = {
     "survey.searchPlaceholder": "Hafen, Land, Stichwort...",
     "survey.noResults": "Keine Häfen gefunden",
     "survey.noResultsDesc": "Versuche andere Suchbegriffe oder Filter",
-    "survey.footerNote": "BulkWatch · Survey-Port-Datenbank · Kosten sind Richtwerte (Stand 2024) · Bitte Surveyor direkt kontaktieren für verbindliches Angebot",
+    "survey.footerNote": "Vessel Database · Survey-Port-Datenbank · Kosten sind Richtwerte (Stand 2024) · Bitte Surveyor direkt kontaktieren für verbindliches Angebot",
 
     // Map
     "map.title": "🗺️ Schiffs-Karte",
@@ -337,7 +337,7 @@ const translations: Record<Language, Record<string, string>> = {
     "pagination.page": "Page",
 
     // Footer
-    "footer.text": "BulkWatch · Data from public sources · Price estimates AI-based",
+    "footer.text": "Vessel Database · Data from public sources · Price estimates AI-based",
     "footer.mockAis": "Mock-AIS",
     "footer.liveAis": "Live-AIS",
     "footer.liveAisNote": "Live-AIS in development",
@@ -379,7 +379,7 @@ const translations: Record<Language, Record<string, string>> = {
     "voyage.progress": "Progress",
     "voyage.departure": "Departure",
     "voyage.eta": "ETA",
-    "voyage.liveNote": "✓ Live-AIS active — Real ship positions in real-time via AISStream.io. Green markers = live, blue markers = BulkWatch database.",
+    "voyage.liveNote": "✓ Live-AIS active — Real ship positions in real-time via AISStream.io. Green markers = live, blue markers = Vessel Database.",
 
     // Status
     "status.under_way_loaded": "Under Way (Loaded)",
@@ -440,7 +440,7 @@ const translations: Record<Language, Record<string, string>> = {
     "survey.searchPlaceholder": "Port, country, keyword...",
     "survey.noResults": "No ports found",
     "survey.noResultsDesc": "Try different search terms or filters",
-    "survey.footerNote": "BulkWatch · Survey Port Database · Costs are guidelines (as of 2024) · Please contact surveyor directly for binding quote",
+    "survey.footerNote": "Vessel Database · Survey Port Database · Costs are guidelines (as of 2024) · Please contact surveyor directly for binding quote",
 
     // Map
     "map.title": "🗺️ Ship Map",

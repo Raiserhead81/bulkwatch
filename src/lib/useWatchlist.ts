@@ -10,7 +10,7 @@ let initialized = false;
 function init() {
   if (initialized || typeof window === "undefined") return;
   initialized = true;
-  const stored = localStorage.getItem("bulkwatch-watchlist");
+  const stored = localStorage.getItem("vesseldb-watchlist");
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
@@ -20,7 +20,7 @@ function init() {
     }
   }
   window.addEventListener("storage", () => {
-    const s = localStorage.getItem("bulkwatch-watchlist");
+    const s = localStorage.getItem("vesseldb-watchlist");
     if (s) {
       try {
         watchlistCache = JSON.parse(s);
@@ -48,7 +48,7 @@ export function useWatchlist(): string[] {
 
 export function setWatchlist(list: string[]) {
   if (typeof window === "undefined") return;
-  localStorage.setItem("bulkwatch-watchlist", JSON.stringify(list));
+  localStorage.setItem("vesseldb-watchlist", JSON.stringify(list));
   watchlistCache = list;
   subscribers.forEach((fn) => fn());
   window.dispatchEvent(new Event("storage"));

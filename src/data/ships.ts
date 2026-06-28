@@ -24,18 +24,80 @@ export interface Ship {
 }
 
 export type BulkCarrierType =
-  | "Capesize"
-  | "Newcastlemax"
-  | "VLOC"
-  | "Valemax"
-  | "Panamax"
-  | "Post-Panamax"
-  | "Kamsarmax"
-  | "Handymax"
-  | "Handysize"
-  | "Mini-Bulker"
-  | "Gearless"
-  | "Geared";
+  | "Capesize" | "Newcastlemax" | "VLOC" | "Valemax"
+  | "Panamax" | "Post-Panamax" | "Kamsarmax"
+  | "Ultramax" | "Supramax"
+  | "Handymax" | "Handysize" | "Mini-Bulker"
+  | "Gearless" | "Geared"
+  | "General Cargo" | "Bulk Carrier"
+  | "Container Ship" | "Tanker"
+  | "Crude Oil Tanker" | "Product Tanker" | "Chemical Tanker"
+  | "LNG Tanker" | "LPG Tanker" | "Oil/Chemical Tanker"
+  | "RoRo" | "Car Carrier" | "Reefer"
+  | "Passenger" | "Ferry"
+  | "Offshore" | "Tug" | "Other";
+
+// Map raw warrantgroup types to canonical BulkCarrierType
+const RAW_TYPE_MAP: Record<string, BulkCarrierType> = {
+  "Bulk Carrier": "Bulk Carrier", "Bulker": "Bulk Carrier",
+  "Self Discharging Bulk Carrier": "Bulk Carrier",
+  "Ore Carrier": "Bulk Carrier", "Obo Carrier": "Bulk Carrier",
+  "Ore/Oil Carrier": "Bulk Carrier",
+  "Aggregates Carrier": "Bulk Carrier", "Cement Carrier": "Bulk Carrier",
+  "Wood Chips Carrier": "Bulk Carrier", "Stone Carrier": "Bulk Carrier",
+  "Limestone Carrier": "Bulk Carrier", "Nuclear Fuel Carrier": "Bulk Carrier",
+  "Cabu Carrier": "Bulk Carrier", "Powder Carrier": "Bulk Carrier",
+  "Handymax": "Handymax",
+  "General Cargo": "General Cargo", "Deck Cargo Ship": "General Cargo",
+  "Heavy Load Carrier": "General Cargo", "Pallet Carrier": "General Cargo",
+  "Barge Carrier": "General Cargo",
+  "Container Ship": "Container Ship",
+  "Cargo/Container Ship": "Container Ship", "Reefer/Container Ship": "Container Ship",
+  "Ro-Ro/Container Carrier": "Container Ship",
+  "Tanker": "Tanker", "Tanker B": "Tanker", "Tanker C": "Tanker", "Tanker D": "Tanker",
+  "Crude Oil Tanker": "Crude Oil Tanker",
+  "Chemical Tanker": "Chemical Tanker",
+  "Oil Products Tanker": "Product Tanker",
+  "Oil/Chemical Tanker": "Oil/Chemical Tanker",
+  "Lng Tanker": "LNG Tanker", "Lpg Tanker": "LPG Tanker",
+  "Lpg/Chemical Tanker": "LPG Tanker",
+  "Shuttle Tanker": "Crude Oil Tanker",
+  "Asphalt/Bitumen Tanker": "Tanker", "Bunkering Tanker": "Tanker",
+  "Water Tanker": "Tanker", "Edible Oil Tanker": "Tanker",
+  "Wine Tanker": "Tanker", "Fruit Juice Tanker": "Tanker",
+  "Co2 Tanker": "LPG Tanker", "Tank Barge": "Tanker",
+  "RoRo": "RoRo", "Rail/Vehicles Carrier": "RoRo", "Vehicles Carrier": "Car Carrier",
+  "Inland Ro-Ro Cargo Ship": "RoRo",
+  "Reefer": "Reefer",
+  "Passenger": "Passenger", "Passenger A": "Passenger", "Passenger B": "Passenger",
+  "Passenger C": "Passenger", "Passenger D": "Passenger",
+  "Passenger/Cargo Ship": "Passenger", "Passengers Landing Craft": "Ferry",
+  "Air Cushion Passenger Ship": "Ferry", "Hydrofoil": "Ferry",
+  "High Speed Craft": "Ferry", "High Speed Craft A": "Ferry",
+  "High Speed Craft B": "Ferry", "High Speed Craft C": "Ferry",
+  "High Speed Craft D": "Ferry",
+  "Tug": "Tug", "Pusher Tug": "Tug", "Articulated Pusher Tug": "Tug",
+  "Tug/Supply Vessel": "Tug",
+  "Offshore Supply Ship": "Offshore", "Multi Purpose Offshore Vessel": "Offshore",
+  "Anchor Handling Vessel": "Offshore",
+  "Livestock Carrier": "General Cargo", "Pipe Carrier": "General Cargo",
+  "Cargo Barge": "General Cargo",
+  "Fish Carrier": "General Cargo", "Reefer": "Reefer",
+};
+
+function getSizeClassFromDwt(dwt: number): BulkCarrierType {
+  if (dwt >= 200000) return "VLOC";
+  if (dwt >= 100000) return "Capesize";
+  if (dwt >= 80000) return "Kamsarmax";
+  if (dwt >= 65000) return "Panamax";
+  if (dwt >= 60000) return "Ultramax";
+  if (dwt >= 40000) return "Handymax";
+  if (dwt >= 10000) return "Handysize";
+  if (dwt > 0) return "Mini-Bulker";
+  return "Other";
+}
+
+const BULK_TYPES = new Set<BulkCarrierType>(["Capesize","Newcastlemax","VLOC","Valemax","Panamax","Post-Panamax","Kamsarmax","Ultramax","Supramax","Handymax","Handysize","Mini-Bulker","Gearless","Geared","Bulk Carrier"]);
 
 // Echte Schiffsbilder von Wikimedia Commons (439 Schiffe)
 import realShipImages from "./ship-images.json";
@@ -340,9 +402,14 @@ for (const [imo, imageData] of Object.entries(realShipImages as Record<string, {
 const wikidataShips: Array<[string, string, Partial<Ship>]> = (wikidataShipsRaw as {imo:string;name:string;type:string;yearBuilt:number;flag:string}[])
   .filter(s => s.imo && s.imo.length === 7 && !realShipImos.has(s.imo))
   .map(s => {
-    const validTypes: BulkCarrierType[] = ["Capesize","Newcastlemax","VLOC","Valemax","Panamax","Post-Panamax","Kamsarmax","Handymax","Handysize","Mini-Bulker","Gearless","Geared"];
-    const t: BulkCarrierType = validTypes.includes(s.type as BulkCarrierType) ? (s.type as BulkCarrierType) : "Handymax";
-    const specs = generateSpecsForType(t);
+    const rawType = s.type || "";
+    let t: BulkCarrierType = RAW_TYPE_MAP[rawType] ?? (rawType as BulkCarrierType) ?? "Other";
+    // Validate it's actually a known type, else "Other"
+    const knownTypes = new Set<string>(["Capesize","Newcastlemax","VLOC","Valemax","Panamax","Post-Panamax","Kamsarmax","Ultramax","Supramax","Handymax","Handysize","Mini-Bulker","Gearless","Geared","General Cargo","Bulk Carrier","Container Ship","Tanker","Crude Oil Tanker","Product Tanker","Chemical Tanker","LNG Tanker","LPG Tanker","Oil/Chemical Tanker","RoRo","Car Carrier","Reefer","Passenger","Ferry","Offshore","Tug","Other"]);
+    if (!knownTypes.has(t as string)) t = "Other";
+    const ORIGINAL_BULK_TYPES = new Set(["Capesize","Newcastlemax","VLOC","Valemax","Panamax","Post-Panamax","Kamsarmax","Handymax","Handysize","Mini-Bulker","Gearless","Geared"]);
+    const specsType = ORIGINAL_BULK_TYPES.has(t as string) ? t as BulkCarrierType : "Handymax";
+    const specs = generateSpecsForType(specsType);
     return [s.imo, s.name, { type: t, ...specs, yearBuilt: s.yearBuilt || specs.yearBuilt, flag: s.flag || "Unknown" }] as [string, string, Partial<Ship>];
   });
 
@@ -373,17 +440,19 @@ export const SHIPS: Ship[] = allShipsData
   );
 
 export const SHIP_TYPES: BulkCarrierType[] = [
-  "Capesize",
-  "Newcastlemax",
-  "VLOC",
-  "Valemax",
-  "Panamax",
-  "Kamsarmax",
-  "Handymax",
-  "Handysize",
-  "Mini-Bulker",
-  "Gearless",
-  "Geared",
+  // Bulk Carriers (by size)
+  "Capesize", "Newcastlemax", "VLOC", "Valemax",
+  "Kamsarmax", "Panamax", "Post-Panamax",
+  "Ultramax", "Supramax", "Handymax", "Handysize", "Mini-Bulker",
+  "Geared", "Gearless", "Bulk Carrier",
+  // Other cargo
+  "General Cargo", "Container Ship", "Reefer",
+  // Tankers
+  "Tanker", "Crude Oil Tanker", "Product Tanker", "Chemical Tanker",
+  "LNG Tanker", "LPG Tanker", "Oil/Chemical Tanker",
+  // Other ship types
+  "RoRo", "Car Carrier", "Passenger", "Ferry",
+  "Offshore", "Tug", "Other",
 ];
 
 // Statistiken
