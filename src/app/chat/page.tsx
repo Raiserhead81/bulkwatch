@@ -146,6 +146,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [lang, setLang] = useState<"de"|"en">("en");
   const [stats, setStats] = useState<LiveStats>({ ships: 0, bdi: 0, aisLive: 0 });
   const [inputFocused, setInputFocused] = useState(false);
