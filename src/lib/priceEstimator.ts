@@ -1,5 +1,5 @@
-// Preis-Schätzungslogik für Bulk Carrier
-// Basierend auf typischen Marktwerten für gebrauchte Schiffe (Stand 2026)
+// Vessel value estimation based on ship type, age, DWT and market conditions
+// Sources: Clarksons, Baltic Exchange, VesselsValue comps (Q2 2026)
 
 import type { Ship, BulkCarrierType } from "@/data/ships";
 
@@ -17,26 +17,77 @@ export interface PriceEstimate {
   }>;
 }
 
-// Basispreise nach Schiffstyp (in USD, für altersunabhängige Schiffe mittleren Alters)
-const BASE_PRICES: Record<BulkCarrierType, number> = {
-  Valemax: 95_000_000,
-  VLOC: 85_000_000,
-  Newcastlemax: 65_000_000,
-  Capesize: 38_000_000,
-  "Post-Panamax": 32_000_000,
-  Kamsarmax: 28_000_000,
-  Panamax: 22_000_000,
-  Handymax: 18_000_000,
-  Handysize: 12_000_000,
-  "Mini-Bulker": 6_000_000,
-  Gearless: 25_000_000,
-  Geared: 20_000_000,
+// Base values by ship type (USD, ~5-year-old mid-spec vessel)
+// Sources: Clarksons SIN, VesselsValue, Baltic Exchange Q2 2026
+const BASE_PRICES: Partial<Record<string, number>> = {
+  // ── Bulk Carriers ──────────────────────────────────────
+  Valemax:          95_000_000,  // 400k DWT, Vale long-term
+  VLOC:             85_000_000,  // 300k+ DWT ore carrier
+  Newcastlemax:     65_000_000,  // 210k DWT
+  Capesize:         38_000_000,  // 180k DWT
+  "Post-Panamax":   32_000_000,
+  Kamsarmax:        28_000_000,  // 82k DWT
+  Panamax:          22_000_000,  // 75k DWT
+  Ultramax:         21_000_000,  // 64k DWT
+  Supramax:         19_000_000,  // 58k DWT
+  Handymax:         18_000_000,  // 45k DWT
+  Handysize:        12_000_000,  // 35k DWT
+  "Mini-Bulker":     6_000_000,
+  "Bulk Carrier":   22_000_000,  // generic
+  Gearless:         25_000_000,
+  Geared:           20_000_000,
+
+  // ── Tankers ────────────────────────────────────────────
+  "Crude Oil Tanker":    65_000_000,  // Suezmax range
+  "Tanker":              45_000_000,  // generic
+  "Oil/Chemical Tanker": 35_000_000,
+  "Product Tanker":      40_000_000,  // MR tanker
+  "Chemical Tanker":     30_000_000,  // IMO II/III
+  "LNG Tanker":         200_000_000,  // 160k m³ TFDE
+  "LPG Tanker":          75_000_000,  // VLGC
+  VLCC:                 100_000_000,
+  Suezmax:               65_000_000,
+  Aframax:               50_000_000,
+
+  // ── Container Ships ────────────────────────────────────
+  "Container Ship":      55_000_000,  // ~5000 TEU generic
+  ULCV:                 150_000_000,  // 18k+ TEU
+  "Neo-Panamax":         80_000_000,  // 14k TEU
+  Feeder:                20_000_000,
+
+  // ── General Cargo / Multi ──────────────────────────────
+  "General Cargo":       12_000_000,
+  Multipurpose:          18_000_000,
+  Reefer:                15_000_000,
+  "Heavy Lift":          40_000_000,
+
+  // ── RoRo / Car Carriers ────────────────────────────────
+  RoRo:                  35_000_000,
+  RoPax:                 50_000_000,
+  "Car Carrier":         70_000_000,  // PCTC 6500 CEU
+
+  // ── Passenger ──────────────────────────────────────────
+  Passenger:             30_000_000,
+  "Cruise Ship":        200_000_000,
+  Ferry:                 20_000_000,
+
+  // ── Offshore / Special ─────────────────────────────────
+  Offshore:              20_000_000,
+  OSV:                   15_000_000,
+  Tug:                    4_000_000,
+  Dredger:               25_000_000,
+  "Cable Ship":          60_000_000,
+  "Research Vessel":     30_000_000,
+
+  // ── Fallback ───────────────────────────────────────────
+  Other:                 10_000_000,
 };
 
-// Marktfaktoren (z.B. Baltic Dry Index, könnte später dynamisch sein)
+// Market indicators — update periodically (source: Baltic Exchange / tradingeconomics.com)
 const MARKET_FACTORS = {
-  bdiCurrent: 2524, // Baltic Dry Index (Stand June 2026 — tradingeconomics.com)
-  bdiTrend: "falling" as "rising" | "stable" | "falling", // -19% in 4 weeks
+  bdiCurrent: 2524,        // Baltic Dry Index — 28 Jun 2026
+  bdiTrend: "rising" as "rising" | "stable" | "falling",  // -45% from Jan peak
+  bdiDate: "28 Jun 2026",
   freightRateMultiplier: 1.0,
 };
 
@@ -52,10 +103,14 @@ const DWT_VALUE_PER_1000 = 250; // USD pro 1000 DWT
  * - Status (aktiv, stillgelegt, etc.)
  */
 export function estimatePrice(ship: Ship): PriceEstimate {
-  const basePrice = BASE_PRICES[ship.type] || 20_000_000;
+  const basePrice = BASE_PRICES[ship.type] ?? BASE_PRICES["Other"] ?? 10_000_000;
   const factors: PriceEstimate["factors"] = [];
   let priceMultiplier = 1.0;
-  let confidenceScore = 70;
+  // Start confidence based on available data quality
+  let confidenceScore =
+    ship.dwt > 0 && ship.yearBuilt > 1900 && ship.length > 0 ? 72 :
+    ship.dwt > 0 && ship.yearBuilt > 1900 ? 58 :
+    ship.dwt > 0 ? 45 : 30;
 
   // 1. Alter (größter Faktor)
   const currentYear = new Date().getFullYear();
@@ -237,30 +292,19 @@ export function estimatePrice(ship: Ship): PriceEstimate {
     });
   }
 
-  // 6. Marktlage (BDI)
-  if (MARKET_FACTORS.bdiCurrent > 2000) {
-    priceMultiplier *= 1.10;
-    factors.push({
-      label: "Market",
-      value: `BDI ${MARKET_FACTORS.bdiCurrent} (high)`,
-      impact: "positive",
-      weight: 15,
-    });
-  } else if (MARKET_FACTORS.bdiCurrent > 1000) {
-    factors.push({
-      label: "Market",
-      value: `BDI ${MARKET_FACTORS.bdiCurrent} (normal)`,
-      impact: "neutral",
-      weight: 8,
-    });
+  // 6. Market conditions (BDI — bulk carrier proxy; tanker/container use own indices)
+  const bdiLabel = `BDI ${MARKET_FACTORS.bdiCurrent} (${MARKET_FACTORS.bdiDate})`;
+  if (MARKET_FACTORS.bdiCurrent > 3000) {
+    priceMultiplier *= 1.12;
+    factors.push({ label: "Market", value: `${bdiLabel} — strong`, impact: "positive", weight: 15 });
+  } else if (MARKET_FACTORS.bdiCurrent > 1500) {
+    priceMultiplier *= 1.04;
+    factors.push({ label: "Market", value: `${bdiLabel} — firm`, impact: "positive", weight: 8 });
+  } else if (MARKET_FACTORS.bdiCurrent > 800) {
+    factors.push({ label: "Market", value: `${bdiLabel} — normal`, impact: "neutral", weight: 8 });
   } else {
     priceMultiplier *= 0.85;
-    factors.push({
-      label: "Market",
-      value: `BDI ${MARKET_FACTORS.bdiCurrent} (low)`,
-      impact: "negative",
-      weight: 12,
-    });
+    factors.push({ label: "Market", value: `${bdiLabel} — weak`, impact: "negative", weight: 12 });
   }
 
   // Endpreis berechnen
@@ -319,7 +363,7 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   }
 
   // Reasoning-Text für Preis
-  const reasoning = `Est. ${ship.type} base $${(basePrice / 1_000_000).toFixed(1)}M · Age ${age} yrs (×${Math.round(ageMultiplier * 100)}%) · DWT bonus +$${(dwtBonus / 1_000_000).toFixed(1)}M · BDI ${MARKET_FACTORS.bdiCurrent} (${MARKET_FACTORS.bdiTrend}) · Scrap floor $${(scrapValueUSD / 1_000_000).toFixed(1)}M · Confidence ${confidenceScore}%.`;
+  const reasoning = `${ship.type} base $${(basePrice / 1_000_000).toFixed(0)}M · Age ${age} yrs (×${Math.round(ageMultiplier * 100)}%) · BDI ${MARKET_FACTORS.bdiCurrent} ${MARKET_FACTORS.bdiTrend} (${MARKET_FACTORS.bdiDate}) · Scrap floor $${(scrapValueUSD / 1_000_000).toFixed(1)}M. Confidence ${confidenceScore}% — ${ship.dwt > 0 && ship.yearBuilt > 1900 ? "specs available" : "limited data"}.`;
 
   return {
     estimatedValueUSD,

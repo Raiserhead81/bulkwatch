@@ -102,6 +102,16 @@ export default function Home() {
           </select>
         </div>
 
+        <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+          <span style={{ fontSize: 12, color: "#64748b" }}>Quick:</span>
+          {[["Oldendorff","Oldendorff"],["Maersk","Maersk"],["MSC","MSC"],["CMA CGM","CMA CGM"],["Hapag-Lloyd","Hapag-Lloyd"],["Evergreen","Evergreen"]].map(([label, q]) => (
+            <button key={q} onClick={() => { setSearch(search === q ? "" : q); setPage(1); }}
+              style={{ padding: "4px 10px", background: search === q ? "#0ea5e9" : "#1e293b", border: "1px solid " + (search === q ? "#0ea5e9" : "#334155"), borderRadius: 20, color: search === q ? "#fff" : "#94a3b8", fontSize: 12, cursor: "pointer" }}>
+              {label}
+            </button>
+          ))}
+        </div>
+
         <div style={{ marginBottom: 16, fontSize: 13, color: "#64748b" }}>
           {loading ? "Loading..." : `${total.toLocaleString()} ships · Page ${page}/${totalPages.toLocaleString()}`}
         </div>

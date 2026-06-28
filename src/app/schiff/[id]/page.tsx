@@ -219,11 +219,11 @@ export default function ShipDetailPage({
             </Card>
 
             {/* Live Route / Voyage */}
-            <Card className="border-blue-500/20">
+            <Card className={ship.position ? "border-emerald-500/30" : "border-blue-500/20"}>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Navigation className="h-5 w-5 text-blue-600 dark:text-cyan-400" />
-                  Current Voyage
+                  {ship.position ? "Current Voyage" : "Estimated Voyage"}
                   <Badge className={`${getStatusColor(voyage.currentStatus)} border ml-auto`}>
                     {getStatusLabel(voyage.currentStatus)}
                   </Badge>
@@ -286,9 +286,16 @@ export default function ShipDetailPage({
                   </span>
                 </div>
 
-                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 border border-emerald-500/20 rounded px-2 py-1">
-                  ✓ Live AIS Position{ship.imo ? ` · IMO ${ship.imo}` : ""}
-                </p>
+                {ship.position ? (
+                  <p className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 border border-emerald-500/20 rounded px-2 py-1">
+                    ✓ Live AIS Position · {ship.position.lat.toFixed(4)}°N {ship.position.lon.toFixed(4)}°E
+                    {ship.lastSeen ? ` · ${new Date(ship.lastSeen * 1000).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}` : ""}
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-slate-500 dark:text-white/30 bg-slate-500/5 border border-slate-500/20 rounded px-2 py-1">
+                    ⚠ Illustrative voyage — no live AIS position available for IMO {ship.imo}
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -1,0 +1,61 @@
+{
+  "wikidata": {
+    "last_run": 0,
+    "offset": 0,
+    "done": false
+  },
+  "commons_cats": {
+    "last_run": 1782617407,
+    "done_cats": [
+      "Oil tankers",
+      "General cargo ships",
+      "Bulk carriers (ships)",
+      "Maersk ships",
+      "Chemical tankers",
+      "Ro-ro ships",
+      "CMA CGM ships",
+      "LNG carriers",
+      "Container ships",
+      "Ships of Norway",
+      "Ships of Netherlands",
+      "Hapag-Lloyd ships",
+      "Ships of Germany",
+      "Evergreen Marine ships",
+      "MSC (container ships)",
+      "Oldendorff Carriers"
+    ]
+  },
+  "commons_search": {
+    "last_run": 1782617491,
+    "done_queries": [
+      "cargo vessel IMO",
+      "mv IMO ship",
+      "ship IMO 9",
+      "container ship IMO 9",
+      "tanker IMO 9",
+      "vessel IMO 9"
+    ]
+  },
+  "wikipedia": {
+    "last_run": 1782617549,
+    "done_langs": []
+  },
+  "flickr": {
+    "last_run": 1782617561,
+    "done_tags": [
+      "vessel,IMO,harbor",
+      "bulkcarrier,IMO",
+      "containership,IMO",
+      "cargo,IMO,ship",
+      "cargo ship,port,IMO",
+      "tanker,IMO,vessel",
+      "shipspotting,IMO",
+      "schip,IMO,haven"
+    ]
+  },
+  "stats": {
+    "total_added": 2,
+    "runs": 1,
+    "last_run": 1782617561
+  }
+}
