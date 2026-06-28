@@ -131,6 +131,28 @@ INSTRUCTIONS:
 - For fleet rankings: COUNT ALL ships per operator (don't filter by year_built!)
 - For total DWT: SUM ALL dwt per operator (don't filter by year_built!)
 - Only filter year_built > 1900 when calculating AGE, never when counting ships or summing DWT
+- NEVER start with "I apologize" or "Let me try again" — just answer directly.
+- Use these TESTED queries for common questions:
+
+FLEET RANKING (copy exactly):
+  SELECT operator, COUNT(*) as ships, SUM(dwt) as total_dwt,
+    ROUND(AVG(CASE WHEN year_built > 1900 AND year_built <= 2026 THEN 2026 - year_built END), 1) as avg_age
+  FROM ships WHERE operator IS NOT NULL AND operator != ''
+  GROUP BY operator ORDER BY SUM(dwt) DESC LIMIT 10
+
+TOP VALUABLE SHIPS (copy exactly):
+  SELECT s.name, s.imo, s.type, s.dwt, s.year_built, s.operator, s.flag, p.estimated_value, p.recommendation
+  FROM ships s JOIN price_history p ON s.imo = p.imo
+  WHERE p.date = (SELECT MAX(date) FROM price_history)
+  ORDER BY p.estimated_value DESC LIMIT 10
+
+FLEET VALUE PER OPERATOR (copy exactly):
+  SELECT s.operator, COUNT(*) as ships, SUM(s.dwt) as total_dwt, SUM(p.estimated_value) as fleet_value
+  FROM ships s JOIN price_history p ON s.imo = p.imo
+  WHERE p.date = (SELECT MAX(date) FROM price_history)
+  AND s.operator IS NOT NULL AND s.operator != ''
+  GROUP BY s.operator ORDER BY fleet_value DESC LIMIT 10
+
 - Example fleet query:
   SELECT operator, COUNT(*) as ships, SUM(dwt) as total_dwt,
     ROUND(AVG(CASE WHEN year_built > 1900 THEN 2026 - year_built END), 1) as avg_age
