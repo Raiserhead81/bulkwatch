@@ -55,3 +55,10 @@ mini-services/ais-streamer/node_modules/
 mini-services/*/node_modules/
 db/
 tmp/
+.next/
+.env
+node_modules/
+db/*.db
+db/*.db-shm
+db/*.db-wal
+*.log
