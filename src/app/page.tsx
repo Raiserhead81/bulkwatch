@@ -36,7 +36,7 @@ const STATUS_OPTIONS = [
   { label: "Lost", value: "lost" },
 ];
 
-const NAV_LINKS: [string,string][] = [["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"]];
+const NAV_LINKS: [string,string][] = [["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"],["AI Chat","/chat"]];
 
 interface Ship {
   id: string; imo: string; name: string; type: string;

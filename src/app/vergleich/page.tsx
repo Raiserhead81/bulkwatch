@@ -9,7 +9,7 @@ interface Ship {
   fuelConsumption: number; fuelType?: string; crewSize: number;
 }
 
-const NAV: [string,string][] = [["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"]];
+const NAV: [string,string][] = [["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"],["AI Chat","/chat"]];
 
 function fmtDwt(d: number) { return d >= 1000 ? `${(d / 1000).toFixed(0)}k` : d > 0 ? d.toLocaleString() : "\u2014"; }
 
