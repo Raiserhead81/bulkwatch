@@ -127,15 +127,23 @@ function extractChartData(text: string): { label: string; value: number }[] | nu
   for (const line of dataLines) {
     const cells = line.split("|").filter(c => c.trim());
     if (cells.length < 2) continue;
-    const label = cells[0].trim().replace(/\*\*/g, "").replace(/<[^>]+>/g, "").substring(0, 30);
-    // Find first cell with a number
-    for (let i = 1; i < cells.length; i++) {
-      const numMatch = cells[i].replace(/[$,%€]/g, "").replace(/,/g, "").match(/([\d.]+)/);
+    // Smart label: if first cell is just a number (rank), use second cell as label
+    let label = cells[0].trim().replace(/\*\*/g, "").replace(/<[^>]+>/g, "").replace(/[🟢🟡🔴🚢⚓]/g, "").trim();
+    let dataStartIdx = 1;
+    if (/^\d+$/.test(label) && cells.length >= 3) {
+      // First cell is rank number — use second cell as label
+      label = cells[1].trim().replace(/\*\*/g, "").replace(/<[^>]+>/g, "").replace(/[🟢🟡🔴🚢⚓]/g, "").trim();
+      dataStartIdx = 2;
+    }
+    label = label.substring(0, 30);
+    // Find the LARGEST numeric value in remaining cells
+    let bestVal = 0;
+    for (let i = dataStartIdx; i < cells.length; i++) {
+      const numMatch = cells[i].replace(/[$,%€B]/g, "").replace(/,/g, "").match(/([\d.]+)/);
       if (numMatch) {
         const val = parseFloat(numMatch[1]);
-        if (val > 0 && isFinite(val)) {
-          results.push({ label, value: val });
-          break;
+        if (val > bestVal && isFinite(val)) {
+          bestVal = val;
         }
       }
     }
