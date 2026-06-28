@@ -102,8 +102,8 @@ function getBuyReason(ship: Ship, price: ReturnType<typeof estimatePrice>): stri
 /**
  * Holt die Top 3 Kauf-Empfehlungen für einen Schiffstyp.
  */
-export function getTopPicksByType(type: BulkCarrierType, limit = 3): TopPick[] {
-  const shipsOfType = SHIPS.filter((s) => s.type === type && s.status === "active");
+export function getTopPicksByType(type: BulkCarrierType, limit = 3, ships: Ship[] = []): TopPick[] {
+  const shipsOfType = ships.filter((s) => s.type === type && s.status === "active");
 
   const scored = shipsOfType.map((ship) => {
     const price = estimatePrice(ship);
@@ -138,7 +138,7 @@ export function getAllTopPicks(ships?: Ship[]): TopPicksByType[] {
     const picks = getTopPicksByType(type, 3);
     if (picks.length === 0) continue;
 
-    const shipsOfType = SHIPS.filter((s) => s.type === type && s.status === "active");
+    const shipsOfType = ships.filter((s) => s.type === type && s.status === "active");
     const avgPrice =
       shipsOfType.reduce((sum, s) => sum + estimatePrice(s).estimatedValueUSD, 0) /
       shipsOfType.length;
