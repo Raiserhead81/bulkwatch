@@ -34,7 +34,7 @@ export interface TopPicksByType {
 function calculateBuyScore(ship: Ship, price: ReturnType<typeof estimatePrice>): number {
   let score = 50; // Basis
   const currentYear = new Date().getFullYear();
-  const age = currentYear - ship.yearBuilt;
+  const age = ship.yearBuilt > 1900 ? currentYear - ship.yearBuilt : 10;
 
   // Alter (max 30 Punkte)
   if (age <= 2) score += 30;
@@ -78,7 +78,7 @@ function calculateBuyScore(ship: Ship, price: ReturnType<typeof estimatePrice>):
 
 function getBuyReason(ship: Ship, price: ReturnType<typeof estimatePrice>): string {
   const currentYear = new Date().getFullYear();
-  const age = currentYear - ship.yearBuilt;
+  const age = ship.yearBuilt > 1900 ? currentYear - ship.yearBuilt : 10;
   const pricePerDwt = price.estimatedValueUSD / ship.dwt;
 
   if (age <= 5 && price.recommendation === "BUY") {
@@ -150,12 +150,12 @@ export function getAllTopPicks(ships?: Ship[]): TopPicksByType[] {
     const shipsOfType = SHIPS.filter((s) => s.type === type && s.status === "active");
     const avgPrice =
       shipsOfType.reduce((sum, s) => sum + estimatePrice(s).estimatedValueUSD, 0) /
-      shipsOfType.length;
+      Math.max(shipsOfType.length, 1);
     const avgDwt =
-      shipsOfType.reduce((sum, s) => sum + s.dwt, 0) / shipsOfType.length;
+      shipsOfType.reduce((sum, s) => sum + s.dwt, 0) / Math.max(shipsOfType.length, 1);
     const avgAge =
       shipsOfType.reduce((sum, s) => sum + (new Date().getFullYear() - s.yearBuilt), 0) /
-      shipsOfType.length;
+      Math.max(shipsOfType.length, 1);
 
     const marketSummary = `${shipsOfType.length} ships available · Avg ${formatPrice(
       avgPrice,
@@ -171,7 +171,7 @@ export function getAllTopPicks(ships?: Ship[]): TopPicksByType[] {
  * Gesamt-Top-Pick über alle Typen hinweg.
  */
 export function getOverallTopPick(ships?: Ship[]): TopPick | null {
-  const allPicks = getAllTopPicks()
+  const allPicks = getAllTopPicks(ships)
     .flatMap((t) => t.picks)
     .sort((a, b) => b.score - a.score);
   return allPicks[0] ?? null;
