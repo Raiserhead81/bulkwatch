@@ -92,8 +92,8 @@ export default function ShipDetailPage({
   const price = estimatePrice(ship);
   const voyage = generateMockVoyage(ship);
   const nearbySurveyPorts = getNearbySurveyPorts(
-    voyage.currentPosition.lat,
-    voyage.currentPosition.lon,
+    voyage?.currentPosition?.lat ?? 0,
+    voyage?.currentPosition?.lon ?? 0,
     3000,
   ).slice(0, 3);
 
@@ -226,7 +226,7 @@ export default function ShipDetailPage({
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Navigation className="h-5 w-5 text-blue-600 dark:text-cyan-400" />
-                  {ship.position ? "Current Voyage" : "Estimated Voyage"}
+                  {ship.status === "under_construction" ? "Construction Status" : ship.position ? "Current Voyage" : "Estimated Voyage"}
                   <Badge className={`${getStatusColor(voyage.currentStatus)} border ml-auto`}>
                     {getStatusLabel(voyage.currentStatus)}
                   </Badge>
