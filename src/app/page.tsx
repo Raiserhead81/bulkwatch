@@ -69,7 +69,7 @@ export default function Home() {
             </p>
           </div>
           <nav style={{ display: "flex", gap: 16, fontSize: 14 }}>
-            {[["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"]].map(([l,h]) => (
+            {[["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"]].map(([l,h]) => (
               <a key={h} href={h} style={{ color: h==="/" ? "#38bdf8" : "#94a3b8", textDecoration: "none" }}>{l}</a>
             ))}
           </nav>
