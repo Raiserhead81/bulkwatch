@@ -27,7 +27,6 @@ function toShip(row: Record<string, unknown>) {
     lastSeen: row.last_seen,
     status: row.status || "active",
     deliveryDate: row.delivery_date,
-    // Extended specs
     grossTonnage: row.gross_tonnage || 0,
     netTonnage: row.net_tonnage || 0,
     engineType: row.engine_type,
@@ -72,6 +71,25 @@ export async function GET(request: NextRequest) {
 
   const status = searchParams.get("status") || "";
   if (status) { conditions.push("status = ?"); params.push(status); }
+
+  // Age filter (years since built)
+  const ageMin = searchParams.get("age_min");
+  const ageMax = searchParams.get("age_max");
+  const currentYear = new Date().getFullYear();
+  if (ageMin) {
+    conditions.push("year_built > 0 AND year_built <= ?");
+    params.push(currentYear - parseInt(ageMin));
+  }
+  if (ageMax) {
+    conditions.push("year_built > 0 AND year_built >= ?");
+    params.push(currentYear - parseInt(ageMax));
+  }
+
+  // DWT range filter
+  const dwtMin = searchParams.get("dwt_min");
+  const dwtMax = searchParams.get("dwt_max");
+  if (dwtMin) { conditions.push("dwt >= ?"); params.push(parseInt(dwtMin)); }
+  if (dwtMax) { conditions.push("dwt <= ?"); params.push(parseInt(dwtMax)); }
 
   const where = conditions.length ? "WHERE " + conditions.join(" AND ") : "";
   const orderMap: Record<string, string> = {

@@ -37,6 +37,10 @@ import {
   getRecommendationLabel,
 } from "@/lib/priceEstimator";
 import {
+  calculateFreightRates,
+  getRateForDwt,
+} from "@/lib/freightRates";
+import {
   generateMockVoyage,
   getStatusColor,
   getStatusLabel,
@@ -414,6 +418,56 @@ export default function ShipDetailPage({
               </>
             )}
 
+
+                {/* Earnings Calculator */}
+                {ship.dwt > 0 && (() => {
+                  const BDI = 2524;
+                  const rates = calculateFreightRates(BDI, "2026-06-28");
+                  const rate = getRateForDwt(rates, ship.dwt, ship.type);
+                  if (!rate) return null;
+                  const daily = rate.tce;
+                  const monthly = daily * 30;
+                  const annual = daily * 365;
+                  const age = ship.yearBuilt > 0 ? new Date().getFullYear() - ship.yearBuilt : 10;
+                  const baseCost = ship.dwt > 100000 ? 9500 : ship.dwt > 50000 ? 7500 : 5500;
+                  const ageFactor = 1 + Math.max(0, age - 5) * 0.03;
+                  const breakEven = Math.round(baseCost * ageFactor);
+                  const margin = daily - breakEven;
+                  return (
+                    <Card className="border-emerald-500/20 overflow-hidden">
+                      <div className="bg-gradient-to-br from-emerald-600 to-teal-500 text-white p-4">
+                        <p className="text-xs uppercase tracking-wider text-white/70 mb-1">Earnings Estimate (BDI {BDI})</p>
+                        <p className="text-3xl font-bold tabular-nums">${daily.toLocaleString()}/day</p>
+                        <p className="text-xs text-white/60 mt-1">TCE based on current Baltic Dry Index</p>
+                      </div>
+                      <CardContent className="p-4 space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Monthly</p>
+                            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">${(monthly/1000).toFixed(0)}k</p>
+                          </div>
+                          <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Annual</p>
+                            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">${(annual/1e6).toFixed(1)}M</p>
+                          </div>
+                          <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Break-Even</p>
+                            <p className="text-sm font-bold text-amber-600 dark:text-amber-400">${breakEven.toLocaleString()}/d</p>
+                          </div>
+                          <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Margin</p>
+                            <p className={"text-sm font-bold " + (margin > 0 ? "text-emerald-500" : "text-red-500")}>{margin > 0 ? "+" : ""}${margin.toLocaleString()}/d</p>
+                          </div>
+                        </div>
+                        {rate.spotRate > 0 && (
+                          <div className="text-xs text-slate-600 dark:text-white/50 pt-2 border-t border-slate-200 dark:border-white/10">
+                            Spot Rate: ${rate.spotRate.toFixed(2)}/ton · Break-even incl. OPEX, crew, insurance, maintenance
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
             {/* Actions */}
             <div className="space-y-2">
               <Link href={`/vergleich?ships=${ship.imo}`}>

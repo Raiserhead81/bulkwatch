@@ -58,7 +58,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem("vessel-theme");if(t==="light"){document.documentElement.classList.remove("dark");document.documentElement.classList.add("light")}})();` }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
@@ -66,11 +69,7 @@ export default function RootLayout({
           {children}
           <Toaster />
         </I18nProvider>
-      <script dangerouslySetInnerHTML={{ __html: `
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').catch(function() {});
-          }
-        `}} />
+        <script dangerouslySetInnerHTML={{ __html: `if("serviceWorker"in navigator){navigator.serviceWorker.register("/sw.js").catch(function(){});}` }} />
       </body>
     </html>
   );

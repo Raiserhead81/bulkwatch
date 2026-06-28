@@ -10,6 +10,32 @@ const SHIP_TYPES = [
   "Ferry","Passenger","Offshore","Tug","Other"
 ];
 
+const AGE_RANGES = [
+  { label: "All Ages", min: "", max: "" },
+  { label: "0-5 years", min: "0", max: "5" },
+  { label: "5-10 years", min: "5", max: "10" },
+  { label: "10-15 years", min: "10", max: "15" },
+  { label: "15-20 years", min: "15", max: "20" },
+  { label: "20+ years", min: "20", max: "" },
+];
+
+const DWT_RANGES = [
+  { label: "All DWT", min: "", max: "" },
+  { label: "Handysize <40k", min: "", max: "40000" },
+  { label: "Handymax 40-60k", min: "40000", max: "60000" },
+  { label: "Panamax 60-80k", min: "60000", max: "80000" },
+  { label: "Capesize 80-200k", min: "80000", max: "200000" },
+  { label: "VLOC 200k+", min: "200000", max: "" },
+];
+
+const STATUS_OPTIONS = [
+  { label: "All Status", value: "" },
+  { label: "Active", value: "active" },
+  { label: "Under Construction", value: "under_construction" },
+  { label: "Scrapped", value: "scrapped" },
+  { label: "Lost", value: "lost" },
+];
+
 interface Ship {
   id: string; imo: string; name: string; type: string;
   dwt: number; yearBuilt: number; flag: string;
@@ -30,13 +56,34 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [flagFilter, setFlagFilter] = useState("");
+  const [ageRange, setAgeRange] = useState(0);
+  const [dwtRange, setDwtRange] = useState(0);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [operatorFilter, setOperatorFilter] = useState("");
   const [sortBy, setSortBy] = useState("name");
   const [loading, setLoading] = useState(true);
   const [flags, setFlags] = useState<string[]>([]);
+  const [operators, setOperators] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [theme, setTheme] = useState<"dark"|"light">("dark");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("vessel-theme") || "dark";
+    setTheme(saved as "dark"|"light");
+    document.documentElement.classList.toggle("light", saved === "light"); document.documentElement.classList.toggle("dark", saved !== "light");
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem("vessel-theme", next);
+    document.documentElement.classList.toggle("light", next === "light"); document.documentElement.classList.toggle("dark", next !== "light");
+  };
 
   useEffect(() => {
     fetch("/api/ships/stats").then(r => r.ok ? r.json() : null).then(d => { if (d) setStats(d); }).catch(() => {});
     fetch("/api/ships/flags").then(r => r.ok ? r.json() : null).then(d => { if (d?.flags) setFlags(d.flags.slice(0, 100)); }).catch(() => {});
+    fetch("/api/ships/operators").then(r => r.ok ? r.json() : null).then(d => { if (d?.operators) setOperators(d.operators); }).catch(() => {});
   }, []);
 
   const fetchShips = useCallback(() => {
@@ -45,47 +92,71 @@ export default function Home() {
     if (search) p.set("search", search);
     if (typeFilter) p.set("type", typeFilter);
     if (flagFilter) p.set("flag", flagFilter);
+    if (statusFilter) p.set("status", statusFilter);
+    if (operatorFilter) p.set("operator", operatorFilter);
+    const age = AGE_RANGES[ageRange];
+    if (age.min) p.set("age_min", age.min);
+    if (age.max) p.set("age_max", age.max);
+    const dwt = DWT_RANGES[dwtRange];
+    if (dwt.min) p.set("dwt_min", dwt.min);
+    if (dwt.max) p.set("dwt_max", dwt.max);
     fetch(`/api/ships?${p}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) { setShips(d.ships || []); setTotal(d.total || 0); setTotalPages(d.totalPages || 0); } setLoading(false); })
       .catch(() => setLoading(false));
-  }, [page, search, typeFilter, flagFilter, sortBy]);
+  }, [page, search, typeFilter, flagFilter, sortBy, ageRange, dwtRange, statusFilter, operatorFilter]);
 
   useEffect(() => { const t = setTimeout(fetchShips, search ? 300 : 0); return () => clearTimeout(t); }, [fetchShips]);
-  useEffect(() => { setPage(1); }, [search, typeFilter, flagFilter, sortBy]);
+  useEffect(() => { setPage(1); }, [search, typeFilter, flagFilter, sortBy, ageRange, dwtRange, statusFilter, operatorFilter]);
+
+  const activeFilterCount = [typeFilter, flagFilter, statusFilter, operatorFilter, ageRange > 0 ? "x" : "", dwtRange > 0 ? "x" : ""].filter(Boolean).length;
 
   const fmtDwt = (d: number) => d > 0 ? `${(d/1000).toFixed(0)}k DWT` : "";
   const fmtM = (n: number) => (n/1e6).toFixed(1);
-  const inp = { padding: "10px 14px", background: "#1e293b", border: "1px solid #334155", borderRadius: 8, color: "#e2e8f0", fontSize: 14 } as const;
+
+  const bg = theme === "light" ? "#f8fafc" : "#0f172a";
+  const cardBg = theme === "light" ? "#ffffff" : "#1e293b";
+  const border = theme === "light" ? "#e2e8f0" : "#334155";
+  const text = theme === "light" ? "#1e293b" : "#e2e8f0";
+  const textMuted = theme === "light" ? "#64748b" : "#94a3b8";
+  const textDim = theme === "light" ? "#94a3b8" : "#64748b";
+  const accent = "#38bdf8";
+  const tagBg = theme === "light" ? "#f1f5f9" : "#0f172a";
+
+  const inp = { padding: "10px 14px", background: cardBg, border: `1px solid ${border}`, borderRadius: 8, color: text, fontSize: 14 } as const;
 
   return (
-    <main style={{ fontFamily: "system-ui,sans-serif", background: "#0f172a", minHeight: "100vh", color: "#e2e8f0" }}>
-      <div style={{ background: "#1e293b", borderBottom: "1px solid #334155", padding: "16px 24px" }}>
+    <main style={{ fontFamily: "system-ui,sans-serif", background: bg, minHeight: "100vh", color: text }}>
+      <div style={{ background: cardBg, borderBottom: `1px solid ${border}`, padding: "16px 24px" }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#38bdf8" }}>⚓ Vessel Database</h1>
-            <p style={{ margin: "4px 0 0", fontSize: 13, color: "#94a3b8" }}>
-              Intelligence for <strong style={{ color: "#e2e8f0" }}>{stats.total.toLocaleString()}</strong> ships worldwide
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: accent }}>⚓ Vessel Database</h1>
+            <p style={{ margin: "4px 0 0", fontSize: 13, color: textMuted }}>
+              Intelligence for <strong style={{ color: text }}>{stats.total.toLocaleString()}</strong> ships worldwide
             </p>
           </div>
-          <nav style={{ display: "flex", gap: 16, fontSize: 14 }}>
+          <nav style={{ display: "flex", gap: 16, fontSize: 14, alignItems: "center" }}>
             {[["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"]].map(([l,h]) => (
-              <a key={h} href={h} style={{ color: h==="/" ? "#38bdf8" : "#94a3b8", textDecoration: "none" }}>{l}</a>
+              <a key={h} href={h} style={{ color: h==="/" ? accent : textMuted, textDecoration: "none" }}>{l}</a>
             ))}
+            <button onClick={toggleTheme} title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              style={{ background: "none", border: `1px solid ${border}`, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 16, color: text, marginLeft: 8 }}>
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
           </nav>
         </div>
       </div>
 
-      <div style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "12px 24px" }}>
+      <div style={{ background: cardBg, borderBottom: `1px solid ${theme === "light" ? "#cbd5e1" : "#1e3a5f"}`, padding: "12px 24px" }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", gap: 32, fontSize: 13 }}>
           {[["Total Ships", stats.total.toLocaleString()],["Photos", stats.withImage.toLocaleString()],["GPS", stats.withPosition.toLocaleString()],["DWT", `${fmtM(stats.totalDwt)} M`]].map(([l,v]) => (
-            <div key={l}><div style={{ color: "#64748b" }}>{l}</div><div style={{ color: "#38bdf8", fontWeight: 600, fontSize: 16 }}>{v}</div></div>
+            <div key={l}><div style={{ color: textDim }}>{l}</div><div style={{ color: accent, fontWeight: 600, fontSize: 16 }}>{v}</div></div>
           ))}
         </div>
       </div>
 
       <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px" }}>
-        <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
           <input type="text" placeholder="Search ships, IMO, operator..." value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, flex: 1, minWidth: 200, outline: "none" }} />
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={inp}>
             <option value="">All Types</option>
@@ -100,43 +171,71 @@ export default function Home() {
             <option value="dwt">DWT</option>
             <option value="year">Year</option>
           </select>
+          <button onClick={() => setShowFilters(!showFilters)}
+            style={{ ...inp, cursor: "pointer", background: showFilters ? "#0ea5e9" : cardBg, color: showFilters ? "#fff" : text, display: "flex", alignItems: "center", gap: 6 }}>
+            🔽 Filters {activeFilterCount > 0 && <span style={{ background: "#ef4444", color: "#fff", borderRadius: 10, padding: "1px 7px", fontSize: 11, fontWeight: 700 }}>{activeFilterCount}</span>}
+          </button>
         </div>
 
+        {showFilters && (
+          <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", padding: "14px 16px", background: theme === "light" ? "#f1f5f9" : "#162032", borderRadius: 10, border: `1px solid ${border}` }}>
+            <select value={ageRange} onChange={e => setAgeRange(Number(e.target.value))} style={inp}>
+              {AGE_RANGES.map((a, i) => <option key={i} value={i}>{a.label}</option>)}
+            </select>
+            <select value={dwtRange} onChange={e => setDwtRange(Number(e.target.value))} style={inp}>
+              {DWT_RANGES.map((d, i) => <option key={i} value={i}>{d.label}</option>)}
+            </select>
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={inp}>
+              {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
+            <select value={operatorFilter} onChange={e => setOperatorFilter(e.target.value)} style={{ ...inp, minWidth: 180 }}>
+              <option value="">All Operators</option>
+              {operators.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+            {activeFilterCount > 0 && (
+              <button onClick={() => { setAgeRange(0); setDwtRange(0); setStatusFilter(""); setOperatorFilter(""); setTypeFilter(""); setFlagFilter(""); }}
+                style={{ ...inp, cursor: "pointer", color: "#ef4444", borderColor: "#ef4444" }}>
+                Clear All
+              </button>
+            )}
+          </div>
+        )}
+
         <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-          <span style={{ fontSize: 12, color: "#64748b" }}>Quick:</span>
+          <span style={{ fontSize: 12, color: textDim }}>Quick:</span>
           {[["Oldendorff","Oldendorff"],["Maersk","Maersk"],["MSC","MSC"],["CMA CGM","CMA CGM"],["Hapag-Lloyd","Hapag-Lloyd"],["Evergreen","Evergreen"]].map(([label, q]) => (
             <button key={q} onClick={() => { setSearch(search === q ? "" : q); setPage(1); }}
-              style={{ padding: "4px 10px", background: search === q ? "#0ea5e9" : "#1e293b", border: "1px solid " + (search === q ? "#0ea5e9" : "#334155"), borderRadius: 20, color: search === q ? "#fff" : "#94a3b8", fontSize: 12, cursor: "pointer" }}>
+              style={{ padding: "4px 10px", background: search === q ? "#0ea5e9" : cardBg, border: `1px solid ${search === q ? "#0ea5e9" : border}`, borderRadius: 20, color: search === q ? "#fff" : textMuted, fontSize: 12, cursor: "pointer" }}>
               {label}
             </button>
           ))}
         </div>
 
-        <div style={{ marginBottom: 16, fontSize: 13, color: "#64748b" }}>
+        <div style={{ marginBottom: 16, fontSize: 13, color: textDim }}>
           {loading ? "Loading..." : `${total.toLocaleString()} ships · Page ${page}/${totalPages.toLocaleString()}`}
         </div>
 
         {loading ? (
-          <div style={{ textAlign: "center", padding: 80, color: "#64748b" }}>Loading ships...</div>
+          <div style={{ textAlign: "center", padding: 80, color: textDim }}>Loading ships...</div>
         ) : ships.length === 0 ? (
-          <div style={{ textAlign: "center", padding: 80, color: "#64748b" }}>No ships found</div>
+          <div style={{ textAlign: "center", padding: 80, color: textDim }}>No ships found</div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16 }}>
             {ships.map(ship => (
-              <a key={ship.imo} href={`/schiff/${ship.imo}`} style={{ textDecoration: "none", display: "block", background: "#1e293b", borderRadius: 12, border: "1px solid #334155", overflow: "hidden" }}>
+              <a key={ship.imo} href={`/schiff/${ship.imo}`} style={{ textDecoration: "none", display: "block", background: cardBg, borderRadius: 12, border: `1px solid ${border}`, overflow: "hidden" }}>
                 {ship.imageUrl
-                  ? <div style={{ height: 160, overflow: "hidden", background: "#0f172a" }}><img src={ship.imageUrl} alt={ship.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" /></div>
-                  : <div style={{ height: 80, background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36 }}>🚢</div>
+                  ? <div style={{ height: 160, overflow: "hidden", background: tagBg }}><img src={ship.imageUrl} alt={ship.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" /></div>
+                  : <div style={{ height: 80, background: tagBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36 }}>🚢</div>
                 }
                 <div style={{ padding: "14px 16px" }}>
-                  <div style={{ fontWeight: 600, fontSize: 15, color: "#e2e8f0", marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ship.name}</div>
-                  <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>IMO {ship.imo}</div>
+                  <div style={{ fontWeight: 600, fontSize: 15, color: text, marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ship.name}</div>
+                  <div style={{ fontSize: 12, color: textDim, marginBottom: 8 }}>IMO {ship.imo}</div>
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    <span style={{ padding: "2px 7px", background: "#0f172a", borderRadius: 4, fontSize: 11, color: "#38bdf8" }}>{ship.type}</span>
-                    {ship.flag && <span style={{ padding: "2px 7px", background: "#0f172a", borderRadius: 4, fontSize: 11, color: "#94a3b8" }}>{ship.flag}</span>}
-                    {ship.dwt > 0 && <span style={{ padding: "2px 7px", background: "#0f172a", borderRadius: 4, fontSize: 11, color: "#94a3b8" }}>{fmtDwt(ship.dwt)}</span>}
-                    {ship.yearBuilt > 0 && <span style={{ padding: "2px 7px", background: "#0f172a", borderRadius: 4, fontSize: 11, color: "#94a3b8" }}>{ship.yearBuilt}</span>}
-                    {ship.lat && <span style={{ padding: "2px 7px", background: "#052e16", borderRadius: 4, fontSize: 11, color: "#4ade80" }}>📍 Live</span>}
+                    <span style={{ padding: "2px 7px", background: tagBg, borderRadius: 4, fontSize: 11, color: accent }}>{ship.type}</span>
+                    {ship.flag && <span style={{ padding: "2px 7px", background: tagBg, borderRadius: 4, fontSize: 11, color: textMuted }}>{ship.flag}</span>}
+                    {ship.dwt > 0 && <span style={{ padding: "2px 7px", background: tagBg, borderRadius: 4, fontSize: 11, color: textMuted }}>{fmtDwt(ship.dwt)}</span>}
+                    {ship.yearBuilt > 0 && <span style={{ padding: "2px 7px", background: tagBg, borderRadius: 4, fontSize: 11, color: textMuted }}>{ship.yearBuilt}</span>}
+                    {ship.lat && <span style={{ padding: "2px 7px", background: theme === "light" ? "#dcfce7" : "#052e16", borderRadius: 4, fontSize: 11, color: "#4ade80" }}>📍 Live</span>}
                   </div>
                 </div>
               </a>
@@ -146,11 +245,11 @@ export default function Home() {
 
         {totalPages > 1 && (
           <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 32 }}>
-            <button onClick={() => setPage(1)} disabled={page===1} style={{ padding: "8px 14px", background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#e2e8f0", cursor: "pointer" }}>«</button>
-            <button onClick={() => setPage(p => Math.max(1,p-1))} disabled={page===1} style={{ padding: "8px 14px", background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#e2e8f0", cursor: "pointer" }}>‹</button>
-            <span style={{ padding: "8px 16px", background: "#0ea5e9", borderRadius: 6, fontWeight: 600 }}>{page}</span>
-            <button onClick={() => setPage(p => Math.min(totalPages,p+1))} disabled={page===totalPages} style={{ padding: "8px 14px", background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#e2e8f0", cursor: "pointer" }}>›</button>
-            <button onClick={() => setPage(totalPages)} disabled={page===totalPages} style={{ padding: "8px 14px", background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#e2e8f0", cursor: "pointer" }}>»</button>
+            <button onClick={() => setPage(1)} disabled={page===1} style={{ padding: "8px 14px", background: cardBg, border: `1px solid ${border}`, borderRadius: 6, color: text, cursor: "pointer" }}>«</button>
+            <button onClick={() => setPage(p => Math.max(1,p-1))} disabled={page===1} style={{ padding: "8px 14px", background: cardBg, border: `1px solid ${border}`, borderRadius: 6, color: text, cursor: "pointer" }}>‹</button>
+            <span style={{ padding: "8px 16px", background: "#0ea5e9", borderRadius: 6, fontWeight: 600, color: "#fff" }}>{page}</span>
+            <button onClick={() => setPage(p => Math.min(totalPages,p+1))} disabled={page===totalPages} style={{ padding: "8px 14px", background: cardBg, border: `1px solid ${border}`, borderRadius: 6, color: text, cursor: "pointer" }}>›</button>
+            <button onClick={() => setPage(totalPages)} disabled={page===totalPages} style={{ padding: "8px 14px", background: cardBg, border: `1px solid ${border}`, borderRadius: 6, color: text, cursor: "pointer" }}>»</button>
           </div>
         )}
       </div>
