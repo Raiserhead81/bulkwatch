@@ -60,8 +60,8 @@ export default function TopPicksPage() {
 
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const watchlist = useWatchlist();
-  const allTopPicks = useMemo(() => getAllTopPicks(dbShips), []);
-  const overallTop = useMemo(() => getOverallTopPick(dbShips), []);
+  const allTopPicks = useMemo(() => dbShips.length > 0 ? getAllTopPicks(dbShips) : [], [dbShips]);
+  const overallTop = useMemo(() => dbShips.length > 0 ? getOverallTopPick(dbShips) : null, [dbShips]);
 
   const filteredPicks = useMemo(() => {
     if (typeFilter === "all") return allTopPicks;
