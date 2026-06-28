@@ -165,7 +165,7 @@ export default function FleetPage() {
                     {ship.type} &middot; {fmtDwt(ship.dwt)} DWT &middot; IMO {ship.imo}
                   </div>
                   <div style={{ display: "flex", gap: 12, fontSize: 11, color: "#64748b", flexWrap: "wrap" }}>
-                    {ship.yearBuilt > 0 && <span>Built {ship.yearBuilt} ({currentYear - ship.yearBuilt} yrs)</span>}
+                    {ship.yearBuilt > 0 ? <span style={{color: currentYear - ship.yearBuilt <= 5 ? "#34d399" : currentYear - ship.yearBuilt <= 10 ? "#38bdf8" : currentYear - ship.yearBuilt <= 15 ? "#fbbf24" : "#f87171"}}>Built {ship.yearBuilt} ({currentYear - ship.yearBuilt} yrs)</span> : <span style={{color:"#64748b"}}>Age unknown</span>}
                     {ship.flag && <span>{ship.flag}</span>}
                     {ship.grossTonnage > 0 && <span>GT {ship.grossTonnage.toLocaleString()}</span>}
                     {ship.crewSize > 0 && <span>Crew {ship.crewSize}</span>}
