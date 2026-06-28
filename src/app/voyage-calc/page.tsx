@@ -162,8 +162,20 @@ export default function VoyageCalcPage() {
   const [toCode, setToCode] = useState("");
   const [dwt, setDwt] = useState(80000);
   const [speed, setSpeed] = useState(13);
-  const [fuelPrice, setFuelPrice] = useState(600);
+  const [fuelPrice, setFuelPrice] = useState(590);
   const [fuelConsumption, setFuelConsumption] = useState(35);
+
+  // Auto-calculate fuel consumption from DWT
+  useMemo(() => {
+    if (dwt >= 200000) setFuelConsumption(55);
+    else if (dwt >= 150000) setFuelConsumption(45);
+    else if (dwt >= 80000) setFuelConsumption(32);
+    else if (dwt >= 60000) setFuelConsumption(28);
+    else if (dwt >= 45000) setFuelConsumption(25);
+    else if (dwt >= 30000) setFuelConsumption(20);
+    else if (dwt >= 15000) setFuelConsumption(15);
+    else setFuelConsumption(10);
+  }, [dwt]);
   const [freightRate, setFreightRate] = useState(15);
   const [liveRates, setLiveRates] = useState<any>(null);
 
