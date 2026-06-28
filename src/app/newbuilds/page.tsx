@@ -20,6 +20,8 @@ interface NewbuildShip {
   deliveryDate?: string;
 }
 
+const NAV_LINKS: [string,string][] = [["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"]];
+
 function fmtDwt(dwt: number): string {
   if (dwt >= 1000) return `${(dwt / 1000).toFixed(0)}k`;
   return dwt > 0 ? dwt.toLocaleString() : "—";
@@ -43,6 +45,7 @@ export default function NewbuildsPage() {
   const [ships, setShips] = useState<NewbuildShip[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/ships?status=under_construction&limit=200&sort=year")
@@ -54,7 +57,6 @@ export default function NewbuildsPage() {
   const types = [...new Set(ships.map(s => s.type))].sort();
   const filtered = typeFilter ? ships.filter(s => s.type === typeFilter) : ships;
 
-  // Group by delivery date
   const groups: Record<string, NewbuildShip[]> = {};
   for (const s of filtered) {
     const key = s.deliveryDate || `${s.yearBuilt}`;
@@ -65,28 +67,36 @@ export default function NewbuildsPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#0f172a", color: "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
-      {/* Header */}
-      <div style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "16px 24px" }}>
+      {/* Mobile menu */}
+      <div className={`mobile-nav-overlay${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
+      <div className={`mobile-nav-panel${menuOpen ? " open" : ""}`}>
+        <button className="mobile-nav-close" onClick={() => setMenuOpen(false)}>&#x2715;</button>
+        {NAV_LINKS.map(([l,h]) => (
+          <a key={h} href={h} className={h==="/newbuilds" ? "active" : ""}>{l}</a>
+        ))}
+      </div>
+
+      <div className="page-header" style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "16px 24px" }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#38bdf8", display: "flex", alignItems: "center", gap: 10 }}>
-              <Hammer style={{ width: 24, height: 24 }} /> Newbuilds & Orderbook
+              <Hammer style={{ width: 24, height: 24 }} /> Newbuilds
             </h1>
             <p style={{ margin: "4px 0 0", fontSize: 13, color: "#94a3b8" }}>
-              <strong style={{ color: "#e2e8f0" }}>{ships.length}</strong> ships under construction worldwide
+              <strong style={{ color: "#e2e8f0" }}>{ships.length}</strong> ships under construction
             </p>
           </div>
-          <nav style={{ display: "flex", gap: 16, fontSize: 14 }}>
-            {[["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"]].map(([l,h]) => (
+          <button className="mobile-menu-btn" onClick={() => setMenuOpen(true)}>&#9776;</button>
+          <nav className="nav-links">
+            {NAV_LINKS.map(([l,h]) => (
               <a key={h} href={h} style={{ color: h==="/newbuilds" ? "#38bdf8" : "#94a3b8", textDecoration: "none" }}>{l}</a>
             ))}
           </nav>
         </div>
       </div>
 
-      {/* Stats bar */}
       <div style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "12px 24px" }}>
-        <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", gap: 32, fontSize: 13 }}>
+        <div className="stats-bar" style={{ maxWidth: 1400, margin: "0 auto", display: "flex", gap: 32, fontSize: 13 }}>
           {[
             ["Total Orders", ships.length.toString()],
             ["Types", types.length.toString()],
@@ -96,15 +106,14 @@ export default function NewbuildsPage() {
           ].map(([l, v]) => (
             <div key={l}>
               <div style={{ color: "#64748b" }}>{l}</div>
-              <div style={{ color: "#38bdf8", fontWeight: 600, fontSize: 16 }}>{v}</div>
+              <div className="stat-value" style={{ color: "#38bdf8", fontWeight: 600, fontSize: 16 }}>{v}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Type filter */}
-      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "16px 24px" }}>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
+      <div className="page-content" style={{ maxWidth: 1400, margin: "0 auto", padding: "16px 24px" }}>
+        <div className="newbuild-filter-bar" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
           <button
             onClick={() => setTypeFilter("")}
             style={{
@@ -136,16 +145,13 @@ export default function NewbuildsPage() {
                 Delivery {key}
                 <span style={{ fontSize: 12, color: "#64748b", fontWeight: 400 }}>({groups[key].length} ships)</span>
               </h2>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 12 }}>
+              <div className="newbuild-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 12 }}>
                 {groups[key].map(ship => (
                   <a key={ship.imo} href={`/schiff/${ship.imo}`}
                     style={{
                       display: "block", background: "#1e293b", borderRadius: 12, overflow: "hidden",
                       border: "1px solid #1e3a5f", textDecoration: "none", color: "inherit",
-                      transition: "border-color 0.15s",
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = "#38bdf8")}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = "#1e3a5f")}
                   >
                     {ship.imageUrl ? (
                       <img src={ship.imageUrl} alt={ship.name}
@@ -158,11 +164,6 @@ export default function NewbuildsPage() {
                         alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden",
                         background: "linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e293b 100%)",
                       }}>
-                        <div style={{
-                          position: "absolute", inset: 0, opacity: 0.08,
-                          backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 20px, #fbbf24 20px, #fbbf24 22px)",
-                          animation: "stripe-scroll 3s linear infinite",
-                        }} />
                         <div style={{ position: "relative", textAlign: "center" }}>
                           <div style={{ fontSize: 32, marginBottom: 4 }}>🏗️</div>
                           <div style={{ fontSize: 11, color: "#fbbf24", fontWeight: 600 }}>Under Construction</div>
@@ -198,7 +199,7 @@ export default function NewbuildsPage() {
                         marginTop: 10, padding: "4px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600,
                         background: "rgba(251,191,36,0.12)", color: "#fbbf24", display: "inline-block",
                       }}>
-                        🏗️ Under Construction · ETA {ship.deliveryDate || ship.yearBuilt}
+                        Under Construction · ETA {ship.deliveryDate || ship.yearBuilt}
                       </div>
                     </div>
                   </a>

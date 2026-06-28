@@ -36,6 +36,8 @@ const STATUS_OPTIONS = [
   { label: "Lost", value: "lost" },
 ];
 
+const NAV_LINKS: [string,string][] = [["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"]];
+
 interface Ship {
   id: string; imo: string; name: string; type: string;
   dwt: number; yearBuilt: number; flag: string;
@@ -66,6 +68,7 @@ export default function Home() {
   const [operators, setOperators] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [theme, setTheme] = useState<"dark"|"light">("dark");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("vessel-theme") || "dark";
@@ -127,36 +130,50 @@ export default function Home() {
 
   return (
     <main style={{ fontFamily: "system-ui,sans-serif", background: bg, minHeight: "100vh", color: text }}>
-      <div style={{ background: cardBg, borderBottom: `1px solid ${border}`, padding: "16px 24px" }}>
+      {/* Mobile menu overlay */}
+      <div className={`mobile-nav-overlay${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
+      <div className={`mobile-nav-panel${menuOpen ? " open" : ""}`}>
+        <button className="mobile-nav-close" onClick={() => setMenuOpen(false)}>&#x2715;</button>
+        {NAV_LINKS.map(([l,h]) => (
+          <a key={h} href={h} className={h==="/" ? "active" : ""}>{l}</a>
+        ))}
+        <button onClick={() => { toggleTheme(); setMenuOpen(false); }}
+          style={{ background: "none", border: `1px solid #334155`, borderRadius: 8, padding: "12px 16px", cursor: "pointer", fontSize: 15, color: "#e2e8f0", textAlign: "left", marginTop: 8 }}>
+          {theme === "dark" ? "Light Mode" : "Dark Mode"}
+        </button>
+      </div>
+
+      <div className="page-header" style={{ background: cardBg, borderBottom: `1px solid ${border}`, padding: "16px 24px" }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: accent }}>⚓ Vessel Database</h1>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: accent }}>Vessel Database</h1>
             <p style={{ margin: "4px 0 0", fontSize: 13, color: textMuted }}>
               Intelligence for <strong style={{ color: text }}>{stats.total.toLocaleString()}</strong> ships worldwide
             </p>
           </div>
-          <nav style={{ display: "flex", gap: 16, fontSize: 14, alignItems: "center" }}>
-            {[["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"]].map(([l,h]) => (
+          <button className="mobile-menu-btn" onClick={() => setMenuOpen(true)}>&#9776;</button>
+          <nav className="nav-links">
+            {NAV_LINKS.map(([l,h]) => (
               <a key={h} href={h} style={{ color: h==="/" ? accent : textMuted, textDecoration: "none" }}>{l}</a>
             ))}
             <button onClick={toggleTheme} title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
               style={{ background: "none", border: `1px solid ${border}`, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 16, color: text, marginLeft: 8 }}>
-              {theme === "dark" ? "☀️" : "🌙"}
+              {theme === "dark" ? "Light" : "Dark"}
             </button>
           </nav>
         </div>
       </div>
 
       <div style={{ background: cardBg, borderBottom: `1px solid ${theme === "light" ? "#cbd5e1" : "#1e3a5f"}`, padding: "12px 24px" }}>
-        <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", gap: 32, fontSize: 13 }}>
+        <div className="stats-bar" style={{ maxWidth: 1400, margin: "0 auto", display: "flex", gap: 32, fontSize: 13 }}>
           {[["Total Ships", stats.total.toLocaleString()],["Photos", stats.withImage.toLocaleString()],["GPS", stats.withPosition.toLocaleString()],["DWT", `${fmtM(stats.totalDwt)} M`]].map(([l,v]) => (
-            <div key={l}><div style={{ color: textDim }}>{l}</div><div style={{ color: accent, fontWeight: 600, fontSize: 16 }}>{v}</div></div>
+            <div key={l}><div style={{ color: textDim }}>{l}</div><div className="stat-value" style={{ color: accent, fontWeight: 600, fontSize: 16 }}>{v}</div></div>
           ))}
         </div>
       </div>
 
-      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px" }}>
-        <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
+      <div className="page-content" style={{ maxWidth: 1400, margin: "0 auto", padding: "24px" }}>
+        <div className="filter-row" style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
           <input type="text" placeholder="Search ships, IMO, operator..." value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, flex: 1, minWidth: 200, outline: "none" }} />
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={inp}>
             <option value="">All Types</option>
@@ -173,12 +190,12 @@ export default function Home() {
           </select>
           <button onClick={() => setShowFilters(!showFilters)}
             style={{ ...inp, cursor: "pointer", background: showFilters ? "#0ea5e9" : cardBg, color: showFilters ? "#fff" : text, display: "flex", alignItems: "center", gap: 6 }}>
-            🔽 Filters {activeFilterCount > 0 && <span style={{ background: "#ef4444", color: "#fff", borderRadius: 10, padding: "1px 7px", fontSize: 11, fontWeight: 700 }}>{activeFilterCount}</span>}
+            Filters {activeFilterCount > 0 && <span style={{ background: "#ef4444", color: "#fff", borderRadius: 10, padding: "1px 7px", fontSize: 11, fontWeight: 700 }}>{activeFilterCount}</span>}
           </button>
         </div>
 
         {showFilters && (
-          <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", padding: "14px 16px", background: theme === "light" ? "#f1f5f9" : "#162032", borderRadius: 10, border: `1px solid ${border}` }}>
+          <div className="filter-row" style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", padding: "14px 16px", background: theme === "light" ? "#f1f5f9" : "#162032", borderRadius: 10, border: `1px solid ${border}` }}>
             <select value={ageRange} onChange={e => setAgeRange(Number(e.target.value))} style={inp}>
               {AGE_RANGES.map((a, i) => <option key={i} value={i}>{a.label}</option>)}
             </select>
@@ -220,7 +237,7 @@ export default function Home() {
         ) : ships.length === 0 ? (
           <div style={{ textAlign: "center", padding: 80, color: textDim }}>No ships found</div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16 }}>
+          <div className="ship-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16 }}>
             {ships.map(ship => (
               <a key={ship.imo} href={`/schiff/${ship.imo}`} style={{ textDecoration: "none", display: "block", background: cardBg, borderRadius: 12, border: `1px solid ${border}`, overflow: "hidden" }}>
                 {ship.imageUrl
@@ -235,7 +252,7 @@ export default function Home() {
                     {ship.flag && <span style={{ padding: "2px 7px", background: tagBg, borderRadius: 4, fontSize: 11, color: textMuted }}>{ship.flag}</span>}
                     {ship.dwt > 0 && <span style={{ padding: "2px 7px", background: tagBg, borderRadius: 4, fontSize: 11, color: textMuted }}>{fmtDwt(ship.dwt)}</span>}
                     {ship.yearBuilt > 0 && <span style={{ padding: "2px 7px", background: tagBg, borderRadius: 4, fontSize: 11, color: textMuted }}>{ship.yearBuilt}</span>}
-                    {ship.lat && <span style={{ padding: "2px 7px", background: theme === "light" ? "#dcfce7" : "#052e16", borderRadius: 4, fontSize: 11, color: "#4ade80" }}>📍 Live</span>}
+                    {ship.lat && <span style={{ padding: "2px 7px", background: theme === "light" ? "#dcfce7" : "#052e16", borderRadius: 4, fontSize: 11, color: "#4ade80" }}>Live</span>}
                   </div>
                 </div>
               </a>
@@ -244,12 +261,12 @@ export default function Home() {
         )}
 
         {totalPages > 1 && (
-          <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 32 }}>
-            <button onClick={() => setPage(1)} disabled={page===1} style={{ padding: "8px 14px", background: cardBg, border: `1px solid ${border}`, borderRadius: 6, color: text, cursor: "pointer" }}>«</button>
-            <button onClick={() => setPage(p => Math.max(1,p-1))} disabled={page===1} style={{ padding: "8px 14px", background: cardBg, border: `1px solid ${border}`, borderRadius: 6, color: text, cursor: "pointer" }}>‹</button>
+          <div className="pagination" style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 32 }}>
+            <button onClick={() => setPage(1)} disabled={page===1} style={{ padding: "8px 14px", background: cardBg, border: `1px solid ${border}`, borderRadius: 6, color: text, cursor: "pointer" }}>&#171;</button>
+            <button onClick={() => setPage(p => Math.max(1,p-1))} disabled={page===1} style={{ padding: "8px 14px", background: cardBg, border: `1px solid ${border}`, borderRadius: 6, color: text, cursor: "pointer" }}>&#8249;</button>
             <span style={{ padding: "8px 16px", background: "#0ea5e9", borderRadius: 6, fontWeight: 600, color: "#fff" }}>{page}</span>
-            <button onClick={() => setPage(p => Math.min(totalPages,p+1))} disabled={page===totalPages} style={{ padding: "8px 14px", background: cardBg, border: `1px solid ${border}`, borderRadius: 6, color: text, cursor: "pointer" }}>›</button>
-            <button onClick={() => setPage(totalPages)} disabled={page===totalPages} style={{ padding: "8px 14px", background: cardBg, border: `1px solid ${border}`, borderRadius: 6, color: text, cursor: "pointer" }}>»</button>
+            <button onClick={() => setPage(p => Math.min(totalPages,p+1))} disabled={page===totalPages} style={{ padding: "8px 14px", background: cardBg, border: `1px solid ${border}`, borderRadius: 6, color: text, cursor: "pointer" }}>&#8250;</button>
+            <button onClick={() => setPage(totalPages)} disabled={page===totalPages} style={{ padding: "8px 14px", background: cardBg, border: `1px solid ${border}`, borderRadius: 6, color: text, cursor: "pointer" }}>&#187;</button>
           </div>
         )}
       </div>

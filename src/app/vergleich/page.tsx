@@ -9,7 +9,7 @@ interface Ship {
   fuelConsumption: number; fuelType?: string; crewSize: number;
 }
 
-const NAV = [["Ships", "/"], ["Map", "/karte"], ["Live", "/live"], ["Top Picks", "/top-picks"], ["Compare", "/vergleich"], ["Watchlist", "/watchlist"], ["Newbuilds", "/newbuilds"]];
+const NAV: [string,string][] = [["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"]];
 
 function fmtDwt(d: number) { return d >= 1000 ? `${(d / 1000).toFixed(0)}k` : d > 0 ? d.toLocaleString() : "\u2014"; }
 
@@ -21,6 +21,7 @@ function estimateValue(ship: Ship): number {
 }
 
 export default function ComparePage() {
+  const [menuOpen, setMenuOpen] = useState(false);
   const [selectedShips, setSelectedShips] = useState<Ship[]>([]);
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<Ship[]>([]);
@@ -109,7 +110,15 @@ export default function ComparePage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#0f172a", color: "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
-      <div style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "16px 24px" }}>
+      <div className={`mobile-nav-overlay${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
+      <div className={`mobile-nav-panel${menuOpen ? " open" : ""}`}>
+        <button className="mobile-nav-close" onClick={() => setMenuOpen(false)}>&#x2715;</button>
+        {NAV.map(([l,h]: [string,string]) => (
+          <a key={h} href={h} className={h==="/vergleich" ? "active" : ""}>{l}</a>
+        ))}
+      </div>
+
+      <div className="page-header" style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "16px 24px" }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#38bdf8" }}>Compare Vessels</h1>
@@ -117,7 +126,8 @@ export default function ComparePage() {
               Side-by-side comparison of up to 5 ships with full specs
             </p>
           </div>
-          <nav style={{ display: "flex", gap: 16, fontSize: 14 }}>
+          <button className="mobile-menu-btn" onClick={() => setMenuOpen(true)}>&#9776;</button>
+          <nav className="nav-links">
             {NAV.map(([l, h]) => (
               <a key={h} href={h} style={{ color: h === "/vergleich" ? "#38bdf8" : "#94a3b8", textDecoration: "none" }}>{l}</a>
             ))}
@@ -125,7 +135,7 @@ export default function ComparePage() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px" }}>
+      <div className="page-content" style={{ maxWidth: 1400, margin: "0 auto", padding: "24px" }}>
         {/* Search bar */}
         <div style={{ ...box, marginBottom: 24 }}>
           <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: searchResults.length > 0 ? 12 : 0 }}>

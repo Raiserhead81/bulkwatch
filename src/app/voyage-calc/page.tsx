@@ -154,10 +154,11 @@ function haversine(lat1: number, lon1: number, lat2: number, lon2: number): numb
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-const NAV = [["Ships", "/"], ["Map", "/karte"], ["Live", "/live"], ["Top Picks", "/top-picks"], ["Compare", "/vergleich"], ["Watchlist", "/watchlist"], ["Newbuilds", "/newbuilds"]];
+const NAV: [string,string][] = [["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"]];
 const inpStyle: React.CSSProperties = { padding: "10px 14px", background: "#1e293b", border: "1px solid #334155", borderRadius: 8, color: "#e2e8f0", fontSize: 14, width: "100%" };
 
 export default function VoyageCalcPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
   const [fromCode, setFromCode] = useState("");
   const [toCode, setToCode] = useState("");
   const [dwt, setDwt] = useState(80000);
@@ -257,22 +258,32 @@ export default function VoyageCalcPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#0f172a", color: "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
-      <div style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "16px 24px" }}>
+      {/* Mobile menu */}
+      <div className={`mobile-nav-overlay${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
+      <div className={`mobile-nav-panel${menuOpen ? " open" : ""}`}>
+        <button className="mobile-nav-close" onClick={() => setMenuOpen(false)}>&#x2715;</button>
+        {NAV.map(([l,h]: [string,string]) => (
+          <a key={h} href={h} className={h==="/voyage-calc" ? "active" : ""}>{l}</a>
+        ))}
+      </div>
+
+      <div className="page-header" style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "16px 24px" }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#38bdf8" }}>Voyage Calculator</h1>
-            <p style={{ margin: "4px 0 0", fontSize: 13, color: "#94a3b8" }}>Estimate costs, duration and TCE for bulk voyages</p>
+            <p style={{ margin: "4px 0 0", fontSize: 13, color: "#94a3b8" }}>Estimate costs, duration and TCE</p>
           </div>
-          <nav style={{ display: "flex", gap: 16, fontSize: 14 }}>
+          <button className="mobile-menu-btn" onClick={() => setMenuOpen(true)}>&#9776;</button>
+          <nav className="nav-links">
             {NAV.map(([l, h]) => (
-              <a key={h} href={h} style={{ color: "#94a3b8", textDecoration: "none" }}>{l}</a>
+              <a key={h} href={h} style={{ color: h==="/voyage-calc" ? "#38bdf8" : "#94a3b8", textDecoration: "none" }}>{l}</a>
             ))}
           </nav>
         </div>
       </div>
 
-      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+      <div className="page-content" style={{ maxWidth: 1400, margin: "0 auto", padding: "24px" }}>
+        <div className="voyage-layout" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={box}>
               <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#38bdf8" }}>Route</h2>
@@ -296,7 +307,7 @@ export default function VoyageCalcPage() {
 
             <div style={box}>
               <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#38bdf8" }}>Vessel Parameters</h2>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div className="vessel-params-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
                   <label style={labelStyle}>DWT (tonnes)</label>
                   <input type="number" value={dwt} onChange={e => setDwt(Number(e.target.value))} style={inpStyle} />
@@ -318,7 +329,7 @@ export default function VoyageCalcPage() {
 
             <div style={box}>
               <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#38bdf8" }}>Market Parameters</h2>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div className="market-params-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
                   <label style={labelStyle}>VLSFO Price ($/t)</label>
                   <input type="number" value={fuelPrice} onChange={e => setFuelPrice(Number(e.target.value))} style={inpStyle} />
@@ -343,20 +354,20 @@ export default function VoyageCalcPage() {
                   <div style={{ fontSize: 14, color: "#94a3b8", marginBottom: 12 }}>
                     {result.from.name} &rarr; {result.to.name}
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+                  <div className="route-summary-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
                     <div>
                       <div style={labelStyle}>Distance</div>
-                      <div style={bigNum}>{result.distNm.toLocaleString()}</div>
+                      <div className="big-number" style={bigNum}>{result.distNm.toLocaleString()}</div>
                       <div style={{ fontSize: 11, color: "#64748b" }}>nautical miles</div>
                     </div>
                     <div>
                       <div style={labelStyle}>Sea Days</div>
-                      <div style={bigNum}>{result.seaDays}</div>
+                      <div className="big-number" style={bigNum}>{result.seaDays}</div>
                       <div style={{ fontSize: 11, color: "#64748b" }}>at {speed} kn</div>
                     </div>
                     <div>
                       <div style={labelStyle}>Total Voyage</div>
-                      <div style={bigNum}>{result.totalDays}</div>
+                      <div className="big-number" style={bigNum}>{result.totalDays}</div>
                       <div style={{ fontSize: 11, color: "#64748b" }}>incl. port days</div>
                     </div>
                   </div>
@@ -364,7 +375,7 @@ export default function VoyageCalcPage() {
 
                 <div style={box}>
                   <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#38bdf8" }}>Fuel &amp; Costs</h2>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div className="fuel-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                     <div>
                       <div style={labelStyle}>Fuel Consumption</div>
                       <div style={{ fontSize: 20, fontWeight: 600, color: "#e2e8f0" }}>{result.fuelTons.toLocaleString()} t</div>
@@ -386,16 +397,16 @@ export default function VoyageCalcPage() {
 
                 <div style={{ ...box, background: "linear-gradient(135deg, #1e293b, #0f2744)" }}>
                   <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#38bdf8" }}>Economics</h2>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                  <div className="economics-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
                     <div>
                       <div style={labelStyle}>TCE (Time Charter Equivalent)</div>
-                      <div style={{ fontSize: 32, fontWeight: 700, color: result.tce >= 0 ? "#4ade80" : "#f87171" }}>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: result.tce >= 0 ? "#4ade80" : "#f87171" }}>
                         ${result.tce.toLocaleString(undefined, { maximumFractionDigits: 0 })}/day
                       </div>
                     </div>
                     <div>
                       <div style={labelStyle}>Break-Even Freight Rate</div>
-                      <div style={{ fontSize: 32, fontWeight: 700, color: "#fbbf24" }}>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: "#fbbf24" }}>
                         ${result.breakEvenRate.toFixed(2)}/t
                       </div>
                     </div>
