@@ -23,6 +23,10 @@ import {
   Download,
   ArrowRight,
   Stethoscope,
+  Fuel,
+  Users,
+  Cog,
+  Box,
 } from "lucide-react";
 import { type Ship } from "@/data/ships";
 import {
@@ -105,6 +109,17 @@ export default function ShipDetailPage({
     { icon: Flag, label: "Flag", value: ship.flag },
     { icon: Building2, label: "Operator", value: ship.operator || "—" },
     { icon: Home, label: "Home Port", value: ship.homePort || "—" },
+    ...(ship.grossTonnage > 0 ? [{ icon: Gauge, label: "Gross Tonnage", value: ship.grossTonnage.toLocaleString("en-US") + " GT" }] : []),
+    ...(ship.engineType ? [{ icon: Cog, label: "Engine", value: ship.engineType }] : []),
+    ...(ship.enginePowerKw > 0 ? [{ icon: Cog, label: "Engine Power", value: (ship.enginePowerKw / 1000).toFixed(0) + " MW" }] : []),
+    ...(ship.speedKnots > 0 ? [{ icon: Gauge, label: "Service Speed", value: ship.speedKnots + " knots" }] : []),
+    ...(ship.fuelConsumption > 0 ? [{ icon: Fuel, label: "Fuel Consumption", value: ship.fuelConsumption + " t/day" }] : []),
+    ...(ship.fuelType ? [{ icon: Fuel, label: "Fuel Type", value: ship.fuelType }] : []),
+    ...(ship.crewSize > 0 ? [{ icon: Users, label: "Crew", value: ship.crewSize.toString() }] : []),
+    ...(ship.holds > 0 ? [{ icon: Box, label: "Cargo Holds", value: ship.holds + " holds / " + ship.hatches + " hatches" }] : []),
+    ...(ship.grainCapacity > 0 ? [{ icon: Box, label: "Grain Capacity", value: ship.grainCapacity.toLocaleString("en-US") + " m³" }] : []),
+    ...(ship.teu > 0 ? [{ icon: Box, label: "TEU Capacity", value: ship.teu.toLocaleString("en-US") + " TEU" }] : []),
+    ...(ship.cranes ? [{ icon: Cog, label: "Cranes", value: ship.cranes }] : []),
   ];
 
   return (
