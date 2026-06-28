@@ -86,7 +86,7 @@ const BASE_PRICES: Partial<Record<string, number>> = {
 // Market indicators — update periodically (source: Baltic Exchange / tradingeconomics.com)
 const MARKET_FACTORS = {
   bdiCurrent: 2524,        // Baltic Dry Index — 28 Jun 2026
-  bdiTrend: "rising" as "rising" | "stable" | "falling",  // -45% from Jan peak
+  bdiTrend: "stable" as "rising" | "stable" | "falling",  // -45% from Jan peak
   bdiDate: "28 Jun 2026",
   freightRateMultiplier: 1.0,
 };
