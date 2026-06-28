@@ -208,7 +208,7 @@ export default function ChatPage() {
     html = html.replace(/\n\n/g, '<div class="vdb-paragraph-break"></div>');
     html = html.replace(/\n/g, '<br>');
 
-    return html;
+    return renderAutoChart(html);
   }
 
   return (
