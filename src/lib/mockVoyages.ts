@@ -263,7 +263,7 @@ export function generateMockVoyage(ship: Ship): MockVoyage {
     const port = PORTS[Math.floor(seededRandom(ship.imo + "port") * PORTS.length)];
     return {
       from: port,
-      to: port,
+      to: PORTS[(Math.floor(seededRandom(ship.imo + "dest") * (PORTS.length - 1)) + 1 + Math.floor(seededRandom(ship.imo + "port") * PORTS.length)) % PORTS.length],
       cargo: "empty",
       cargoDescription: "In Port",
       cargoLoadPercent: 0,
