@@ -90,7 +90,7 @@ export default function ShipDetailPage({
   }
 
   const price = estimatePrice(ship);
-  const voyage = ship.status !== 'under_construction' ? generateMockVoyage(ship) : null;
+  const voyage = generateMockVoyage(ship);
   const nearbySurveyPorts = getNearbySurveyPorts(
     voyage?.currentPosition?.lat ?? 0,
     voyage?.currentPosition?.lon ?? 0,
