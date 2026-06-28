@@ -284,8 +284,8 @@ export default function ShipDetailPage({
                 <div className="flex items-center justify-between text-xs text-slate-600 dark:text-white/60 pt-2 border-t border-slate-200 dark:border-white/10">
                   <span>Departure: {voyage?.departureDate ?? new Date().toLocaleDateString("en-US")}</span>
                   <span className="font-semibold">
-                    ETA: {voyage.eta.toLocaleDateString("en-US")} ·{" "}
-                    {voyage.eta.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                    ETA: {voyage?.eta?.toLocaleDateString("en-US")} ·{" "}
+                    {voyage?.eta?.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>
 
