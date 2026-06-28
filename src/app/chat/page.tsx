@@ -370,14 +370,14 @@ export default function ChatPage() {
       {/* Header */}
       <div className="vdb-header">
           <button onClick={() => setMenuOpen(!menuOpen)} style={{
-            display:"none", background:"none", border:"none", color:"#94a3b8", fontSize:22, cursor:"pointer", padding:4,
+            background:"none", border:"none", color:"#94a3b8", fontSize:22, cursor:"pointer", padding:4,
           }} className="vdb-hamburger">{menuOpen ? "\u2715" : "\u2630"}</button>
         <div className="vdb-header-inner">
           <a href="/" className="vdb-logo-link">
             <span className="vdb-logo-anchor">{"\u2693"}</span>
             <span className="vdb-logo-text">Vessel AI</span>
           </a>
-          <div className="vdb-nav">
+          <div className={"vdb-nav" + (menuOpen ? " open" : "")}>
             {NAV_LINKS.map(([l,h]) => (
               <a key={h} href={h} className={`vdb-nav-link ${h === "/chat" ? "vdb-nav-active" : ""}`}>{l}</a>
             ))}
@@ -559,11 +559,11 @@ export default function ChatPage() {
           font-weight: 400;
         }
         
-        .vdb-hamburger { display: none !important; }
+        .vdb-hamburger { display: none; }
         @media (max-width: 768px) {
           .vdb-hamburger { display: block !important; }
-          .vdb-nav-links { display: none !important; }
-          .vdb-nav-links.open { display: flex !important; position: fixed; top: 50px; left: 0; right: 0; bottom: 0; background: #050810; flex-direction: column; padding: 20px; gap: 8px; z-index: 100; }
+          .vdb-nav { display: none !important; }
+          .vdb-nav.open { display: flex !important; position: fixed; top: 50px; left: 0; right: 0; bottom: 0; background: #050810; flex-direction: column; padding: 20px; gap: 8px; z-index: 100; }
         }
 
         .vdb-nav-link:hover { color: #94a3b8; }
