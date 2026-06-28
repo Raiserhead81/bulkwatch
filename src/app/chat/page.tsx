@@ -528,7 +528,7 @@ export default function ChatPage() {
         .vdb-header {
           background: rgba(10, 15, 25, 0.85); backdrop-filter: blur(20px);
           border-bottom: 1px solid rgba(56, 189, 248, 0.15);
-          padding: 10px 16px; flex-shrink: 0; position: relative; z-index: 10;
+          padding: 10px 16px; flex-shrink: 0; position: sticky; top: 0; z-index: 50;
         }
         .vdb-header-inner {
           max-width: 960px; margin: 0 auto;
