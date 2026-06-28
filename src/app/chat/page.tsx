@@ -77,7 +77,7 @@ function renderMarkdown(text: string): string {
     const dataStart = sepIdx >= 0 ? sepIdx + 1 : 0;
     const dataLines = lines.slice(dataStart);
 
-    let t = '<table class="vdb-table">';
+    let t = '<div style="overflow-x:auto;margin:8px 0;border-radius:8px;border:1px solid #1e3a5f"><table class="vdb-table">';
     if (headerLine) {
       const cells = headerLine.split("|").filter(c => c.trim());
       t += "<thead><tr>" + cells.map(c => `<th>${c.trim()}</th>`).join("") + "</tr></thead>";
@@ -89,7 +89,7 @@ function renderMarkdown(text: string): string {
       const cls = i % 2 === 0 ? "vdb-row-even" : "vdb-row-odd";
       t += `<tr class="${cls}">` + cells.map(c => `<td>${c.trim()}</td>`).join("") + "</tr>";
     });
-    t += "</tbody></table>";
+    t += "</tbody></table></div>";
     return t;
   });
 
@@ -467,6 +467,7 @@ export default function ChatPage() {
         .vdb-table td {
           padding: 6px 10px;
           border-bottom: 1px solid #1e293b;
+          white-space: nowrap;
         }
         .vdb-row-even { background: #0f1219; }
         .vdb-row-odd { background: #131825; }
