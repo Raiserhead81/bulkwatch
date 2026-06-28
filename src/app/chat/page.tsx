@@ -157,6 +157,67 @@ export default function ChatPage() {
   };
 
   // Markdown-to-html with premium styling
+
+  function renderAutoChart(html: string): string {
+    const tableRegex = /<table class="vdb-table">([\/\s\S]*?)<\/table>/g;
+    let result = html;
+    let chartHtml = "";
+    let m;
+
+    while ((m = tableRegex.exec(html)) !== null) {
+      const tbl = m[1];
+      const rows = tbl.match(/<tr[^>]*>([\/\s\S]*?)<\/tr>/g);
+      if (!rows || rows.length < 3) continue;
+
+      // Get headers
+      const hCells = rows[0].match(/<th[^>]*>([\/\s\S]*?)<\/th>/g);
+      if (!hCells) continue;
+      const headers = hCells.map((c: string) => c.replace(/<[^>]+>/g, "").trim());
+
+      // Get data rows
+      const data: { label: string; val: number }[] = [];
+      for (let i = 1; i < rows.length && i < 15; i++) {
+        const cells = rows[i].match(/<td[^>]*>([\/\s\S]*?)<\/td>/g);
+        if (!cells || cells.length < 2) continue;
+        const texts = cells.map((c: string) => c.replace(/<[^>]+>/g, "").trim());
+        const label = texts[0].substring(0, 22);
+        // Find first numeric value
+        let val = 0;
+        for (let j = 1; j < texts.length; j++) {
+          const n = parseFloat(texts[j].replace(/[^0-9.-]/g, ""));
+          if (!isNaN(n) && n > 0) { val = n; break; }
+        }
+        if (val > 0) data.push({ label, val });
+      }
+
+      if (data.length < 2) continue;
+
+      const maxVal = Math.max(...data.map(d => d.val));
+      const h = data.length * 34 + 20;
+      const colors = ["#38bdf8","#818cf8","#34d399","#fbbf24","#f87171","#a78bfa","#fb923c","#22d3ee","#e879f9","#84cc16"];
+
+      let bars = "";
+      data.forEach((d, i) => {
+        const w = Math.max((d.val / maxVal) * 320, 4);
+        const y = i * 34 + 16;
+        const col = colors[i % colors.length];
+        const fv = d.val >= 1e6 ? "$" + (d.val/1e6).toFixed(1) + "M" :
+                   d.val >= 1e3 ? "$" + (d.val/1e3).toFixed(0) + "k" :
+                   d.val.toLocaleString();
+        bars += '<g><text x="0" y="' + (y+4) + '" fill="#94a3b8" font-size="11" font-family="system-ui">' + d.label + '</text>' +
+                '<rect x="160" y="' + (y-9) + '" width="' + w + '" height="22" rx="4" fill="' + col + '" opacity="0.85">' +
+                '<animate attributeName="width" from="0" to="' + w + '" dur="0.6s" fill="freeze"/></rect>' +
+                '<text x="' + (165+w) + '" y="' + (y+4) + '" fill="#e2e8f0" font-size="11" font-weight="700" font-family="system-ui">' + fv + '</text></g>';
+      });
+
+      chartHtml += '<div style="margin:12px 0;padding:16px 12px;background:rgba(15,23,42,0.8);border:1px solid #1e3a5f;border-radius:12px;overflow-x:auto">' +
+        '<div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">\u{1F4CA} Chart</div>' +
+        '<svg viewBox="0 0 550 ' + h + '" style="width:100%;height:' + h + 'px">' + bars + '</svg></div>';
+    }
+
+    return result + chartHtml;
+  }
+
   function renderMarkdown(text: string) {
     let html = linkifyContent(text);
 
