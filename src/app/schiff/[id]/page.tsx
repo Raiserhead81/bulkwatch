@@ -418,13 +418,13 @@ export default function ShipDetailPage({
                     Download Image
                   </Button>
                 </a>
-                <a href={`/api/ships/${ship.imo}/pdf`} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" size="sm" className="gap-1">
-                    <Download className="h-4 w-4 mr-1.5" />
-                    PDF Report
-                  </Button>
-                </a>
               )}
+              <a href={`/api/ships/${ship.imo}/pdf`} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" className="w-full border-cyan-500/30 text-cyan-600 dark:text-cyan-400">
+                  <Download className="h-4 w-4 mr-1.5" />
+                  PDF Report
+                </Button>
+              </a>
             </div>
 
             {/* Nearby Survey Ports */}
