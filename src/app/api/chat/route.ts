@@ -26,7 +26,7 @@ function buildSystemPrompt(): string {
   const flagCounts = db.prepare("SELECT flag, COUNT(*) as c FROM ships WHERE flag != 'Unknown' GROUP BY flag ORDER BY c DESC LIMIT 10").all() as any[];
   const withAIS = (db.prepare("SELECT COUNT(*) as c FROM ships WHERE lat IS NOT NULL AND lon IS NOT NULL").get() as any).c;
   const latestBDI = db.prepare("SELECT bdi FROM price_history ORDER BY date DESC LIMIT 1").get() as any;
-  const avgAge = db.prepare("SELECT ROUND(AVG(2026 - year_built),1) as a FROM ships WHERE year_built > 0").get() as any;
+  const avgAge = db.prepare("SELECT ROUND(AVG(2026 - year_built),1) as a FROM ships WHERE year_built > 1900").get() as any;
   // Live freight rates from BDI (same formula as freightRates.ts)
   const bdiVal = latestBDI?.bdi || 2524;
   const freightRates = [
@@ -122,6 +122,11 @@ INSTRUCTIONS:
 - When the user asks about ships, fleets, operators, or market data, generate a SQL query
 - Wrap SQL queries in <SQL>SELECT ... FROM ...</SQL> tags — the system will execute them
 - ONLY use SELECT statements — never INSERT, UPDATE, DELETE, DROP, ALTER
+- CRITICAL: year_built = 0 means UNKNOWN, NOT year zero! When calculating age, ALWAYS filter: WHERE year_built > 1900
+- For average age: AVG(2026 - year_built) WHERE year_built > 1900
+- For fleet stats: COUNT ships WHERE year_built > 1900 to get "ships with known age"
+- Never show ages > 50 years — if you see that, year_built is 0 (unknown)
+- Fleet value estimates should only include ships with known specs (dwt > 0 AND year_built > 1900)
 - Use LIKE for name searches (case insensitive with COLLATE NOCASE)
 - Format numbers nicely (e.g. 180,000 DWT)
 - For route cost estimates, use typical industry rates:
