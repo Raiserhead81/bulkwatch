@@ -1,6 +1,7 @@
 "use client";
 
 import { getRoutingFactors } from "@/lib/voyageRouting";
+import { calculateFreightRates, getRateForDwt } from "@/lib/freightRates";
 
 import { useState, useMemo, useEffect } from "react";
 
@@ -164,6 +165,17 @@ export default function VoyageCalcPage() {
   const [fuelPrice, setFuelPrice] = useState(600);
   const [fuelConsumption, setFuelConsumption] = useState(35);
   const [freightRate, setFreightRate] = useState(15);
+  const [liveRates, setLiveRates] = useState<any>(null);
+
+  // Auto-calculate freight rate from current BDI
+  useMemo(() => {
+    const rates = calculateFreightRates(2524, "28 Jun 2026");
+    setLiveRates(rates);
+    const match = getRateForDwt(rates, dwt, "Bulk Carrier");
+    if (match && match.spotRate > 0) {
+      setFreightRate(+match.spotRate.toFixed(1));
+    }
+  }, [dwt]);
   const [portDays, setPortDays] = useState(4);
   const [weather, setWeather] = useState<any>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
