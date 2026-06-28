@@ -52,6 +52,96 @@ function linkifyContent(text: string): string {
   return text;
 }
 
+
+function BarChart({ data }: { data: { label: string; value: number }[] }) {
+  if (data.length < 2) return null;
+  const max = Math.max(...data.map(d => d.value));
+  const colors = ["#38bdf8","#818cf8","#34d399","#fbbf24","#f87171","#a78bfa","#fb923c","#22d3ee","#e879f9","#84cc16"];
+  const fmt = (v: number) => v >= 1e6 ? "$" + (v/1e6).toFixed(1) + "M" : v >= 1e3 ? "$" + (v/1e3).toFixed(0) + "k" : v.toLocaleString();
+
+  return (
+    <div style={{ margin:"12px 0", padding:"16px", background:"rgba(15,23,42,0.8)", border:"1px solid #1e3a5f", borderRadius:12 }}>
+      <div style={{ fontSize:10, color:"#64748b", fontWeight:600, textTransform:"uppercase", letterSpacing:0.5, marginBottom:8 }}>Chart</div>
+      {data.map((d, i) => (
+        <div key={i} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
+          <div style={{ width:120, fontSize:11, color:"#94a3b8", textAlign:"right", flexShrink:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{d.label}</div>
+          <div style={{ flex:1, height:22, background:"#0f172a", borderRadius:4, overflow:"hidden", position:"relative" }}>
+            <div style={{
+              height:"100%", borderRadius:4, background: `linear-gradient(90deg, ${colors[i % colors.length]}, ${colors[(i+1) % colors.length]})`,
+              width: `${Math.max((d.value / max) * 100, 2)}%`,
+              transition: "width 0.8s ease-out",
+              opacity: 0.9,
+            }} />
+          </div>
+          <div style={{ width:70, fontSize:11, color:"#e2e8f0", fontWeight:700, textAlign:"right", flexShrink:0 }}>{fmt(d.value)}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function extractChartData(text: string): { label: string; value: number }[][] {
+  const charts: { label: string; value: number }[][] = [];
+  // Split by table markers
+  const tableBlocks = text.split(/\n\|/);
+  let currentTable: string[] = [];
+
+  const lines = text.split("\n");
+  let inTable = false;
+  let tableLines: string[] = [];
+
+  for (const line of lines) {
+    if (line.trim().startsWith("|") && line.trim().endsWith("|")) {
+      inTable = true;
+      tableLines.push(line);
+    } else if (inTable) {
+      // Table ended
+      if (tableLines.length >= 3) {
+        const data: { label: string; value: number }[] = [];
+        // Skip header (0) and separator (1)
+        for (let i = 2; i < tableLines.length && i < 17; i++) {
+          const cells = tableLines[i].split("|").filter(c => c.trim());
+          if (cells.length < 2) continue;
+          const label = cells[0].replace(/\*\*/g, "").trim().substring(0, 22);
+          // Find first numeric cell
+          for (let j = 1; j < cells.length; j++) {
+            const numStr = cells[j].replace(/[^0-9.-]/g, "");
+            const num = parseFloat(numStr);
+            if (!isNaN(num) && num > 0) {
+              data.push({ label, value: num });
+              break;
+            }
+          }
+        }
+        if (data.length >= 2) charts.push(data);
+      }
+      inTable = false;
+      tableLines = [];
+    }
+  }
+  // Handle table at end of text
+  if (inTable && tableLines.length >= 3) {
+    const data: { label: string; value: number }[] = [];
+    for (let i = 2; i < tableLines.length && i < 17; i++) {
+      const cells = tableLines[i].split("|").filter(c => c.trim());
+      if (cells.length < 2) continue;
+      const label = cells[0].replace(/\*\*/g, "").trim().substring(0, 22);
+      for (let j = 1; j < cells.length; j++) {
+        const numStr = cells[j].replace(/[^0-9.-]/g, "");
+        const num = parseFloat(numStr);
+        if (!isNaN(num) && num > 0) {
+          data.push({ label, value: num });
+          break;
+        }
+      }
+    }
+    if (data.length >= 2) charts.push(data);
+  }
+
+  return charts;
+}
+
+
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -269,7 +359,7 @@ export default function ChatPage() {
     html = html.replace(/\n\n/g, '<div class="vdb-paragraph-break"></div>');
     html = html.replace(/\n/g, '<br>');
 
-    return renderAutoChart(html);
+    return html;
   }
 
   return (
@@ -278,6 +368,9 @@ export default function ChatPage() {
 
       {/* Header */}
       <div className="vdb-header">
+          <button onClick={() => setMenuOpen(!menuOpen)} style={{
+            display:"none", background:"none", border:"none", color:"#94a3b8", fontSize:22, cursor:"pointer", padding:4,
+          }} className="vdb-hamburger">{menuOpen ? "\u2715" : "\u2630"}</button>
         <div className="vdb-header-inner">
           <a href="/" className="vdb-logo-link">
             <span className="vdb-logo-anchor">{"\u2693"}</span>
@@ -464,6 +557,14 @@ export default function ChatPage() {
           text-decoration: none; color: #64748b; transition: all 0.2s;
           font-weight: 400;
         }
+        
+        .vdb-hamburger { display: none !important; }
+        @media (max-width: 768px) {
+          .vdb-hamburger { display: block !important; }
+          .vdb-nav-links { display: none !important; }
+          .vdb-nav-links.open { display: flex !important; position: fixed; top: 50px; left: 0; right: 0; bottom: 0; background: #050810; flex-direction: column; padding: 20px; gap: 8px; z-index: 100; }
+        }
+
         .vdb-nav-link:hover { color: #94a3b8; }
         .vdb-nav-active {
           color: #fff !important; background: linear-gradient(135deg, #2563eb, #1d4ed8);
