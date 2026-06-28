@@ -24,6 +24,7 @@ function toShip(row: Record<string, unknown>) {
     position: row.lat ? { lat: row.lat, lon: row.lon } : undefined,
     lastSeen: row.last_seen,
     status: row.status || "active",
+    deliveryDate: row.delivery_date,
   };
 }
 
@@ -35,5 +36,23 @@ export async function GET(
   const db = getDb();
   const row = db.prepare("SELECT * FROM ships WHERE imo = ?").get(imo) as Record<string, unknown> | undefined;
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(toShip(row));
+
+  const ship = toShip(row);
+
+  // Operator contact details
+  if (ship.operator) {
+    const op = db.prepare("SELECT * FROM operators WHERE name = ?").get(ship.operator) as Record<string, unknown> | undefined;
+    if (op) {
+      (ship as Record<string, unknown>).operatorDetails = {
+        country: op.country,
+        city: op.city,
+        website: op.website,
+        email: op.email,
+        phone: op.phone,
+        fleetSize: op.fleet_size,
+      };
+    }
+  }
+
+  return NextResponse.json(ship);
 }

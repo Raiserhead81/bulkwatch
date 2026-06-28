@@ -20,7 +20,9 @@ export interface Ship {
   imageUrl?: string;
   imageAttribution?: string;
   position?: { lat: number; lon: number };
-  status: "active" | "laid_up" | "scrapped" | "lost";
+  status: "active" | "laid_up" | "scrapped" | "lost" | "under_construction";
+  deliveryDate?: string;
+  operatorDetails?: { country: string; city: string; website: string; email: string; phone: string; fleetSize: number };
 }
 
 export type BulkCarrierType =

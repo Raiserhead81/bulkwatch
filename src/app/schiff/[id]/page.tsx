@@ -13,6 +13,7 @@ import {
   Flag,
   Building2,
   Home,
+  Globe,
   Gauge,
   Navigation,
   TrendingUp,
@@ -104,7 +105,9 @@ export default function ShipDetailPage({
     { icon: Calendar, label: "Year Built", value: ship.yearBuilt > 0 ? ship.yearBuilt.toString() : "—" },
     { icon: Flag, label: "Flag", value: ship.flag },
     { icon: Building2, label: "Operator", value: ship.operator || "—" },
+    ...(ship.operatorDetails?.country ? [{ icon: MapPin, label: "HQ", value: `${ship.operatorDetails.city}, ${ship.operatorDetails.country}` }] : []),
     { icon: Home, label: "Home Port", value: ship.homePort || "—" },
+    ...(ship.operatorDetails?.website ? [{ icon: Globe, label: "Website", value: ship.operatorDetails.website.replace("https://", "") }] : []),
   ];
 
   return (

@@ -24,6 +24,7 @@ function toShip(row: Record<string, unknown>) {
     position: row.lat ? { lat: row.lat, lon: row.lon } : undefined,
     lastSeen: row.last_seen,
     status: row.status || "active",
+    deliveryDate: row.delivery_date,
   };
 }
 
