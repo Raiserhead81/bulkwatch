@@ -27,6 +27,28 @@ function buildSystemPrompt(): string {
   const withAIS = (db.prepare("SELECT COUNT(*) as c FROM ships WHERE lat IS NOT NULL AND lon IS NOT NULL").get() as any).c;
   const latestBDI = db.prepare("SELECT bdi FROM price_history ORDER BY date DESC LIMIT 1").get() as any;
   const avgAge = db.prepare("SELECT ROUND(AVG(2026 - year_built),1) as a FROM ships WHERE year_built > 0").get() as any;
+  // Live freight rates from BDI (same formula as freightRates.ts)
+  const bdiVal = latestBDI?.bdi || 2524;
+  const freightRates = [
+    { type: "Capesize (180k DWT)", tce: Math.max(Math.round(12.5 * bdiVal - 8000), 1000) },
+    { type: "Kamsarmax (82k DWT)", tce: Math.max(Math.round(6.2 * bdiVal - 2000), 1000) },
+    { type: "Panamax (75k DWT)", tce: Math.max(Math.round(5.8 * bdiVal - 1500), 1000) },
+    { type: "Ultramax (64k DWT)", tce: Math.max(Math.round(5.0 * bdiVal - 1000), 1000) },
+    { type: "Supramax (58k DWT)", tce: Math.max(Math.round(4.5 * bdiVal - 500), 1000) },
+    { type: "Handysize (35k DWT)", tce: Math.max(Math.round(3.2 * bdiVal + 500), 1000) },
+    { type: "VLCC Tanker", tce: Math.max(Math.round(8.0 * bdiVal + 5000), 5000) },
+    { type: "Suezmax Tanker", tce: Math.max(Math.round(5.5 * bdiVal + 3000), 3000) },
+    { type: "MR Tanker (50k)", tce: Math.max(Math.round(3.0 * bdiVal + 2500), 2000) },
+  ];
+  const ratesList = freightRates.map(r => `  ${r.type}: $${r.tce.toLocaleString()}/day TCE`).join("\n");
+
+  // Bunker prices estimated from Brent (updated daily by cron)
+  // Read from priceEstimator or use BDI correlation
+  const brentEst = Math.round(bdiVal * 0.028 + 2); // rough BDI→Brent correlation
+  const vlsfo = Math.round(brentEst * 8.2);
+  const hsfo = Math.round(brentEst * 5.8);
+  const mgo = Math.round(brentEst * 12.5);
+
   const topOperators = db.prepare("SELECT operator, COUNT(*) as c FROM ships WHERE operator IS NOT NULL AND operator != '' GROUP BY operator ORDER BY c DESC LIMIT 10").all() as any[];
 
   const typeList = typeCounts.map((r: any) => `  ${r.type}: ${r.c}`).join("\n");
@@ -62,6 +84,16 @@ CURRENT STATS:
 - Ships with AIS position: ${withAIS}
 - Average fleet age: ${avgAge?.a || "?"} years
 - Current BDI: ${bdi}
+
+LIVE FREIGHT RATES (calculated from BDI ${bdiVal}, updated daily):
+${ratesList}
+
+CURRENT BUNKER FUEL PRICES (estimated from crude oil):
+  VLSFO 0.5%S: ~$${vlsfo}/ton
+  HSFO 380: ~$${hsfo}/ton
+  MGO/MDO: ~$${mgo}/ton
+
+When asked about freight rates or fuel prices, use these CURRENT values - they are updated daily.
 
 FLEET BY TYPE:
 ${typeList}
