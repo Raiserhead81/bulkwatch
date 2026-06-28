@@ -2,7 +2,7 @@
 
 import { getRoutingFactors } from "@/lib/voyageRouting";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 interface Port {
   code: string; name: string; country: string;
@@ -69,6 +69,8 @@ export default function VoyageCalcPage() {
   const [fuelConsumption, setFuelConsumption] = useState(35);
   const [freightRate, setFreightRate] = useState(15);
   const [portDays, setPortDays] = useState(4);
+  const [weather, setWeather] = useState<any>(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
 
   const result = useMemo(() => {
     const from = PORTS.find(p => p.code === fromCode);
@@ -116,6 +118,18 @@ export default function VoyageCalcPage() {
       routing: rf,
     };
   }, [fromCode, toCode, dwt, speed, fuelPrice, fuelConsumption, freightRate, portDays]);
+
+  // Fetch live weather for selected route
+  const fetchWeather = () => {
+    const from = PORTS.find(p => p.code === fromCode);
+    const to = PORTS.find(p => p.code === toCode);
+    if (!from || !to || from.code === to.code) return;
+    setWeatherLoading(true);
+    fetch(`/api/weather/route?fromLat=${from.lat}&fromLon=${from.lon}&toLat=${to.lat}&toLon=${to.lon}`)
+      .then(r => r.json())
+      .then(data => { setWeather(data); setWeatherLoading(false); })
+      .catch(() => setWeatherLoading(false));
+  };
 
   const box: React.CSSProperties = { background: "#1e293b", borderRadius: 12, border: "1px solid #1e3a5f", padding: 20 };
   const labelStyle: React.CSSProperties = { fontSize: 12, color: "#64748b", marginBottom: 4, display: "block" };
