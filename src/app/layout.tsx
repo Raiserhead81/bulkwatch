@@ -29,11 +29,33 @@ export const metadata: Metadata = {
     "Valemax",
   ],
   authors: [{ name: "Vessel Database" }],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Vessel DB",
+  },
+  formatDetection: { telephone: false },
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icon-192.png", sizes: "192x192" }],
+  },
   openGraph: {
     title: "Vessel Database",
     description: "Global Ship Intelligence Database",
     type: "website",
   },
+};
+
+export const viewport = {
+  themeColor: "#0f172a",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
 };
 
 export default function RootLayout({
@@ -50,6 +72,11 @@ export default function RootLayout({
           {children}
           <Toaster />
         </I18nProvider>
+      <script dangerouslySetInnerHTML={{ __html: `
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(function() {});
+          }
+        `}} />
       </body>
     </html>
   );
