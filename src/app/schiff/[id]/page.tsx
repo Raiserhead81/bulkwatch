@@ -90,7 +90,7 @@ export default function ShipDetailPage({
   }
 
   const price = estimatePrice(ship);
-  const voyage = generateMockVoyage(ship);
+  const voyage = ship.status !== 'under_construction' ? generateMockVoyage(ship) : null;
   const nearbySurveyPorts = getNearbySurveyPorts(
     voyage?.currentPosition?.lat ?? 0,
     voyage?.currentPosition?.lon ?? 0,
@@ -227,62 +227,62 @@ export default function ShipDetailPage({
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Navigation className="h-5 w-5 text-blue-600 dark:text-cyan-400" />
                   {ship.status === "under_construction" ? "Construction Status" : ship.position ? "Current Voyage" : "Estimated Voyage"}
-                  <Badge className={`${getStatusColor(voyage.currentStatus)} border ml-auto`}>
-                    {getStatusLabel(voyage.currentStatus)}
+                  <Badge className={`${getStatusColor(voyage?.currentStatus ?? 'at_port')} border ml-auto`}>
+                    {getStatusLabel(voyage?.currentStatus ?? 'at_port')}
                   </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                  <div className="text-2xl">{voyage.from.countryFlag}</div>
+                  <div className="text-2xl">{voyage?.from?.countryFlag ?? '🏗️'}</div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">From</p>
-                    <p className="font-semibold text-sm truncate">{voyage.from.name}</p>
-                    <p className="text-xs text-slate-500 dark:text-white/40">{voyage.from.country}</p>
+                    <p className="font-semibold text-sm truncate">{voyage?.from?.name ?? (ship.builder || 'Shipyard')}</p>
+                    <p className="text-xs text-slate-500 dark:text-white/40">{voyage?.from?.country ?? ''}</p>
                   </div>
                   <ArrowRight className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                  <div className="text-2xl">{voyage.to.countryFlag}</div>
+                  <div className="text-2xl">{voyage?.to?.countryFlag ?? '🚢'}</div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">To</p>
-                    <p className="font-semibold text-sm truncate">{voyage.to.name}</p>
-                    <p className="text-xs text-slate-500 dark:text-white/40">{voyage.to.country}</p>
+                    <p className="font-semibold text-sm truncate">{voyage?.to?.name ?? 'Delivery'}</p>
+                    <p className="text-xs text-slate-500 dark:text-white/40">{voyage?.to?.country ?? (ship.deliveryDate || '')}</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
                     <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Cargo</p>
-                    <p className="text-sm font-semibold">{voyage.cargoDescription}</p>
+                    <p className="text-sm font-semibold">{voyage?.cargoDescription ?? 'Under Construction'}</p>
                   </div>
                   <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
                     <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Load</p>
-                    <p className="text-sm font-semibold">{voyage.cargoLoadPercent}%</p>
+                    <p className="text-sm font-semibold">{voyage?.cargoLoadPercent ?? 0}%</p>
                   </div>
                   <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
                     <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Speed</p>
-                    <p className="text-sm font-semibold tabular-nums">{voyage.speedKnots} kn</p>
+                    <p className="text-sm font-semibold tabular-nums">{voyage?.speedKnots ?? 0} kn</p>
                   </div>
                   <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
                     <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Distance</p>
-                    <p className="text-sm font-semibold tabular-nums">{voyage.distanceNm} sm</p>
+                    <p className="text-sm font-semibold tabular-nums">{voyage?.distanceNm ?? 0} sm</p>
                   </div>
                 </div>
 
                 <div>
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-slate-500 dark:text-white/40">Progress</span>
-                    <span className="font-semibold tabular-nums">{voyage.progressPercent}%</span>
+                    <span className="font-semibold tabular-nums">{voyage?.progressPercent ?? 0}%</span>
                   </div>
                   <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all"
-                      style={{ width: `${voyage.progressPercent}%` }}
+                      style={{ width: `${voyage?.progressPercent ?? 0}%` }}
                     />
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between text-xs text-slate-600 dark:text-white/60 pt-2 border-t border-slate-200 dark:border-white/10">
-                  <span>Departure: {voyage.departureDate.toLocaleDateString("en-US")}</span>
+                  <span>Departure: {voyage?.departureDate ?? new Date().toLocaleDateString("en-US")}</span>
                   <span className="font-semibold">
                     ETA: {voyage.eta.toLocaleDateString("en-US")} ·{" "}
                     {voyage.eta.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
