@@ -9,13 +9,22 @@ const NAV_LINKS: [string, string][] = [
   ["AI Chat", "/chat"]
 ];
 
-const SUGGESTIONS = [
-  { icon: "\u{1F4CA}", label: "Markt\u00fcbersicht", prompt: "Gib mir eine \u00dcbersicht zum aktuellen Schiffsmarkt. BDI, Frachtraten, Trends." },
-  { icon: "\u{1F6A2}", label: "Schiffe im Suezkanal", prompt: "Welche Schiffe befinden sich gerade im Suezkanal?" },
-  { icon: "\u{1F4B0}", label: "Beste Investments", prompt: "Welche Schiffe lohnen sich aktuell als Investment? Zeige die Top 10 mit Preissch\u00e4tzung." },
-  { icon: "\u{1F30D}", label: "Route berechnen", prompt: "Berechne die Kosten f\u00fcr eine Capesize-Fahrt von Port Hedland nach Qingdao mit Eisenerz." },
-  { icon: "\u{2693}", label: "Flotten-Vergleich", prompt: "Vergleiche die Flotten von Oldendorff und Berge Bulk. Gr\u00f6\u00dfe, Alter, Wert." },
-  { icon: "\u{1F3D7}", label: "Neubauten", prompt: "Welche Schiffe werden gerade gebaut? Zeige alle Neubauten mit Werft und Liefertermin." },
+const SUGGESTIONS_DE = [
+  { icon: "\u{1F4CA}", label: "Markt\u00fcbersicht", prompt: "Gib mir eine \u00dcbersicht zum aktuellen Schiffsmarkt. BDI, Frachtraten, Trends und Prognose." },
+  { icon: "\u{1F6A2}", label: "Wo sind die Schiffe?", prompt: "Zeige mir Schiffe die sich gerade in wichtigen Gew\u00e4ssern befinden: Suezkanal, Singapur, Rotterdam." },
+  { icon: "\u{1F4B0}", label: "Top Investments", prompt: "Welche Schiffe lohnen sich aktuell als Investment? Zeige die Top 10 nach Preis/DWT-Verh\u00e4ltnis mit Alter und Empfehlung." },
+  { icon: "\u{1F30D}", label: "Route berechnen", prompt: "Berechne die Kosten und Dauer f\u00fcr eine Bulk-Carrier-Fahrt von Australien nach China mit Eisenerz. Welcher Schiffstyp ist am wirtschaftlichsten?" },
+  { icon: "\u{2693}", label: "Reedereien vergleichen", prompt: "Welche sind die gr\u00f6\u00dften Reedereien in der Datenbank? Vergleiche ihre Flottengr\u00f6\u00dfe, Durchschnittsalter und Schiffstypen." },
+  { icon: "\u{1F3D7}", label: "Neubauten & Werften", prompt: "Welche Schiffe werden gerade gebaut? Gruppiere nach Schiffstyp und zeige Werft, Reederei und Liefertermin." },
+];
+
+const SUGGESTIONS_EN = [
+  { icon: "\u{1F4CA}", label: "Market Overview", prompt: "Give me an overview of the current shipping market. BDI, freight rates, trends and outlook." },
+  { icon: "\u{1F6A2}", label: "Where are ships?", prompt: "Show me ships currently in key waterways: Suez Canal, Singapore, Rotterdam area." },
+  { icon: "\u{1F4B0}", label: "Top Investments", prompt: "Which ships are the best investment right now? Show top 10 by price/DWT ratio with age and recommendation." },
+  { icon: "\u{1F30D}", label: "Route Calculator", prompt: "Calculate cost and duration for a bulk carrier voyage from Australia to China with iron ore. Which ship type is most economical?" },
+  { icon: "\u{2693}", label: "Compare Operators", prompt: "Which are the largest operators in the database? Compare fleet size, average age and ship types." },
+  { icon: "\u{1F3D7}", label: "Newbuilds & Yards", prompt: "Which ships are currently under construction? Group by type and show yard, operator and delivery date." },
 ];
 
 interface Message {
@@ -36,6 +45,8 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [lang, setLang] = useState<"de"|"en">("de");
+  const SUGGESTIONS = lang === "de" ? SUGGESTIONS_DE : SUGGESTIONS_EN;
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -176,6 +187,10 @@ export default function ChatPage() {
               }}>{l}</a>
             ))}
           </div>
+          <div style={{ display:"flex", borderRadius:8, overflow:"hidden", border:"1px solid #1e3a5f" }}>
+            <button onClick={() => setLang("de")} style={{ padding:"4px 10px", fontSize:11, fontWeight:700, border:"none", cursor:"pointer", background: lang==="de" ? "#2563eb" : "#0f172a", color: lang==="de" ? "#fff" : "#64748b" }}>DE</button>
+            <button onClick={() => setLang("en")} style={{ padding:"4px 10px", fontSize:11, fontWeight:700, border:"none", cursor:"pointer", background: lang==="en" ? "#2563eb" : "#0f172a", color: lang==="en" ? "#fff" : "#64748b" }}>EN</button>
+          </div>
         </div>
       </div>
 
@@ -187,7 +202,9 @@ export default function ChatPage() {
               <div style={{ width:80, height:80, borderRadius:20, background:"linear-gradient(135deg,#2563eb,#38bdf8)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px", boxShadow:"0 8px 32px rgba(37,99,235,0.4)", fontSize:36 }}>\u2693</div>
               <h1 style={{ fontSize:28, fontWeight:800, margin:"0 0 8px", background:"linear-gradient(180deg,#fff,#94a3b8)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>Vessel Database AI</h1>
               <p style={{ color:"#64748b", fontSize:14, maxWidth:450, margin:"0 auto 32px", lineHeight:1.6 }}>
-                Frag mich alles \u00fcber Schiffe, Routen, M\u00e4rkte und Flottendaten. Ich habe Zugriff auf die Live-Datenbank mit \u00fcber 10.000 Schiffen.
+                {lang === "de"
+                  ? "Frag mich alles \u00fcber Schiffe, Routen, M\u00e4rkte und Flottendaten. Ich habe Zugriff auf die Live-Datenbank mit \u00fcber 10.000 Schiffen."
+                  : "Ask me anything about ships, routes, markets and fleet data. I have access to the live database with over 10,000 ships."}
               </p>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:10, maxWidth:600, margin:"0 auto" }}>
                 {SUGGESTIONS.map(s => (
@@ -239,7 +256,7 @@ export default function ChatPage() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Frag nach Schiffen, Routen, M\u00e4rkten..."
+            placeholder={lang === "de" ? "Frag nach Schiffen, Routen, M\u00e4rkten..." : "Ask about ships, routes, markets..."}
             rows={1}
             style={{
               flex:1, padding:"12px 16px", borderRadius:12, border:"1px solid #1e3a5f",
