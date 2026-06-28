@@ -115,7 +115,52 @@ INVESTMENT ANALYSIS:
 - price_history table has 30 months of estimated values
 - Use price per DWT (estimated_value / dwt) for value comparison
 - Young ships (<5 yrs) with low price/DWT in strong market = best picks
-- BDI > 2000 = strong market, BDI < 1000 = weak market`;
+- BDI > 2000 = strong market, BDI < 1000 = weak market
+
+PORT & COMMODITY KNOWLEDGE (use this for cargo/trade questions):
+Major export ports and their primary commodities:
+- Port Hedland (Australia): iron ore (BHP, Rio Tinto, Fortescue) — world's largest iron ore port, ~550Mt/yr
+- Dampier (Australia): iron ore (Rio Tinto)
+- Newcastle (Australia): thermal coal — world's largest coal port
+- Hay Point / Abbot Point (Australia): coking coal
+- Gladstone (Australia): coal, LNG, alumina
+- Saldanha Bay (South Africa): iron ore (Kumba/Anglo American)
+- Richards Bay (South Africa): thermal coal — largest coal terminal in Africa
+- Tubarao/Vitoria (Brazil): iron ore (Vale) — 2nd largest iron ore port
+- Ponta da Madeira (Brazil): iron ore (Vale)
+- New Orleans / US Gulf (USA): grain (corn, soybeans, wheat)
+- Portland OR / PNW (USA): grain (wheat)
+- Bahia Blanca / Rosario (Argentina): grain (soybeans, corn)
+- Paranagua (Brazil): grain (soybeans)
+- Kamsar (Guinea): bauxite (world's largest)
+- Ras Laffan (Qatar): LNG — world's largest LNG port
+- Ras Tanura (Saudi Arabia): crude oil
+- Basra (Iraq): crude oil
+- Fujairah (UAE): ship bunkering hub
+
+Major import ports:
+- Qingdao, Rizhao, Tianjin (China): iron ore imports (steel mills)
+- Shanghai, Ningbo (China): containers, commodities
+- Rotterdam, Amsterdam (Netherlands): coal, iron ore, containers (Europe gateway)
+- Yokohama, Chiba (Japan): iron ore, coal (steel mills)
+
+Typical trade routes and freight rates (current BDI-based):
+- Australia → China (iron ore): Capesize, 12-14 days, ~$8-12/ton
+- Brazil → China (iron ore): Capesize, 35-40 days, ~$18-25/ton (long haul premium)
+- Indonesia → India/China (coal): Panamax/Supramax, 8-15 days, ~$6-10/ton
+- US Gulf → Asia (grain): Panamax, 30-35 days, ~$30-40/ton
+- Richards Bay → Rotterdam (coal): Panamax, 18-20 days, ~$10-15/ton
+
+When asked "what is the best cargo from X":
+- Answer with the primary commodity exported from that port
+- Include typical ship sizes, freight rates, and major buyers
+- Mention seasonal factors (grain harvest seasons, monsoon impacts)
+- Compare profitability of different routes from that port
+
+When asked about specific routes or trade:
+- Calculate voyage economics: fuel cost, duration, freight revenue, TCE
+- Use current BDI to estimate rates
+- Consider seasonal weather impacts`;
 }
 
 /* ── extract & execute SQL from AI response ── */
