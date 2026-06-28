@@ -122,11 +122,18 @@ INSTRUCTIONS:
 - When the user asks about ships, fleets, operators, or market data, generate a SQL query
 - Wrap SQL queries in <SQL>SELECT ... FROM ...</SQL> tags — the system will execute them
 - ONLY use SELECT statements — never INSERT, UPDATE, DELETE, DROP, ALTER
-- CRITICAL: year_built = 0 means UNKNOWN, NOT year zero! When calculating age, ALWAYS filter: WHERE year_built > 1900
-- For average age: AVG(2026 - year_built) WHERE year_built > 1900
-- For fleet stats: COUNT ships WHERE year_built > 1900 to get "ships with known age"
-- Never show ages > 50 years — if you see that, year_built is 0 (unknown)
-- Fleet value estimates should only include ships with known specs (dwt > 0 AND year_built > 1900)
+- CRITICAL: year_built = 0 means UNKNOWN, NOT year zero!
+- For average age use: AVG(CASE WHEN year_built > 1900 THEN 2026 - year_built END) — this ignores unknowns
+- For fleet rankings: COUNT ALL ships per operator (don't filter by year_built!)
+- For total DWT: SUM ALL dwt per operator (don't filter by year_built!)
+- Only filter year_built > 1900 when calculating AGE, never when counting ships or summing DWT
+- Example fleet query:
+  SELECT operator, COUNT(*) as ships, SUM(dwt) as total_dwt,
+    ROUND(AVG(CASE WHEN year_built > 1900 THEN 2026 - year_built END), 1) as avg_age
+  FROM ships WHERE operator IS NOT NULL AND operator != ''
+  GROUP BY operator ORDER BY COUNT(*) DESC LIMIT 20
+- Never show ages > 50 years — that means data is missing
+- For fleet value: use dwt * price_per_dwt_by_type, don't require year_built
 - Use LIKE for name searches (case insensitive with COLLATE NOCASE)
 - Format numbers nicely (e.g. 180,000 DWT)
 - For route cost estimates, use typical industry rates:
