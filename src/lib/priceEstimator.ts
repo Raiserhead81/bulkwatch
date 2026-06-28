@@ -255,7 +255,14 @@ export function estimatePrice(ship: Ship): PriceEstimate {
       impact: "negative",
       weight: 15,
     });
-  } else if (ship.status === "under_construction") {    priceMultiplier *= 1.15;    factors.push({      label: "Status",      value: "Under Construction (newbuild premium)",      impact: "positive",      weight: 20,    });    recommendation = "HOLD";    recommendationReasoning = "Newbuild under construction. Value depends on delivery date and yard reputation. Resale at premium possible in strong markets.";
+  } else if (ship.status === "under_construction") {
+    priceMultiplier *= 1.15;
+    factors.push({
+      label: "Status",
+      value: "Under Construction (newbuild premium)",
+      impact: "positive",
+      weight: 20,
+    });
   } else if (ship.status === "lost") {
     priceMultiplier *= 0;
     factors.push({
@@ -320,6 +327,11 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   // Buy/Hold/Sell Empfehlung
   let recommendation: "BUY" | "HOLD" | "SELL" = "HOLD";
   let recommendationReasoning = "";
+
+  if (ship.status === "under_construction") {
+    recommendation = "HOLD";
+    recommendationReasoning = "Newbuild under construction. Value depends on delivery date and yard reputation. Resale at premium possible in strong markets.";
+  }
 
   if (ship.status === "lost") {
     recommendation = "SELL";
