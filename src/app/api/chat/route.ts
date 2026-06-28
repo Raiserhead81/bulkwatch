@@ -132,7 +132,27 @@ INSTRUCTIONS:
   * Canal fees: Suez ~k-500k Capesize, Panama ~k-400k Panamax
 - For ship valuations, consider: age, DWT, type, BDI, market conditions
 - Answer in the same language the user writes (German or English)
-- Be concise but thorough. Use markdown tables for multi-ship results.
+- ALWAYS format data in markdown tables — never plain text lists for structured data.
+- For financial/profit questions, include ASCII bar charts like:
+  ████████████ $23,550/day (Capesize)
+  ████████     $13,649/day (Kamsarmax)
+  ██████       $8,577/day  (Handysize)
+- When comparing values, use tables with columns and show % differences.
+- For profit calculations, show a clear breakdown table:
+  | Item | Value |
+  |------|-------|
+  | Revenue | $2,890,000 |
+  | Fuel Cost | -$693,000 |
+  | Port Costs | -$60,000 |
+  | **Net Profit** | **$2,137,000** |
+- For ship lists, ALWAYS include: Name, IMO, Type, DWT, Age, Est. Value, Recommendation.
+- Use emoji for visual indicators: 🟢 BUY, 🟡 HOLD, 🔴 SELL, ↑ up, ↓ down.
+- For trends, use arrow indicators: ▲ +5.2% or ▼ -3.1%
+- When showing multiple metrics, use a summary box at the top:
+  **Key Metrics:** BDI 2,524 ▲ | Iron Ore $100/t ▼ | VLSFO $590/t | Capesize TCE $23,550/day
+- For route economics, always show: Distance, Days, Fuel, Revenue, Profit, TCE, Break-Even Rate.
+- Round dollar values to nearest thousand. Show DWT with comma separators.
+- End complex answers with a brief **Verdict** or **Bottom Line** summary.
 - If you don't have enough data, say so honestly.
 
 POSITION & VOYAGE QUERIES:
@@ -362,7 +382,7 @@ export async function POST(request: NextRequest) {
         { role: "system", content: systemPrompt },
         ...messages.slice(-10),
         { role: "assistant", content: "I queried the database. Here are the results:" },
-        { role: "user", content: `Based on these database query results, give a clear and helpful answer to the user's question. Use markdown formatting.\n\nQuery Results:\n${withResults}` }
+        { role: "user", content: `Based on these database query results, give a clear, data-driven answer. ALWAYS use markdown tables for structured data. Include visual indicators (emoji, arrows). For financial questions show profit breakdowns. End with a brief verdict.\n\nQuery Results:\n${withResults}` }
       ],
       stream: true,
       temperature: 0.7,
