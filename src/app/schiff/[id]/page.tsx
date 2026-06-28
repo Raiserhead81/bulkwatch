@@ -181,8 +181,36 @@ export default function ShipDetailPage({
                     onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ShipIcon className="h-16 w-16 text-slate-300 dark:text-white/20" />
+                  <div className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden"
+                    style={{ background: ship.status === "under_construction"
+                      ? "linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e293b 100%)"
+                      : "linear-gradient(135deg, #1e293b, #0f172a)" }}>
+                    {/* Animated construction lines for newbuilds */}
+                    {ship.status === "under_construction" && (
+                      <div className="absolute inset-0 opacity-10" style={{
+                        backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 20px, #fbbf24 20px, #fbbf24 22px)",
+                        animation: "stripe-scroll 3s linear infinite",
+                      }} />
+                    )}
+                    <div className="relative z-10 text-center">
+                      <div className="text-5xl mb-3">
+                        {ship.status === "under_construction" ? "🏗️" :
+                         ship.type.includes("Tanker") || ship.type.includes("VLCC") || ship.type.includes("Crude") ? "🛢️" :
+                         ship.type.includes("Container") || ship.type.includes("ULCV") ? "📦" :
+                         ship.type.includes("LNG") || ship.type.includes("LPG") ? "⛽" :
+                         ship.type.includes("Cruise") || ship.type.includes("Passenger") ? "🚢" :
+                         ship.type.includes("Car") || ship.type.includes("RoRo") ? "🚗" :
+                         ship.type.includes("Tug") ? "⚓" : "🚢"}
+                      </div>
+                      <p className="text-sm font-semibold text-white/60">{ship.type}</p>
+                      {ship.status === "under_construction" && ship.deliveryDate && (
+                        <p className="text-xs text-amber-400/80 mt-1 font-medium">ETA {ship.deliveryDate}</p>
+                      )}
+                      {ship.builder && ship.status === "under_construction" && (
+                        <p className="text-xs text-white/40 mt-0.5">{ship.builder}</p>
+                      )}
+                    </div>
+                    <style>{"@keyframes stripe-scroll { to { background-position: 60px 0 } }"}</style>
                   </div>
                 )}
               </div>

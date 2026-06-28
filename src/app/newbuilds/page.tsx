@@ -147,11 +147,27 @@ export default function NewbuildsPage() {
                     onMouseEnter={e => (e.currentTarget.style.borderColor = "#38bdf8")}
                     onMouseLeave={e => (e.currentTarget.style.borderColor = "#1e3a5f")}
                   >
-                    {ship.imageUrl && (
+                    {ship.imageUrl ? (
                       <img src={ship.imageUrl} alt={ship.name}
                         style={{ width: "100%", height: 140, objectFit: "cover" }}
                         onError={e => (e.currentTarget.style.display = "none")}
                       />
+                    ) : (
+                      <div style={{
+                        width: "100%", height: 140, display: "flex", flexDirection: "column",
+                        alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden",
+                        background: "linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e293b 100%)",
+                      }}>
+                        <div style={{
+                          position: "absolute", inset: 0, opacity: 0.08,
+                          backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 20px, #fbbf24 20px, #fbbf24 22px)",
+                          animation: "stripe-scroll 3s linear infinite",
+                        }} />
+                        <div style={{ position: "relative", textAlign: "center" }}>
+                          <div style={{ fontSize: 32, marginBottom: 4 }}>🏗️</div>
+                          <div style={{ fontSize: 11, color: "#fbbf24", fontWeight: 600 }}>Under Construction</div>
+                        </div>
+                      </div>
                     )}
                     <div style={{ padding: "14px 16px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
