@@ -117,45 +117,51 @@ INVESTMENT ANALYSIS:
 - Young ships (<5 yrs) with low price/DWT in strong market = best picks
 - BDI > 2000 = strong market, BDI < 1000 = weak market
 
-PORT & COMMODITY KNOWLEDGE (use this for cargo/trade questions):
-Major export ports and their primary commodities:
-- Port Hedland (Australia): iron ore (BHP, Rio Tinto, Fortescue) — world's largest iron ore port, ~550Mt/yr
-- Dampier (Australia): iron ore (Rio Tinto)
-- Newcastle (Australia): thermal coal — world's largest coal port
-- Hay Point / Abbot Point (Australia): coking coal
-- Gladstone (Australia): coal, LNG, alumina
-- Saldanha Bay (South Africa): iron ore (Kumba/Anglo American)
-- Richards Bay (South Africa): thermal coal — largest coal terminal in Africa
-- Tubarao/Vitoria (Brazil): iron ore (Vale) — 2nd largest iron ore port
-- Ponta da Madeira (Brazil): iron ore (Vale)
-- New Orleans / US Gulf (USA): grain (corn, soybeans, wheat)
-- Portland OR / PNW (USA): grain (wheat)
-- Bahia Blanca / Rosario (Argentina): grain (soybeans, corn)
-- Paranagua (Brazil): grain (soybeans)
-- Kamsar (Guinea): bauxite (world's largest)
-- Ras Laffan (Qatar): LNG — world's largest LNG port
-- Ras Tanura (Saudi Arabia): crude oil
-- Basra (Iraq): crude oil
-- Fujairah (UAE): ship bunkering hub
+COMPLETE PORT & COMMODITY DATABASE (133 ports):
 
-Major import ports:
-- Qingdao, Rizhao, Tianjin (China): iron ore imports (steel mills)
-- Shanghai, Ningbo (China): containers, commodities
-- Rotterdam, Amsterdam (Netherlands): coal, iron ore, containers (Europe gateway)
-- Yokohama, Chiba (Japan): iron ore, coal (steel mills)
+Bauxite / Alumina:
+  Kamsar (Guinea), Weipa (Australia)
 
-Typical trade routes and freight rates (current BDI-based):
-- Australia → China (iron ore): Capesize, 12-14 days, ~$8-12/ton
-- Brazil → China (iron ore): Capesize, 35-40 days, ~$18-25/ton (long haul premium)
-- Indonesia → India/China (coal): Panamax/Supramax, 8-15 days, ~$6-10/ton
-- US Gulf → Asia (grain): Panamax, 30-35 days, ~$30-40/ton
-- Richards Bay → Rotterdam (coal): Panamax, 18-20 days, ~$10-15/ton
+Cement:
+  Ras Al Khaimah (UAE)
 
-When asked "what is the best cargo from X":
-- Answer with the primary commodity exported from that port
-- Include typical ship sizes, freight rates, and major buyers
-- Mention seasonal factors (grain harvest seasons, monsoon impacts)
-- Compare profitability of different routes from that port
+Coal (thermal/coking):
+  Abbot Point (Australia), Amsterdam (Netherlands), Balikpapan (Indonesia), Baltimore (USA), Gangavaram (India), Gdansk (Poland), Gladstone (Australia), Haldia (India), Hay Point (Australia), Immingham (UK), Krishnapatnam (India), Newcastle (Australia), Norfolk (VA) (USA), Richards Bay (South Africa), Tanjung Bara (Indonesia), Tianjin (China), Tyne (UK), Vancouver (Canada), Yantai (China)
+
+Containers (general cargo):
+  Algeciras (Spain), Antwerp (Belgium), Bandar Abbas (Iran), Barcelona (Spain), Bremerhaven (Germany), Buenos Aires (Argentina), Busan (South Korea), Callao (Peru), Cape Town (South Africa), Cartagena (Colombia), Charleston (USA), Chennai (India), Colon (Panama), Dar es Salaam (Tanzania), Djibouti (Djibouti), Durban (South Africa), Felixstowe (UK), Fuzhou (China), Genoa (Italy), Gioia Tauro (Italy), Gothenburg (Sweden), Guangzhou (China), Guayaquil (Ecuador), Hai Phong (Vietnam), Haifa (Israel), Halifax (Canada), Hamburg (Germany), Helsinki (Finland), Ho Chi Minh City (Vietnam), Incheon (South Korea), Istanbul (Ambarli) (Turkey), Jakarta (Indonesia), Jebel Ali (UAE), Jeddah (Saudi Arabia), Kingston (Jamaica), Klaipeda (Lithuania), Kobe (Japan), Kochi (India), Laem Chabang (Thailand), Lagos (Apapa) (Nigeria), Long Beach (USA), Los Angeles (USA), Manila (Philippines), Manzanillo (Mexico), Marsaxlokk (Malta), Marseille/Fos (France), Melbourne (Australia), Mersin (Turkey), Mombasa (Kenya), Mumbai (JNPT) (India), Mundra (India), Nagoya (Japan), New York/New Jersey (USA), Osaka (Japan), Piraeus (Greece), Port Klang (Malaysia), Port Said (Egypt), Rotterdam (Netherlands), Salalah (Oman), San Antonio (Chile), Santos (Brazil), Savannah (USA), Shanghai (China), Shenzhen (China), Singapore (Singapore), Southampton (UK), St. Petersburg (Russia), Sydney (Australia), Tanger Med (Morocco), Tanjung Pelepas (Malaysia), Tokyo (Japan), Valencia (Spain), Xiamen (China), Yokohama (Japan)
+
+Crude Oil:
+  Basra (Iraq), Houston (USA), Ras Tanura (Saudi Arabia)
+
+Fertilizer / Chemicals:
+  Dammam (Saudi Arabia)
+
+Grain (wheat, corn, soybeans):
+  Alexandria (Egypt), Bahia Blanca (Argentina), Constanta (Romania), Fremantle (Australia), Itaqui (Brazil), Montreal (Canada), New Orleans (USA), Novorossiysk (Russia), Paranagua (Brazil), Portland (OR) (USA), Rosario (Argentina)
+
+Iron Ore:
+  Chiba (Japan), Dalian (China), Dampier (Australia), IJmuiden (Netherlands), Iskenderun (Turkey), Kashima (Japan), Kwangyang (South Korea), Lianyungang (China), Mizushima (Japan), Ningbo-Zhoushan (China), Paradip (India), Pohang (South Korea), Ponta da Madeira (Brazil), Port Hedland (Australia), Qingdao (China), Rizhao (China), Saldanha Bay (South Africa), Tubarao (Vitoria) (Brazil), Visakhapatnam (India), Zhanjiang (China)
+
+LNG (Liquefied Natural Gas):
+  Ras Laffan (Qatar)
+
+Ship Bunkering (fuel):
+  Fujairah (UAE)
+
+DETAILED PORT PROFILES (key ports):
+- Hamburg (Germany): Major European hub. Imports: crude oil, coal, iron ore, containers. Exports: manufactured goods, chemicals, machinery. Best cargo INBOUND: coal from Richards Bay/Colombia, iron ore from Brazil.
+- Rotterdam (Netherlands): Europe's largest port. Coal, iron ore, crude oil, containers, grain. Hub for Rhine river distribution.
+- Singapore: World's largest transshipment hub and bunkering port. All cargo types.
+- Shanghai/Ningbo (China): World's busiest port complex. Imports iron ore, coal, soybeans. Exports containers.
+- Qingdao/Rizhao (China): Primary iron ore import terminals for Shandong steel mills.
+- Dubai/Jebel Ali (UAE): Middle East container hub. Also cement, steel, vehicles.
+- Houston (USA): Crude oil, refined products, chemicals, grain.
+- Santos (Brazil): Latin America's largest. Soybeans, sugar, coffee, containers.
+- Busan (South Korea): Major transshipment hub for Northeast Asia.
+- Mumbai/JNPT (India): India's largest container port. Also coal, crude oil imports.
+
+When asked about ANY port: check the list above, state the primary cargo, typical ship types used, and suggest the most profitable trade routes from/to that port based on current BDI.
 
 When asked about specific routes or trade:
 - Calculate voyage economics: fuel cost, duration, freight revenue, TCE
