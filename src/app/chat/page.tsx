@@ -159,25 +159,25 @@ export default function ChatPage() {
   // Markdown-to-html with premium styling
 
   function renderAutoChart(html: string): string {
-    const tableRegex = /<table class="vdb-table">([\/\s\S]*?)<\/table>/g;
+    const tableRegex = /<table class="vdb-table">([\s\S]*?)<\/table>/g;
     let result = html;
     let chartHtml = "";
     let m;
 
     while ((m = tableRegex.exec(html)) !== null) {
       const tbl = m[1];
-      const rows = tbl.match(/<tr[^>]*>([\/\s\S]*?)<\/tr>/g);
+      const rows = tbl.match(/<tr[^>]*>([\s\S]*?)<\/tr>/g);
       if (!rows || rows.length < 3) continue;
 
       // Get headers
-      const hCells = rows[0].match(/<th[^>]*>([\/\s\S]*?)<\/th>/g);
+      const hCells = rows[0].match(/<th[^>]*>([\s\S]*?)<\/th>/g);
       if (!hCells) continue;
       const headers = hCells.map((c: string) => c.replace(/<[^>]+>/g, "").trim());
 
       // Get data rows
       const data: { label: string; val: number }[] = [];
       for (let i = 1; i < rows.length && i < 15; i++) {
-        const cells = rows[i].match(/<td[^>]*>([\/\s\S]*?)<\/td>/g);
+        const cells = rows[i].match(/<td[^>]*>([\s\S]*?)<\/td>/g);
         if (!cells || cells.length < 2) continue;
         const texts = cells.map((c: string) => c.replace(/<[^>]+>/g, "").trim());
         const label = texts[0].substring(0, 22);
