@@ -243,7 +243,7 @@ export default function ChatPage() {
         }
       }
 
-      if (!accumulated) {
+      if (true) {
         setMessages([...newMessages, { role: "assistant", content: accumulated || "No response received." }]);
       }
     } catch (err: any) {
