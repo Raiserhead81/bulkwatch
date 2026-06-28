@@ -1,7 +1,7 @@
 // Top 3 Kauf-Empfehlungen pro Schiffsgröße (Bulk Carrier Typ)
 // Basierend auf Preis-Schätzung + Buy/Hold/Sell Empfehlung + Markt-Logik
 
-import { SHIPS, type Ship, type BulkCarrierType } from "@/data/ships";
+import { type Ship, type BulkCarrierType } from "@/data/ships";
 import { estimatePrice, formatPrice } from "./priceEstimator";
 import { generateMockVoyage } from "./mockVoyages";
 
@@ -119,7 +119,8 @@ export function getTopPicksByType(type: BulkCarrierType, limit = 3): TopPick[] {
 /**
  * Holt die Top 3 Kauf-Empfehlungen für ALLE Schiffstypen.
  */
-export function getAllTopPicks(): TopPicksByType[] {
+export function getAllTopPicks(ships?: Ship[]): TopPicksByType[] {
+  const SHIPS = ships || [];
   const types: BulkCarrierType[] = [
     "Capesize",
     "Newcastlemax",
@@ -160,7 +161,7 @@ export function getAllTopPicks(): TopPicksByType[] {
 /**
  * Gesamt-Top-Pick über alle Typen hinweg.
  */
-export function getOverallTopPick(): TopPick | null {
+export function getOverallTopPick(ships?: Ship[]): TopPick | null {
   const allPicks = getAllTopPicks()
     .flatMap((t) => t.picks)
     .sort((a, b) => b.score - a.score);

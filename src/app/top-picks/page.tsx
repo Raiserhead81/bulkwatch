@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -16,7 +16,14 @@ import {
   ArrowRight,
   Sparkles,
 } from "lucide-react";
-import { SHIPS, SHIP_TYPES, type BulkCarrierType } from "@/data/ships";
+import { type Ship, type BulkCarrierType } from "@/data/ships";
+
+const SHIP_TYPES = [
+  "Capesize","Newcastlemax","VLOC","Kamsarmax","Panamax","Ultramax","Supramax",
+  "Handymax","Handysize","General Cargo","Container Ship","Tanker","Crude Oil Tanker",
+  "Product Tanker","Chemical Tanker","LNG Tanker","LPG Tanker","RoRo","Car Carrier",
+  "Passenger","Offshore","Other"
+];
 import {
   estimatePrice,
   formatPrice,
@@ -38,10 +45,23 @@ import {
 } from "@/components/ui/select";
 
 export default function TopPicksPage() {
+  const [dbShips, setDbShips] = useState<Ship[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/ships?limit=5000&sort=dwt_desc")
+      .then(r => r.json())
+      .then(data => {
+        setDbShips(data.ships || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const watchlist = useWatchlist();
-  const allTopPicks = useMemo(() => getAllTopPicks(), []);
-  const overallTop = useMemo(() => getOverallTopPick(), []);
+  const allTopPicks = useMemo(() => getAllTopPicks(dbShips), []);
+  const overallTop = useMemo(() => getOverallTopPick(dbShips), []);
 
   const filteredPicks = useMemo(() => {
     if (typeFilter === "all") return allTopPicks;
@@ -246,12 +266,17 @@ function TopPickCard({ pick, rank, isWatched }: { pick: TopPick; rank: number; i
       {/* Image */}
       <div className="relative aspect-video bg-slate-200 dark:bg-slate-800">
         {/* Ship photo */}
-        <img
-          src={ship.imageUrl || ""}
-          alt={ship.name}
-          loading="lazy"
-          className="w-full h-full object-cover"
-        />
+        {ship.imageUrl ? (
+          <img
+            src={ship.imageUrl}
+            alt={ship.name}
+            loading="lazy"
+            className="w-full h-full object-cover"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-4xl">🚢</div>
+        )}
         {/* Rank badge */}
         <div className="absolute top-2 left-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-full px-3 py-1 shadow-md flex items-center gap-1.5">
           <span className="text-xl">{rankBadge}</span>
