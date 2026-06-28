@@ -57,6 +57,16 @@ export default function ShipDetailPage({
   const [ship, setShip] = useState<Ship | null>(null);
   const [loading, setLoading] = useState(true);
   const watchlist = useWatchlist();
+  const [priceHistory, setPriceHistory] = useState<any>(null);
+
+  useEffect(() => {
+    if (ship?.imo) {
+      fetch(`/api/ships/${ship.imo}/history`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => setPriceHistory(data))
+        .catch(() => {});
+    }
+  }, [ship?.imo]);
 
   useEffect(() => {
     fetch(`/api/ships/${id}`)
@@ -425,6 +435,84 @@ export default function ShipDetailPage({
                   PDF Report
                 </Button>
               </a>
+
+              {/* Price History Chart */}
+              {priceHistory && priceHistory.history && priceHistory.history.length > 0 && (
+                <Card className="border-blue-500/20 overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-blue-500" />
+                      Price History (30 months)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {/* Stats */}
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                        <p className="text-[9px] text-slate-500 dark:text-white/40 uppercase">30d Change</p>
+                        <p className={`text-sm font-bold ${priceHistory.change30dPct > 0 ? "text-emerald-500" : priceHistory.change30dPct < 0 ? "text-red-500" : "text-slate-500"}`}>
+                          {priceHistory.change30dPct > 0 ? "+" : ""}{priceHistory.change30dPct}%
+                        </p>
+                      </div>
+                      <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                        <p className="text-[9px] text-slate-500 dark:text-white/40 uppercase">1Y Change</p>
+                        <p className={`text-sm font-bold ${priceHistory.change1yPct > 0 ? "text-emerald-500" : priceHistory.change1yPct < 0 ? "text-red-500" : "text-slate-500"}`}>
+                          {priceHistory.change1yPct > 0 ? "+" : ""}{priceHistory.change1yPct}%
+                        </p>
+                      </div>
+                      <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                        <p className="text-[9px] text-slate-500 dark:text-white/40 uppercase">Range</p>
+                        <p className="text-[10px] font-semibold text-slate-700 dark:text-white/70">
+                          ${(priceHistory.min / 1e6).toFixed(1)}M — ${(priceHistory.max / 1e6).toFixed(1)}M
+                        </p>
+                      </div>
+                    </div>
+                    {/* SVG Chart */}
+                    <div className="w-full" style={{ height: 140 }}>
+                      <svg viewBox="0 0 600 140" className="w-full h-full" preserveAspectRatio="none">
+                        {(() => {
+                          const h = priceHistory.history;
+                          const vals = h.map((p: any) => p.value);
+                          const minV = Math.min(...vals) * 0.95;
+                          const maxV = Math.max(...vals) * 1.05;
+                          const range = maxV - minV || 1;
+                          const points = h.map((p: any, i: number) => {
+                            const x = (i / (h.length - 1)) * 600;
+                            const y = 130 - ((p.value - minV) / range) * 120;
+                            return `${x},${y}`;
+                          }).join(" ");
+                          const areaPoints = points + ` 600,135 0,135`;
+                          const lastVal = vals[vals.length - 1];
+                          const firstVal = vals[0];
+                          const color = lastVal >= firstVal ? "#10b981" : "#ef4444";
+                          return (
+                            <>
+                              <defs>
+                                <linearGradient id="priceGrad" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+                                  <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+                                </linearGradient>
+                              </defs>
+                              <polygon points={areaPoints} fill="url(#priceGrad)" />
+                              <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" />
+                              {/* Current price dot */}
+                              {(() => {
+                                const lastX = 600;
+                                const lastY = 130 - ((lastVal - minV) / range) * 120;
+                                return <circle cx={lastX} cy={lastY} r="4" fill={color} stroke="#fff" strokeWidth="1.5" />;
+                              })()}
+                            </>
+                          );
+                        })()}
+                      </svg>
+                    </div>
+                    <div className="flex justify-between text-[9px] text-slate-500 dark:text-white/30 mt-1">
+                      <span>{priceHistory.history[0]?.date}</span>
+                      <span>{priceHistory.history[priceHistory.history.length - 1]?.date}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Nearby Survey Ports */}
