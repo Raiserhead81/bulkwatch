@@ -124,6 +124,9 @@ INSTRUCTIONS:
 - ONLY use SELECT statements — never INSERT, UPDATE, DELETE, DROP, ALTER
 - CRITICAL: year_built = 0 means UNKNOWN, NOT year zero!
 - For average age use: AVG(CASE WHEN year_built > 1900 THEN 2026 - year_built END) — this ignores unknowns
+- IMPORTANT: if less than 30% of ships have year_built > 1900, show "N/A" or "insufficient data" for average age, NOT the average of the few known ones
+- Use this SQL pattern: CASE WHEN SUM(CASE WHEN year_built > 1900 THEN 1 ELSE 0 END) * 100 / COUNT(*) >= 30 THEN ROUND(AVG(CASE WHEN year_built > 1900 THEN 2026 - year_built END),1) ELSE NULL END as avg_age
+- When avg_age is NULL, display "N/A" in the table
 - For fleet rankings: COUNT ALL ships per operator (don't filter by year_built!)
 - For total DWT: SUM ALL dwt per operator (don't filter by year_built!)
 - Only filter year_built > 1900 when calculating AGE, never when counting ships or summing DWT
