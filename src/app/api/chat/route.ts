@@ -49,6 +49,19 @@ function buildSystemPrompt(): string {
   const hsfo = Math.round(brentEst * 5.8);
   const mgo = Math.round(brentEst * 12.5);
 
+  // Read live commodity prices
+  let commodityInfo = "";
+  try {
+    const fs = require("fs");
+    const raw = fs.readFileSync("/opt/bulkwatch/db/commodities.json", "utf8");
+    const commodities = JSON.parse(raw);
+    const items = Object.entries(commodities)
+      .filter(([k, v]: [string, any]) => k !== "date" && v.price > 0)
+      .map(([k, v]: [string, any]) => `  ${v.name}: ${v.price} ${v.unit}`)
+      .join("\n");
+    commodityInfo = `\nLIVE COMMODITY PRICES (updated ${commodities.date}):\n${items}\n\nUse these prices when calculating cargo values, voyage profitability, or answering commodity questions.\nIron ore at $100/ton means a Capesize (170k tons) carries ~$17M worth of cargo per voyage.\nCoal at $143/ton means a Panamax (70k tons) carries ~$10M worth of cargo.`;
+  } catch {}
+
   const topOperators = db.prepare("SELECT operator, COUNT(*) as c FROM ships WHERE operator IS NOT NULL AND operator != '' GROUP BY operator ORDER BY c DESC LIMIT 10").all() as any[];
 
   const typeList = typeCounts.map((r: any) => `  ${r.type}: ${r.c}`).join("\n");
@@ -94,6 +107,7 @@ CURRENT BUNKER FUEL PRICES (estimated from crude oil):
   MGO/MDO: ~$${mgo}/ton
 
 When asked about freight rates or fuel prices, use these CURRENT values - they are updated daily.
+${commodityInfo}
 
 FLEET BY TYPE:
 ${typeList}
