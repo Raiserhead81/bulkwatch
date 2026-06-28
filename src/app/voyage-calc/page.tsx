@@ -1,5 +1,7 @@
 "use client";
 
+import { getRoutingFactors } from "@/lib/voyageRouting";
+
 import { useState, useMemo } from "react";
 
 interface Port {
@@ -73,23 +75,45 @@ export default function VoyageCalcPage() {
     const to = PORTS.find(p => p.code === toCode);
     if (!from || !to || from.code === to.code) return null;
 
-    const distNm = haversine(from.lat, from.lon, to.lat, to.lon);
-    const routeDist = distNm * 1.15;
-    const seaDays = routeDist / (speed * 24);
-    const totalDays = seaDays + portDays;
+    const gcDist = haversine(from.lat, from.lon, to.lat, to.lon);
+    const rf = getRoutingFactors(from.lat, from.lon, to.lat, to.lon, from.country, to.country);
+
+    // Apply routing multiplier (coastal deviation, canal routing)
+    const routeDist = gcDist * rf.routingMultiplier;
+
+    // Effective speed after weather and current
+    const weatherLoss = speed * (rf.weatherMargin / 100);
+    const currentGain = speed * (rf.currentEffect / 100);
+    const effectiveSpeed = Math.max(speed - weatherLoss + currentGain, speed * 0.6);
+
+    const seaDays = routeDist / (effectiveSpeed * 24);
+    const canalDays = rf.canalTransit?.days || 0;
+    const totalDays = seaDays + portDays + canalDays;
+
     const fuelTonsTotal = fuelConsumption * seaDays;
     const fuelCost = fuelTonsTotal * fuelPrice;
     const portCosts = portDays * 15000;
-    const totalVoyageCost = fuelCost + portCosts;
+    const canalCost = rf.canalTransit?.cost || 0;
+    const warRiskPremium = rf.piracyRisk ? dwt * 0.15 : 0; // ~$0.15/DWT
+    const totalVoyageCost = fuelCost + portCosts + canalCost + warRiskPremium;
+
     const revenue = dwt * freightRate;
     const profit = revenue - totalVoyageCost;
-    const tce = (revenue - fuelCost - portCosts) / totalDays;
+    const tce = (revenue - totalVoyageCost) / totalDays;
     const breakEvenRate = totalVoyageCost / dwt;
 
     return {
-      from, to, distNm: Math.round(routeDist), seaDays: seaDays.toFixed(1),
-      totalDays: totalDays.toFixed(1), fuelTons: Math.round(fuelTonsTotal),
-      fuelCost, portCosts, totalVoyageCost, revenue, profit, tce, breakEvenRate,
+      from, to,
+      gcDist: Math.round(gcDist),
+      distNm: Math.round(routeDist),
+      effectiveSpeed: effectiveSpeed.toFixed(1),
+      seaDays: seaDays.toFixed(1),
+      canalDays,
+      totalDays: totalDays.toFixed(1),
+      fuelTons: Math.round(fuelTonsTotal),
+      fuelCost, portCosts, canalCost, warRiskPremium,
+      totalVoyageCost, revenue, profit, tce, breakEvenRate,
+      routing: rf,
     };
   }, [fromCode, toCode, dwt, speed, fuelPrice, fuelConsumption, freightRate, portDays]);
 
