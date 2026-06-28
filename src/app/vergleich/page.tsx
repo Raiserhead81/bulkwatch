@@ -1,305 +1,217 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import Link from "next/link";
-import {
-  ArrowLeft,
-  Scale,
-  Plus,
-  X,
-  Search,
-  Trophy,
-  TrendingUp,
-  Ship as ShipIcon,
-} from "lucide-react";
-import { SHIPS, type Ship } from "@/data/ships";
-import {
-  estimatePrice,
-  formatPrice,
-  getRecommendationColor,
-  getRecommendationEmoji,
-  getRecommendationLabel,
-} from "@/lib/priceEstimator";
-import { useI18n } from "@/lib/i18n";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect } from "react";
+
+interface Ship {
+  imo: string; name: string; type: string; dwt: number; length: number; beam: number;
+  draft: number; yearBuilt: number; flag: string; operator?: string; imageUrl?: string;
+  grossTonnage: number; engineType?: string; enginePowerKw: number; speedKnots: number;
+  fuelConsumption: number; fuelType?: string; crewSize: number;
+}
+
+const NAV = [["Ships", "/"], ["Map", "/karte"], ["Live", "/live"], ["Top Picks", "/top-picks"], ["Compare", "/vergleich"], ["Watchlist", "/watchlist"], ["Newbuilds", "/newbuilds"]];
+
+function fmtDwt(d: number) { return d >= 1000 ? `${(d / 1000).toFixed(0)}k` : d > 0 ? d.toLocaleString() : "\u2014"; }
+
+function estimateValue(ship: Ship): number {
+  const age = ship.yearBuilt > 0 ? new Date().getFullYear() - ship.yearBuilt : 10;
+  const basePricePerDwt = 250;
+  const ageFactor = Math.max(0.3, 1 - age * 0.035);
+  return ship.dwt * basePricePerDwt * ageFactor;
+}
 
 export default function ComparePage() {
-  const { t } = useI18n();
-  const [selectedImos, setSelectedImos] = useState<string[]>([]);
+  const [selectedShips, setSelectedShips] = useState<Ship[]>([]);
   const [search, setSearch] = useState("");
-  const [showSearch, setShowSearch] = useState(false);
+  const [searchResults, setSearchResults] = useState<Ship[]>([]);
+  const [searching, setSearching] = useState(false);
 
-  const selectedShips = useMemo(
-    () => SHIPS.filter((s) => selectedImos.includes(s.imo)),
-    [selectedImos],
-  );
+  useEffect(() => {
+    if (!search || search.length < 2) { setSearchResults([]); return; }
+    const t = setTimeout(() => {
+      setSearching(true);
+      fetch(`/api/ships?search=${encodeURIComponent(search)}&limit=10`)
+        .then(r => r.json())
+        .then(data => {
+          const results = (data.ships || []).map((s: Record<string, unknown>) => ({
+            imo: s.imo, name: s.name, type: s.type, dwt: s.dwt || 0, length: s.length || 0,
+            beam: s.beam || 0, draft: s.draft || 0, yearBuilt: s.yearBuilt || 0, flag: s.flag || "Unknown",
+            operator: s.operator, imageUrl: s.imageUrl, grossTonnage: s.grossTonnage || 0,
+            engineType: s.engineType, enginePowerKw: s.enginePowerKw || 0, speedKnots: s.speedKnots || 0,
+            fuelConsumption: s.fuelConsumption || 0, fuelType: s.fuelType, crewSize: s.crewSize || 0,
+          })).filter((s: Ship) => !selectedShips.find(sel => sel.imo === s.imo));
+          setSearchResults(results);
+          setSearching(false);
+        })
+        .catch(() => setSearching(false));
+    }, 300);
+    return () => clearTimeout(t);
+  }, [search, selectedShips]);
 
-  const searchResults = useMemo(() => {
-    if (!search) return [];
-    const q = search.toLowerCase();
-    return SHIPS.filter(
-      (s) =>
-        !selectedImos.includes(s.imo) &&
-        (s.name.toLowerCase().includes(q) || s.imo.includes(q)),
-    ).slice(0, 10);
-  }, [search, selectedImos]);
-
-  const addShip = (imo: string) => {
-    if (selectedImos.length >= 5) return;
-    if (!selectedImos.includes(imo)) {
-      setSelectedImos([...selectedImos, imo]);
-    }
+  // Fetch extended data for a ship (the main API may not return all fields)
+  const addShip = (ship: Ship) => {
+    if (selectedShips.length >= 5) return;
+    // Fetch full ship data from fleet API to get extended specs
+    fetch(`/api/ships?search=${encodeURIComponent(ship.imo)}&limit=1`)
+      .then(r => r.json())
+      .then(data => {
+        const s = data.ships?.[0];
+        if (s) {
+          setSelectedShips(prev => [...prev, {
+            imo: s.imo, name: s.name, type: s.type, dwt: s.dwt || 0, length: s.length || 0,
+            beam: s.beam || 0, draft: s.draft || 0, yearBuilt: s.yearBuilt || 0, flag: s.flag || "Unknown",
+            operator: s.operator, imageUrl: s.imageUrl, grossTonnage: s.grossTonnage || 0,
+            engineType: s.engineType, enginePowerKw: s.enginePowerKw || 0, speedKnots: s.speedKnots || 0,
+            fuelConsumption: s.fuelConsumption || 0, fuelType: s.fuelType, crewSize: s.crewSize || 0,
+          }]);
+        } else {
+          setSelectedShips(prev => [...prev, ship]);
+        }
+      })
+      .catch(() => setSelectedShips(prev => [...prev, ship]));
     setSearch("");
-    setShowSearch(false);
+    setSearchResults([]);
   };
 
   const removeShip = (imo: string) => {
-    setSelectedImos(selectedImos.filter((i) => i !== imo));
+    setSelectedShips(prev => prev.filter(s => s.imo !== imo));
   };
 
-  // Compute "best" values
-  const prices = selectedShips.map((s) => estimatePrice(s).estimatedValueUSD);
+  const inp: React.CSSProperties = { padding: "10px 14px", background: "#1e293b", border: "1px solid #334155", borderRadius: 8, color: "#e2e8f0", fontSize: 14, width: "100%", outline: "none" };
+  const box: React.CSSProperties = { background: "#1e293b", borderRadius: 12, border: "1px solid #1e3a5f", padding: 16 };
+
+  // Best values for highlighting
+  const prices = selectedShips.map(s => estimateValue(s));
+  const bestDwt = Math.max(...selectedShips.map(s => s.dwt));
+  const newestYear = Math.max(...selectedShips.map(s => s.yearBuilt));
   const lowestPrice = Math.min(...prices);
   const highestPrice = Math.max(...prices);
-  const newestYear = Math.max(...selectedShips.map((s) => s.yearBuilt));
-  const oldestYear = Math.min(...selectedShips.map((s) => s.yearBuilt));
-  const bestDwt = Math.max(...selectedShips.map((s) => s.dwt));
+
+  const specRows: { label: string; getValue: (s: Ship) => string; getBest?: (s: Ship) => boolean }[] = [
+    { label: "Type", getValue: s => s.type },
+    { label: "DWT", getValue: s => fmtDwt(s.dwt), getBest: s => s.dwt === bestDwt && selectedShips.length > 1 },
+    { label: "Year Built", getValue: s => s.yearBuilt > 0 ? String(s.yearBuilt) : "\u2014", getBest: s => s.yearBuilt === newestYear && selectedShips.length > 1 },
+    { label: "Length", getValue: s => s.length > 0 ? `${s.length} m` : "\u2014" },
+    { label: "Beam", getValue: s => s.beam > 0 ? `${s.beam} m` : "\u2014" },
+    { label: "Draft", getValue: s => s.draft > 0 ? `${s.draft} m` : "\u2014" },
+    { label: "Flag", getValue: s => s.flag },
+    { label: "Gross Tonnage", getValue: s => s.grossTonnage > 0 ? s.grossTonnage.toLocaleString() : "\u2014" },
+    { label: "Engine", getValue: s => s.engineType || "\u2014" },
+    { label: "Engine Power", getValue: s => s.enginePowerKw > 0 ? `${s.enginePowerKw.toLocaleString()} kW` : "\u2014" },
+    { label: "Speed", getValue: s => s.speedKnots > 0 ? `${s.speedKnots} kn` : "\u2014" },
+    { label: "Fuel Consumption", getValue: s => s.fuelConsumption > 0 ? `${s.fuelConsumption} t/day` : "\u2014" },
+    { label: "Fuel Type", getValue: s => s.fuelType || "\u2014" },
+    { label: "Crew", getValue: s => s.crewSize > 0 ? String(s.crewSize) : "\u2014" },
+    { label: "Operator", getValue: s => s.operator || "\u2014" },
+    { label: "Est. Value", getValue: s => `$${(estimateValue(s) / 1_000_000).toFixed(1)}M` },
+    { label: "$/DWT", getValue: s => s.dwt > 0 ? `$${(estimateValue(s) / s.dwt).toFixed(0)}` : "\u2014" },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-blue-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-white">
-      <header className="sticky top-0 z-20 border-b border-blue-500/10 backdrop-blur-md bg-white/80 dark:bg-slate-950/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-          <Link href="/" className="flex items-center gap-2 text-sm hover:text-blue-600 dark:hover:text-cyan-400">
-            <ArrowLeft className="h-4 w-4" /> {t("common.back")}
-          </Link>
-          <h1 className="font-bold text-sm sm:text-base">{t("compare.title")}</h1>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-        <section className="mb-6">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-700 dark:text-cyan-300 border border-blue-500/20 mb-3">
-            <Scale className="h-3 w-3" /> Comparison
+    <div style={{ minHeight: "100vh", background: "#0f172a", color: "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
+      <div style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "16px 24px" }}>
+        <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#38bdf8" }}>Compare Vessels</h1>
+            <p style={{ margin: "4px 0 0", fontSize: 13, color: "#94a3b8" }}>
+              Side-by-side comparison of up to 5 ships with full specs
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-4xl font-bold tracking-tight mb-2">
-            {t("compare.title")}
-          </h1>
-          <p className="text-sm text-slate-600 dark:text-white/50 max-w-2xl">
-            {t("compare.desc")}
-          </p>
-        </section>
+          <nav style={{ display: "flex", gap: 16, fontSize: 14 }}>
+            {NAV.map(([l, h]) => (
+              <a key={h} href={h} style={{ color: h === "/vergleich" ? "#38bdf8" : "#94a3b8", textDecoration: "none" }}>{l}</a>
+            ))}
+          </nav>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px" }}>
+        {/* Search bar */}
+        <div style={{ ...box, marginBottom: 24 }}>
+          <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: searchResults.length > 0 ? 12 : 0 }}>
+            <input type="text" placeholder="Search by ship name or IMO..." value={search}
+              onChange={e => setSearch(e.target.value)} style={{ ...inp, flex: 1 }} />
+            <span style={{ fontSize: 12, color: "#64748b", whiteSpace: "nowrap" }}>{selectedShips.length}/5 ships</span>
+            {selectedShips.length > 0 && (
+              <button onClick={() => setSelectedShips([])}
+                style={{ padding: "8px 14px", background: "#7f1d1d", border: "none", borderRadius: 8, color: "#fca5a5", fontSize: 12, cursor: "pointer" }}>
+                Clear All
+              </button>
+            )}
+          </div>
+          {searchResults.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              {searchResults.map(ship => (
+                <button key={ship.imo} onClick={() => addShip(ship)}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px",
+                    background: "#0f172a", border: "1px solid #1e3a5f", borderRadius: 8, color: "#e2e8f0",
+                    cursor: "pointer", textAlign: "left", width: "100%" }}>
+                  <div>
+                    <span style={{ fontWeight: 600, fontSize: 14 }}>{ship.name}</span>
+                    <span style={{ fontSize: 12, color: "#64748b", marginLeft: 8 }}>{ship.type} &middot; IMO {ship.imo} &middot; {fmtDwt(ship.dwt)} DWT</span>
+                  </div>
+                  <span style={{ color: "#38bdf8", fontSize: 18 }}>+</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {selectedShips.length === 0 ? (
-          <Card className="border-blue-500/20">
-            <CardContent className="p-12 text-center">
-              <Scale className="h-12 w-12 mx-auto text-slate-300 dark:text-white/20 mb-4" />
-              <p className="text-slate-600 dark:text-white/60 mb-2">{t("compare.empty")}</p>
-              <p className="text-xs text-slate-500 dark:text-white/40 mb-4">{t("compare.emptyDesc")}</p>
-              <Button onClick={() => setShowSearch(true)}>
-                <Plus className="h-4 w-4 mr-1.5" />
-                {t("compare.addShip")}
-              </Button>
-            </CardContent>
-          </Card>
+          <div style={{ ...box, textAlign: "center", padding: 60 }}>
+            <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.3 }}>&#x2696;</div>
+            <p style={{ color: "#64748b", marginBottom: 4 }}>No ships selected yet</p>
+            <p style={{ color: "#475569", fontSize: 13 }}>Search above to add ships for comparison</p>
+          </div>
         ) : (
           <>
-            {/* Add ship search */}
-            <Card className="mb-6 border-blue-500/20">
-              <CardContent className="p-4">
-                {showSearch || selectedImos.length < 5 ? (
-                  <div className="space-y-3">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <Input
-                        type="text"
-                        placeholder={t("compare.searchPlaceholder")}
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="pl-9 bg-white dark:bg-slate-900"
-                        autoFocus
-                      />
-                    </div>
-                    {searchResults.length > 0 && (
-                      <div className="space-y-1 max-h-60 overflow-y-auto">
-                        {searchResults.map((ship) => (
-                          <button
-                            key={ship.imo}
-                            onClick={() => addShip(ship.imo)}
-                            className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-blue-500/10 transition-colors text-left"
-                          >
-                            <div className="flex items-center gap-2">
-                              <ShipIcon className="h-4 w-4 text-blue-500" />
-                              <div>
-                                <p className="text-sm font-medium">{ship.name}</p>
-                                <p className="text-xs text-slate-500">{ship.type} · IMO {ship.imo}</p>
-                              </div>
-                            </div>
-                            <Plus className="h-4 w-4 text-blue-500" />
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <Button
-                    variant="outline"
-                    onClick={() => setSelectedImos([])}
-                    className="border-rose-500/30 text-rose-700 dark:text-rose-400"
-                  >
-                    <X className="h-4 w-4 mr-1.5" />
-                    {t("compare.clearAll")}
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Comparison grid */}
-            <div className="grid gap-4" style={{
-              gridTemplateColumns: `repeat(${Math.min(selectedShips.length, 5)}, minmax(0, 1fr))`
-            }}>
-              {selectedShips.map((ship) => {
-                const price = estimatePrice(ship);
-                const isLowest = price.estimatedValueUSD === lowestPrice && selectedShips.length > 1;
-                const isHighest = price.estimatedValueUSD === highestPrice && selectedShips.length > 1;
-                const isNewest = ship.yearBuilt === newestYear && selectedShips.length > 1;
-                const isOldest = ship.yearBuilt === oldestYear && selectedShips.length > 1;
-                const hasBestDwt = ship.dwt === bestDwt && selectedShips.length > 1;
-
-                return (
-                  <Card key={ship.imo} className="border-blue-500/10 dark:border-white/10 overflow-hidden">
-                    {/* Image */}
-                    <div className="relative aspect-video bg-slate-200 dark:bg-slate-800">
-                      <img
-                        src={ship.imageUrl || ""}
-                        alt={ship.name}
-                        className="w-full h-full object-cover"
-                      />
-                      <button
-                        onClick={() => removeShip(ship.imo)}
-                        className="absolute top-2 right-2 rounded-full bg-black/60 hover:bg-rose-500 p-1.5 text-white transition-colors"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-
-                    <CardContent className="p-3 space-y-3">
-                      {/* Name */}
-                      <div>
-                        <Link href={`/schiff/${ship.imo}`}>
-                          <h3 className="font-bold text-sm hover:text-blue-600 dark:hover:text-cyan-400 transition-colors leading-tight">
-                            {ship.name}
-                          </h3>
-                        </Link>
-                        <p className="text-[10px] text-slate-500 dark:text-white/40 font-mono">
-                          {ship.type} · IMO {ship.imo}
-                        </p>
-                      </div>
-
-                      {/* Spec rows */}
-                      <div className="space-y-2 text-xs">
-                        <CompareRow
-                          label={t("spec.dwt")}
-                          value={`${(ship.dwt / 1000).toFixed(0)}K`}
-                          highlight={hasBestDwt}
-                          highlightLabel={t("compare.bestValue")}
-                        />
-                        <CompareRow
-                          label={t("spec.built")}
-                          value={String(ship.yearBuilt)}
-                          highlight={isNewest}
-                          highlightLabel={t("compare.newest")}
-                          negative={isOldest}
-                          negativeLabel={t("compare.oldest")}
-                        />
-                        <CompareRow label={t("spec.length")} value={`${ship.length} m`} />
-                        <CompareRow label={t("spec.beam")} value={`${ship.beam} m`} />
-                        <CompareRow label={t("spec.flag")} value={ship.flag} />
-                      </div>
-
-                      {/* Price */}
-                      <div className="pt-2 border-t border-slate-200 dark:border-white/10">
-                        <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase mb-1">
-                          {t("compare.price")}
-                        </p>
-                        <p className={`text-lg font-bold tabular-nums ${
-                          isLowest ? "text-emerald-600 dark:text-emerald-400" :
-                          isHighest ? "text-rose-600 dark:text-rose-400" :
-                          "text-blue-600 dark:text-cyan-400"
-                        }`}>
-                          {formatPrice(price.estimatedValueUSD)}
-                        </p>
-                        <p className="text-[10px] text-slate-500 dark:text-white/40">
-                          ${(price.estimatedValueUSD / ship.dwt).toFixed(0)}/DWT
-                        </p>
-                      </div>
-
-                      {/* Recommendation */}
-                      <div>
-                        <Badge className={`${getRecommendationColor(price.recommendation)} border w-full justify-center text-[10px]`}>
-                          {getRecommendationEmoji(price.recommendation)} {getRecommendationLabel(price.recommendation)}
-                        </Badge>
-                      </div>
-
-                      <Link href={`/schiff/${ship.imo}`}>
-                        <Button variant="outline" size="sm" className="w-full text-xs">
-                          {t("ship.details")}
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+            {/* Ship headers */}
+            <div style={{ display: "grid", gridTemplateColumns: `200px repeat(${selectedShips.length}, 1fr)`, gap: 0, marginBottom: 0 }}>
+              <div />
+              {selectedShips.map(ship => (
+                <div key={ship.imo} style={{ ...box, borderRadius: "12px 12px 0 0", borderBottom: "none", textAlign: "center", position: "relative" }}>
+                  <button onClick={() => removeShip(ship.imo)}
+                    style={{ position: "absolute", top: 8, right: 8, width: 24, height: 24, borderRadius: "50%",
+                      background: "#7f1d1d", border: "none", color: "#fca5a5", cursor: "pointer", fontSize: 14, lineHeight: "24px" }}>
+                    &times;
+                  </button>
+                  {ship.imageUrl ? (
+                    <img src={ship.imageUrl} alt={ship.name}
+                      style={{ width: "100%", height: 100, objectFit: "cover", borderRadius: 8, marginBottom: 8 }}
+                      onError={e => (e.currentTarget.style.display = "none")} />
+                  ) : (
+                    <div style={{ width: "100%", height: 60, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, marginBottom: 8 }}>&#x1F6A2;</div>
+                  )}
+                  <a href={`/schiff/${ship.imo}`} style={{ color: "#e2e8f0", textDecoration: "none" }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>{ship.name}</div>
+                  </a>
+                  <div style={{ fontSize: 11, color: "#64748b" }}>IMO {ship.imo}</div>
+                </div>
+              ))}
             </div>
 
-            {selectedImos.length < 5 && (
-              <div className="mt-4 text-center">
-                <Button variant="outline" onClick={() => setShowSearch(true)}>
-                  <Plus className="h-4 w-4 mr-1.5" />
-                  {t("compare.addShip")} ({selectedImos.length}/5)
-                </Button>
-              </div>
-            )}
+            {/* Spec rows */}
+            <div style={{ border: "1px solid #1e3a5f", borderRadius: "0 0 12px 12px", overflow: "hidden" }}>
+              {specRows.map((row, i) => (
+                <div key={row.label} style={{
+                  display: "grid", gridTemplateColumns: `200px repeat(${selectedShips.length}, 1fr)`,
+                  background: i % 2 === 0 ? "#1e293b" : "#162032",
+                }}>
+                  <div style={{ padding: "10px 16px", fontSize: 13, color: "#64748b", fontWeight: 600 }}>{row.label}</div>
+                  {selectedShips.map(ship => {
+                    const isBest = row.getBest?.(ship);
+                    return (
+                      <div key={ship.imo} style={{ padding: "10px 16px", fontSize: 13, textAlign: "center",
+                        color: isBest ? "#4ade80" : "#e2e8f0", fontWeight: isBest ? 700 : 400 }}>
+                        {row.getValue(ship)}
+                        {isBest && <span style={{ fontSize: 9, marginLeft: 4, color: "#4ade80" }}>&#9733;</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
           </>
-        )}
-      </main>
-    </div>
-  );
-}
-
-function CompareRow({
-  label,
-  value,
-  highlight = false,
-  highlightLabel,
-  negative = false,
-  negativeLabel,
-}: {
-  label: string;
-  value: string;
-  highlight?: boolean;
-  highlightLabel?: string;
-  negative?: boolean;
-  negativeLabel?: string;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-slate-500 dark:text-white/40">{label}</span>
-      <div className="flex items-center gap-1">
-        <span className={`font-medium ${highlight ? "text-emerald-600 dark:text-emerald-400" : negative ? "text-rose-600 dark:text-rose-400" : ""}`}>
-          {value}
-        </span>
-        {highlight && highlightLabel && (
-          <span className="text-[8px] bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 px-1 rounded">
-            ★
-          </span>
-        )}
-        {negative && negativeLabel && (
-          <span className="text-[8px] bg-rose-500/15 text-rose-700 dark:text-rose-400 px-1 rounded">
-            ↓
-          </span>
         )}
       </div>
     </div>

@@ -22,9 +22,20 @@ function toShip(row: Record<string, unknown>) {
     imageUrl: row.image_url,
     imageAttribution: row.image_attribution,
     position: row.lat ? { lat: row.lat, lon: row.lon } : undefined,
+    lat: row.lat,
+    lon: row.lon,
     lastSeen: row.last_seen,
     status: row.status || "active",
     deliveryDate: row.delivery_date,
+    // Extended specs
+    grossTonnage: row.gross_tonnage || 0,
+    netTonnage: row.net_tonnage || 0,
+    engineType: row.engine_type,
+    enginePowerKw: row.engine_power_kw || 0,
+    speedKnots: row.speed_knots || 0,
+    fuelConsumption: row.fuel_consumption_tons_day || 0,
+    fuelType: row.fuel_type,
+    crewSize: row.crew_size || 0,
   };
 }
 
@@ -52,7 +63,6 @@ export async function GET(request: NextRequest) {
   if (type) { conditions.push("type = ?"); params.push(type); }
   if (flag) { conditions.push("flag = ?"); params.push(flag); }
   if (operator) {
-    // Search both operator field AND ship name prefix (companies often name ships after themselves)
     conditions.push("(operator LIKE ? OR name LIKE ?)");
     params.push(`%${operator}%`, `%${operator}%`);
   }
