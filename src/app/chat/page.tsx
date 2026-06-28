@@ -10,12 +10,12 @@ const NAV_LINKS: [string, string][] = [
 ];
 
 const SUGGESTIONS_DE = [
-  { icon: "\u{1F4CA}", label: "Markt\u00fcbersicht", prompt: "Gib mir eine \u00dcbersicht zum aktuellen Schiffsmarkt. BDI, Frachtraten, Trends und Prognose." },
-  { icon: "\u{1F6A2}", label: "Wo sind die Schiffe?", prompt: "Zeige mir Schiffe die sich gerade in wichtigen Gew\u00e4ssern befinden: Suezkanal, Singapur, Rotterdam." },
-  { icon: "\u{1F4B0}", label: "Top Investments", prompt: "Welche Schiffe lohnen sich aktuell als Investment? Zeige die Top 10 nach Preis/DWT-Verh\u00e4ltnis mit Alter und Empfehlung." },
-  { icon: "\u{1F30D}", label: "Route berechnen", prompt: "Berechne die Kosten und Dauer f\u00fcr eine Bulk-Carrier-Fahrt von Australien nach China mit Eisenerz. Welcher Schiffstyp ist am wirtschaftlichsten?" },
-  { icon: "\u{2693}", label: "Reedereien vergleichen", prompt: "Welche sind die gr\u00f6\u00dften Reedereien in der Datenbank? Vergleiche ihre Flottengr\u00f6\u00dfe, Durchschnittsalter und Schiffstypen." },
-  { icon: "\u{1F3D7}", label: "Neubauten & Werften", prompt: "Welche Schiffe werden gerade gebaut? Gruppiere nach Schiffstyp und zeige Werft, Reederei und Liefertermin." },
+  { icon: "\u{1F4CA}", label: "Markt-Intelligence", prompt: "Analysiere den aktuellen Dry-Bulk-Markt: BDI-Trend, Capesize vs Panamax Raten, Flottenauslastung und deine 3-Monats-Prognose. Mit konkreten $/Tag TCE-Raten." },
+  { icon: "\u{1F6A2}", label: "Live Schiffstracker", prompt: "Welche Schiffe befinden sich gerade in der N\u00e4he des Suezkanals, der Stra\u00dfe von Malakka und Singapur? Zeige Namen, Typen, DWT und vermutliche Ladung." },
+  { icon: "\u{1F4B0}", label: "Top Investments", prompt: "Finde die 10 am meisten unterbewerteten Schiffe: junges Alter, hohe DWT, niedriger Preis pro DWT. Zeige gesch\u00e4tzten Wert, Alter, Typ und warum jedes ein guter Kauf ist." },
+  { icon: "\u{1F30D}", label: "Voyage-\u00d6konomie", prompt: "Vergleiche die Wirtschaftlichkeit von Eisenerztransport von Port Hedland nach Qingdao mit Capesize vs Kamsarmax. Inklusive Treibstoffkosten, Kanalgeb\u00fchren, TCE und Break-Even Frachtrate." },
+  { icon: "\u2693", label: "Flottenanalyse", prompt: "Ranke die Top 10 Operatoren nach Gesamtflottenwert. Pro Operator zeige: Anzahl Schiffe, Gesamt-DWT, Durchschnittsalter, h\u00e4ufigster Typ und gesch\u00e4tzter Flottenwert." },
+  { icon: "\u{1F3D7}\uFE0F", label: "Orderbuch", prompt: "Zeige das komplette Neubau-Orderbuch: Wie viele Schiffe sind nach Typ im Bau? Welche Werften bauen sie? Wann werden sie geliefert? Was ist der Gesamtwert des Orderbuchs?" },
 ];
 
 const SUGGESTIONS_EN = [
@@ -23,8 +23,8 @@ const SUGGESTIONS_EN = [
   { icon: "\u{1F6A2}", label: "Live Ship Tracker", prompt: "Which ships are currently near the Suez Canal, Strait of Malacca, and Singapore? Show their names, types, DWT and likely cargo." },
   { icon: "\u{1F4B0}", label: "Best Buys Now", prompt: "Find the top 10 undervalued ships right now: young age, large DWT, low price per DWT. Show estimated value, age, type and why each is a good buy." },
   { icon: "\u{1F30D}", label: "Voyage Economics", prompt: "Compare the economics of shipping iron ore from Port Hedland to Qingdao with a Capesize vs Kamsarmax. Include fuel cost, canal fees, TCE, and break-even freight rate." },
-  { icon: "\u{2693}", label: "Fleet Analysis", prompt: "Rank the top 10 operators by total fleet value. For each show: number of ships, total DWT, average age, most common type, and estimated fleet value." },
-  { icon: "\u{1F3D7}", label: "Orderbook", prompt: "Show the complete newbuilding orderbook: how many ships are under construction by type? Which yards are building them? When are they delivering? What is the total orderbook value?" },
+  { icon: "\u2693", label: "Fleet Analysis", prompt: "Rank the top 10 operators by total fleet value. For each show: number of ships, total DWT, average age, most common type, and estimated fleet value." },
+  { icon: "\u{1F3D7}\uFE0F", label: "Orderbook", prompt: "Show the complete newbuilding orderbook: how many ships are under construction by type? Which yards are building them? When are they delivering? What is the total orderbook value?" },
 ];
 
 interface Message {
@@ -32,12 +32,23 @@ interface Message {
   content: string;
 }
 
+interface LiveStats {
+  ships: number;
+  bdi: number;
+  aisLive: number;
+}
+
 // Convert IMO numbers and ship names to clickable links
 function linkifyContent(text: string): string {
+  // Link ship names followed by IMO reference: "SHIP NAME (IMO 1234567)" or "SHIP NAME, IMO 1234567"
+  text = text.replace(/\*\*([A-Z][A-Z0-9\s\.\-]{2,30})\*\*\s*[\(\[,\s]*IMO[:\s]*([0-9]{7})/gi,
+    '<a href="/schiff/$2" class="vdb-ship-link"><strong>$1</strong></a> <a href="/schiff/$2" class="vdb-imo-link">IMO $2</a>');
   // Link IMO numbers: IMO 1234567 or IMO: 1234567
-  text = text.replace(/IMO[:\s]*([0-9]{7})/gi, '<a href="/schiff/$1" style="color:#38bdf8;text-decoration:underline;font-weight:600">IMO $1</a>');
-  // Link standalone 7-digit numbers that look like IMOs (in tables, after |)
-  text = text.replace(/\|\s*([0-9]{7})\s*\|/g, (m, imo) => `| <a href="/schiff/${imo}" style="color:#38bdf8;text-decoration:underline">${imo}</a> |`);
+  text = text.replace(/(?<!href="[^"]*?)IMO[:\s]*([0-9]{7})(?![^<]*<\/a>)/gi,
+    '<a href="/schiff/$1" class="vdb-imo-link">IMO $1</a>');
+  // Link standalone 7-digit numbers in tables that look like IMOs
+  text = text.replace(/\|\s*([0-9]{7})\s*\|/g,
+    (m, imo) => `| <a href="/schiff/${imo}" class="vdb-imo-link">${imo}</a> |`);
   return text;
 }
 
@@ -46,9 +57,26 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [lang, setLang] = useState<"de"|"en">("en");
+  const [stats, setStats] = useState<LiveStats>({ ships: 0, bdi: 0, aisLive: 0 });
+  const [inputFocused, setInputFocused] = useState(false);
   const SUGGESTIONS = lang === "de" ? SUGGESTIONS_DE : SUGGESTIONS_EN;
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // Fetch live stats on mount
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/ships/stats").then(r => r.json()).catch(() => ({ total: 0 })),
+      fetch("/api/ais/stats").then(r => r.json()).catch(() => ({ activeShips: 0 })),
+    ]).then(([shipStats, aisStats]) => {
+      setStats({
+        ships: shipStats.total || 0,
+        bdi: 2524,
+        aisLive: aisStats.activeShips || 0,
+      });
+    });
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -73,7 +101,7 @@ export default function ChatPage() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "Request failed" }));
-        setMessages(prev => [...prev, { role: "assistant", content: "Fehler: " + (err.error || "Etwas ist schiefgelaufen") }]);
+        setMessages(prev => [...prev, { role: "assistant", content: "Error: " + (err.error || "Something went wrong") }]);
         setLoading(false);
         return;
       }
@@ -111,11 +139,15 @@ export default function ChatPage() {
         }
       }
     } catch (e: any) {
-      setMessages(prev => [...prev, { role: "assistant", content: "Fehler: " + e.message }]);
+      setMessages(prev => [...prev, { role: "assistant", content: "Error: " + e.message }]);
     }
     setLoading(false);
     inputRef.current?.focus();
   }, [input, messages, loading]);
+
+  const clearChat = () => {
+    setMessages([]);
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -124,164 +156,588 @@ export default function ChatPage() {
     }
   };
 
-  // Simple markdown-to-html (tables, bold, code, links, lists)
+  // Markdown-to-html with premium styling
   function renderMarkdown(text: string) {
-    // First linkify IMOs
     let html = linkifyContent(text);
 
     // Code blocks
-    html = html.replace(/```([\s\S]*?)```/g, '<pre style="background:#0f172a;padding:12px 16px;border-radius:10px;overflow-x:auto;font-size:12px;border:1px solid #1e3a5f;margin:8px 0"><code>$1</code></pre>');
+    html = html.replace(/```([\s\S]*?)```/g,
+      '<pre class="vdb-code-block"><code>$1</code></pre>');
     // Inline code
-    html = html.replace(/`([^`]+)`/g, '<code style="background:#1e293b;padding:2px 6px;border-radius:4px;font-size:12px;color:#38bdf8">$1</code>');
-    // Bold
-    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong style="color:#38bdf8;font-weight:600">$1</strong>');
+    html = html.replace(/`([^`]+)`/g,
+      '<code class="vdb-inline-code">$1</code>');
+    // Bold — ship names in cyan
+    html = html.replace(/\*\*([^*]+)\*\*/g,
+      '<strong class="vdb-bold">$1</strong>');
     // Headers
-    html = html.replace(/^### (.+)$/gm, '<h3 style="font-size:15px;font-weight:700;color:#e2e8f0;margin:14px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:4px">$1</h3>');
-    html = html.replace(/^## (.+)$/gm, '<h2 style="font-size:17px;font-weight:700;color:#e2e8f0;margin:16px 0 8px;border-bottom:1px solid #1e3a5f;padding-bottom:4px">$1</h2>');
-    html = html.replace(/^# (.+)$/gm, '<h1 style="font-size:20px;font-weight:800;color:#38bdf8;margin:16px 0 8px">$1</h1>');
+    html = html.replace(/^### (.+)$/gm,
+      '<h3 class="vdb-h3">$1</h3>');
+    html = html.replace(/^## (.+)$/gm,
+      '<h2 class="vdb-h2">$1</h2>');
+    html = html.replace(/^# (.+)$/gm,
+      '<h1 class="vdb-h1">$1</h1>');
 
-    // Tables
+    // Tables with alternating rows
+    let rowIndex = 0;
     html = html.replace(/^\|(.+)\|\s*$/gm, (match) => {
       const cells = match.split("|").filter(c => c.trim());
       const isHeader = cells.some(c => /^[\s-:]+$/.test(c));
-      if (isHeader) return ""; // skip separator row
-      return "<tr>" + cells.map(c =>
-        `<td style="padding:6px 12px;border-bottom:1px solid #1e3a5f;font-size:13px;white-space:nowrap">${c.trim()}</td>`
+      if (isHeader) return "";
+      rowIndex++;
+      const isEven = rowIndex % 2 === 0;
+      return `<tr class="${isEven ? 'vdb-row-even' : 'vdb-row-odd'}">` + cells.map(c =>
+        `<td class="vdb-td">${c.trim()}</td>`
       ).join("") + "</tr>";
     });
     // Wrap consecutive tr elements in table
-    html = html.replace(/((?:<tr>.*<\/tr>\s*)+)/g,
-      '<div style="overflow-x:auto;margin:8px 0;border:1px solid #1e3a5f;border-radius:10px"><table style="width:100%;border-collapse:collapse">$1</table></div>');
+    html = html.replace(/((?:<tr[^>]*>.*<\/tr>\s*)+)/g,
+      '<div class="vdb-table-wrap"><table class="vdb-table">$1</table></div>');
     // First row in each table = header
-    html = html.replace(/<table[^>]*>\s*<tr>(.*?)<\/tr>/g, (m, cells) =>
-      m.replace(/<td/g, '<th').replace(/<\/td/g, '</th').replace(/style="[^"]*"/g,
-        'style="padding:8px 12px;background:#1e293b;font-weight:600;font-size:12px;text-align:left;color:#94a3b8;border-bottom:2px solid #38bdf8"'));
+    html = html.replace(/<table class="vdb-table">\s*<tr[^>]*>(.*?)<\/tr>/g, (m, cells) =>
+      m.replace(/<td class="vdb-td"/g, '<th class="vdb-th"').replace(/<\/td>/g, '</th>').replace(/<tr[^>]*>/, '<tr class="vdb-header-row">'));
+    // Reset row counter for next table
+    rowIndex = 0;
 
     // Lists
-    html = html.replace(/^- (.+)$/gm, '<div style="display:flex;gap:8px;margin:3px 0"><span style="color:#38bdf8">\u2022</span><span>$1</span></div>');
-    html = html.replace(/^\d+\. (.+)$/gm, '<div style="display:flex;gap:8px;margin:3px 0"><span style="color:#38bdf8;font-weight:600;min-width:18px">\u2022</span><span>$1</span></div>');
+    html = html.replace(/^- (.+)$/gm,
+      '<div class="vdb-list-item"><span class="vdb-bullet">&bull;</span><span>$1</span></div>');
+    html = html.replace(/^\d+\. (.+)$/gm,
+      '<div class="vdb-list-item"><span class="vdb-bullet">&bull;</span><span>$1</span></div>');
 
-    // Paragraphs (double newline)
-    html = html.replace(/\n\n/g, '<div style="height:10px"></div>');
+    // Paragraphs
+    html = html.replace(/\n\n/g, '<div class="vdb-paragraph-break"></div>');
     html = html.replace(/\n/g, '<br>');
 
     return html;
   }
 
   return (
-    <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column", background:"#0a0d14", color:"#e2e8f0", fontFamily:"system-ui,-apple-system,sans-serif" }}>
+    <div className="vdb-root">
+      <div className="vdb-bg-gradient" />
+
       {/* Header */}
-      <div style={{ background:"#0f172a", borderBottom:"1px solid #1e3a5f", padding:"10px 16px", flexShrink:0 }}>
-        <div style={{ maxWidth:900, margin:"0 auto", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-          <a href="/" style={{ display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
-            <span style={{ fontSize:20 }}>\u2693</span>
-            <span style={{ fontWeight:800, fontSize:16, color:"#38bdf8" }}>Vessel AI</span>
+      <div className="vdb-header">
+        <div className="vdb-header-inner">
+          <a href="/" className="vdb-logo-link">
+            <span className="vdb-logo-anchor">{"\u2693"}</span>
+            <span className="vdb-logo-text">Vessel AI</span>
           </a>
-          <div style={{ display:"flex", gap:6, flexWrap:"wrap", justifyContent:"flex-end" }}>
+          <div className="vdb-nav">
             {NAV_LINKS.map(([l,h]) => (
-              <a key={h} href={h} style={{
-                padding:"4px 10px", borderRadius:6, fontSize:12, textDecoration:"none",
-                color: h==="/chat" ? "#fff" : "#64748b",
-                background: h==="/chat" ? "#2563eb" : "transparent",
-                fontWeight: h==="/chat" ? 600 : 400,
-              }}>{l}</a>
+              <a key={h} href={h} className={`vdb-nav-link ${h === "/chat" ? "vdb-nav-active" : ""}`}>{l}</a>
             ))}
           </div>
-          <div style={{ display:"flex", borderRadius:8, overflow:"hidden", border:"1px solid #1e3a5f" }}>
-            <button onClick={() => setLang("de")} style={{ padding:"4px 10px", fontSize:11, fontWeight:700, border:"none", cursor:"pointer", background: lang==="de" ? "#2563eb" : "#0f172a", color: lang==="de" ? "#fff" : "#64748b" }}>DE</button>
-            <button onClick={() => setLang("en")} style={{ padding:"4px 10px", fontSize:11, fontWeight:700, border:"none", cursor:"pointer", background: lang==="en" ? "#2563eb" : "#0f172a", color: lang==="en" ? "#fff" : "#64748b" }}>EN</button>
+          <div className="vdb-lang-toggle">
+            <button onClick={() => setLang("de")} className={`vdb-lang-btn ${lang === "de" ? "vdb-lang-active" : ""}`}>DE</button>
+            <button onClick={() => setLang("en")} className={`vdb-lang-btn ${lang === "en" ? "vdb-lang-active" : ""}`}>EN</button>
           </div>
         </div>
       </div>
 
-      {/* Messages */}
-      <div style={{ flex:1, overflow:"auto", padding:"0 16px" }}>
-        <div style={{ maxWidth:900, margin:"0 auto" }}>
+      {/* Messages Area */}
+      <div className="vdb-messages-area" ref={messagesContainerRef}>
+        <div className="vdb-messages-inner">
           {messages.length === 0 && (
-            <div style={{ textAlign:"center", paddingTop:80 }}>
-              <div style={{ width:80, height:80, borderRadius:20, background:"linear-gradient(135deg,#2563eb,#38bdf8)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px", boxShadow:"0 8px 32px rgba(37,99,235,0.4)", fontSize:36 }}>\u2693</div>
-              <h1 style={{ fontSize:28, fontWeight:800, margin:"0 0 8px", background:"linear-gradient(180deg,#fff,#94a3b8)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>Vessel Database AI</h1>
-              <p style={{ color:"#64748b", fontSize:14, maxWidth:450, margin:"0 auto 32px", lineHeight:1.6 }}>
+            <div className="vdb-welcome">
+              <div className="vdb-welcome-logo">
+                <div className="vdb-welcome-logo-glow" />
+                <div className="vdb-welcome-logo-icon">{"\u2693"}</div>
+              </div>
+              <h1 className="vdb-welcome-title">Vessel Database AI</h1>
+              <p className="vdb-welcome-subtitle">
                 {lang === "de"
-                  ? "Frag mich alles \u00fcber Schiffe, Routen, M\u00e4rkte und Flottendaten. Ich habe Zugriff auf die Live-Datenbank mit \u00fcber 10.000 Schiffen."
-                  : "Ask me anything about ships, routes, markets and fleet data. I have access to the live database with over 10,000 ships."}
+                  ? "Maritime Intelligence auf Knopfdruck. Zugriff auf \u00fcber 10.000 Schiffe, Live-AIS, M\u00e4rkte und Flottendaten."
+                  : "Maritime intelligence at your fingertips. Access to 10,000+ vessels, live AIS, markets and fleet analytics."}
               </p>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:10, maxWidth:600, margin:"0 auto" }}>
+              <div className="vdb-suggestions-grid">
                 {SUGGESTIONS.map(s => (
-                  <button key={s.label} onClick={() => sendMessage(s.prompt)} style={{
-                    padding:"14px 12px", borderRadius:12, border:"1px solid #1e3a5f",
-                    background:"#0f172a", color:"#94a3b8", cursor:"pointer", fontSize:12,
-                    textAlign:"left", transition:"all 0.15s", lineHeight:1.4,
-                  }}
-                  onMouseOver={e => { (e.target as HTMLElement).style.borderColor="#38bdf8"; (e.target as HTMLElement).style.color="#e2e8f0"; }}
-                  onMouseOut={e => { (e.target as HTMLElement).style.borderColor="#1e3a5f"; (e.target as HTMLElement).style.color="#94a3b8"; }}
-                  ><span style={{ fontSize:18, display:"block", marginBottom:4 }}>{s.icon}</span>{s.label}</button>
+                  <button key={s.label} onClick={() => sendMessage(s.prompt)} className="vdb-suggestion-card">
+                    <span className="vdb-suggestion-icon">{s.icon}</span>
+                    <span className="vdb-suggestion-label">{s.label}</span>
+                  </button>
                 ))}
               </div>
             </div>
           )}
 
           {messages.map((msg, i) => (
-            <div key={i} style={{ display:"flex", gap:10, padding:"16px 0", borderBottom: i < messages.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
-              <div style={{
-                width:32, height:32, borderRadius:10, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:14,
-                background: msg.role === "user" ? "#2563eb" : "linear-gradient(135deg,#1e293b,#0f172a)",
-                border: msg.role === "user" ? "none" : "1px solid #1e3a5f",
-                color: msg.role === "user" ? "#fff" : "#38bdf8",
-                fontWeight:700,
-              }}>{msg.role === "user" ? "\u{1F464}" : "\u2693"}</div>
-              <div style={{ flex:1, minWidth:0, paddingTop:4 }}>
-                <div style={{ fontSize:11, color:"#64748b", marginBottom:4, fontWeight:600 }}>
-                  {msg.role === "user" ? "Du" : "Vessel AI"}
+            <div key={i} className={`vdb-message ${msg.role === "user" ? "vdb-message-user" : "vdb-message-ai"}`}>
+              <div className={`vdb-avatar ${msg.role === "user" ? "vdb-avatar-user" : "vdb-avatar-ai"}`}>
+                {msg.role === "user" ? "\u{1F464}" : "\u2693"}
+              </div>
+              <div className="vdb-message-body">
+                <div className="vdb-message-sender">
+                  {msg.role === "user" ? "You" : "Vessel AI"}
                 </div>
                 {msg.role === "assistant" ? (
-                  <div style={{ fontSize:14, lineHeight:1.7, color:"#e2e8f0" }}
-                    dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) || (loading && i === messages.length - 1 ? '<span style="color:#38bdf8;animation:pulse 1.5s infinite">Denke nach...</span>' : '') }}
+                  <div className="vdb-message-content vdb-ai-content"
+                    dangerouslySetInnerHTML={{
+                      __html: renderMarkdown(msg.content) ||
+                        (loading && i === messages.length - 1
+                          ? '<span class="vdb-typing-indicator"><span class="vdb-typing-dot"></span><span class="vdb-typing-dot"></span><span class="vdb-typing-dot"></span></span>'
+                          : '')
+                    }}
                   />
                 ) : (
-                  <div style={{ fontSize:14, lineHeight:1.6 }}>{msg.content}</div>
+                  <div className="vdb-message-content vdb-user-content">{msg.content}</div>
+                )}
+                {msg.role === "assistant" && loading && i === messages.length - 1 && msg.content && (
+                  <span className="vdb-cursor-blink">|</span>
                 )}
               </div>
             </div>
           ))}
-          <div ref={bottomRef} style={{ height:20 }} />
+          <div ref={bottomRef} style={{ height: 20 }} />
         </div>
       </div>
 
-      {/* Input */}
-      <div style={{ background:"#0f172a", borderTop:"1px solid #1e3a5f", padding:"12px 16px 20px", flexShrink:0 }}>
-        <div style={{ maxWidth:900, margin:"0 auto", display:"flex", gap:8, alignItems:"flex-end" }}>
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={lang === "de" ? "Frag nach Schiffen, Routen, M\u00e4rkten..." : "Ask about ships, routes, markets..."}
-            rows={1}
-            style={{
-              flex:1, padding:"12px 16px", borderRadius:12, border:"1px solid #1e3a5f",
-              background:"#1e293b", color:"#e2e8f0", fontSize:14, resize:"none",
-              outline:"none", fontFamily:"inherit", lineHeight:1.5, minHeight:44, maxHeight:120,
-            }}
-            onFocus={e => e.target.style.borderColor="#38bdf8"}
-            onBlur={e => e.target.style.borderColor="#1e3a5f"}
-          />
-          <button
-            onClick={() => sendMessage()}
-            disabled={loading || !input.trim()}
-            style={{
-              padding:"12px 20px", borderRadius:12, border:"none", height:44,
-              background: loading || !input.trim() ? "#1e293b" : "linear-gradient(135deg,#2563eb,#38bdf8)",
-              color: loading || !input.trim() ? "#64748b" : "#fff",
-              cursor: loading || !input.trim() ? "default" : "pointer",
-              fontWeight:700, fontSize:14, transition:"all 0.15s",
-              boxShadow: loading || !input.trim() ? "none" : "0 4px 12px rgba(37,99,235,0.3)",
-            }}
-          >{loading ? "..." : "\u27A4"}</button>
+      {/* Input Area */}
+      <div className="vdb-input-area">
+        <div className="vdb-input-inner">
+          {messages.length > 0 && (
+            <button onClick={clearChat} className="vdb-clear-btn" title="Clear chat">
+              {"\u2715"}
+            </button>
+          )}
+          <div className={`vdb-input-wrap ${inputFocused ? "vdb-input-focused" : ""}`}>
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
+              placeholder={lang === "de" ? "Frag nach Schiffen, Routen, M\u00e4rkten..." : "Ask about ships, routes, markets..."}
+              rows={1}
+              className="vdb-input"
+            />
+            <button
+              onClick={() => sendMessage()}
+              disabled={loading || !input.trim()}
+              className={`vdb-send-btn ${loading || !input.trim() ? "vdb-send-disabled" : ""}`}
+            >{loading ? "\u2026" : "\u27A4"}</button>
+          </div>
+        </div>
+        {/* Live Stats Bar */}
+        <div className="vdb-stats-bar">
+          <span className="vdb-stat">
+            <span className="vdb-stat-dot vdb-dot-blue" />
+            {stats.ships.toLocaleString()} ships
+          </span>
+          <span className="vdb-stat-sep">&middot;</span>
+          <span className="vdb-stat">
+            <span className="vdb-stat-dot vdb-dot-green" />
+            BDI {stats.bdi.toLocaleString()}
+          </span>
+          <span className="vdb-stat-sep">&middot;</span>
+          <span className="vdb-stat">
+            <span className="vdb-stat-dot vdb-dot-cyan" />
+            {stats.aisLive.toLocaleString()} AIS live
+          </span>
         </div>
       </div>
 
-      <style>{"@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}"}</style>
+      <style>{`
+        /* ── Base ── */
+        .vdb-root {
+          min-height: 100vh; display: flex; flex-direction: column;
+          background: #050810; color: #e2e8f0;
+          font-family: 'Inter', system-ui, -apple-system, sans-serif;
+          position: relative; overflow: hidden;
+        }
+
+        /* ── Animated Background ── */
+        .vdb-bg-gradient {
+          position: fixed; inset: 0; z-index: 0; pointer-events: none;
+          background:
+            radial-gradient(ellipse 80% 50% at 50% -20%, rgba(14, 50, 100, 0.35), transparent),
+            radial-gradient(ellipse 60% 40% at 80% 100%, rgba(6, 40, 80, 0.25), transparent),
+            radial-gradient(ellipse 50% 50% at 20% 80%, rgba(10, 60, 90, 0.15), transparent);
+          animation: bgPulse 8s ease-in-out infinite alternate;
+        }
+        @keyframes bgPulse {
+          0% { opacity: 0.7; transform: scale(1); }
+          100% { opacity: 1; transform: scale(1.05); }
+        }
+
+        /* ── Scanline overlay ── */
+        .vdb-root::before {
+          content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+          background: repeating-linear-gradient(
+            0deg, transparent, transparent 2px,
+            rgba(0, 180, 255, 0.015) 2px, rgba(0, 180, 255, 0.015) 4px
+          );
+        }
+
+        /* ── Header ── */
+        .vdb-header {
+          background: rgba(10, 15, 25, 0.85); backdrop-filter: blur(20px);
+          border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+          padding: 10px 16px; flex-shrink: 0; position: relative; z-index: 10;
+        }
+        .vdb-header-inner {
+          max-width: 960px; margin: 0 auto;
+          display: flex; justify-content: space-between; align-items: center; gap: 12px;
+        }
+        .vdb-logo-link {
+          display: flex; align-items: center; gap: 8px; text-decoration: none;
+        }
+        .vdb-logo-anchor {
+          font-size: 22px;
+          filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
+          animation: anchorGlow 3s ease-in-out infinite;
+        }
+        @keyframes anchorGlow {
+          0%, 100% { filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.4)); }
+          50% { filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.8)) drop-shadow(0 0 30px rgba(37, 99, 235, 0.3)); }
+        }
+        .vdb-logo-text {
+          font-weight: 800; font-size: 16px; color: #38bdf8;
+          letter-spacing: -0.5px;
+        }
+        .vdb-nav {
+          display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end;
+        }
+        .vdb-nav-link {
+          padding: 4px 10px; border-radius: 6px; font-size: 12px;
+          text-decoration: none; color: #64748b; transition: all 0.2s;
+          font-weight: 400;
+        }
+        .vdb-nav-link:hover { color: #94a3b8; }
+        .vdb-nav-active {
+          color: #fff !important; background: linear-gradient(135deg, #2563eb, #1d4ed8);
+          font-weight: 600; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        }
+        .vdb-lang-toggle {
+          display: flex; border-radius: 8px; overflow: hidden;
+          border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+        .vdb-lang-btn {
+          padding: 4px 10px; font-size: 11px; font-weight: 700;
+          border: none; cursor: pointer; background: rgba(15, 23, 42, 0.8);
+          color: #64748b; transition: all 0.2s;
+        }
+        .vdb-lang-active {
+          background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+          color: #fff !important;
+        }
+
+        /* ── Messages Area ── */
+        .vdb-messages-area {
+          flex: 1; overflow: auto; padding: 0 16px; position: relative; z-index: 1;
+        }
+        .vdb-messages-inner { max-width: 960px; margin: 0 auto; }
+
+        /* ── Welcome Screen ── */
+        .vdb-welcome { text-align: center; padding-top: 60px; }
+        .vdb-welcome-logo {
+          position: relative; width: 90px; height: 90px;
+          margin: 0 auto 24px; display: flex; align-items: center; justify-content: center;
+        }
+        .vdb-welcome-logo-glow {
+          position: absolute; inset: -10px; border-radius: 24px;
+          background: linear-gradient(135deg, #2563eb, #38bdf8);
+          opacity: 0.3; filter: blur(20px);
+          animation: logoGlow 4s ease-in-out infinite;
+        }
+        @keyframes logoGlow {
+          0%, 100% { opacity: 0.2; transform: scale(0.95); }
+          50% { opacity: 0.5; transform: scale(1.1); }
+        }
+        .vdb-welcome-logo-icon {
+          position: relative; width: 90px; height: 90px; border-radius: 22px;
+          background: linear-gradient(135deg, #1e3a5f, #0f172a);
+          border: 1px solid rgba(56, 189, 248, 0.3);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 40px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(56, 189, 248, 0.1);
+        }
+        .vdb-welcome-title {
+          font-size: 32px; font-weight: 800; margin: 0 0 10px;
+          background: linear-gradient(180deg, #fff 30%, #64748b);
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+          letter-spacing: -0.5px;
+        }
+        .vdb-welcome-subtitle {
+          color: #64748b; font-size: 15px; max-width: 480px;
+          margin: 0 auto 40px; line-height: 1.7;
+        }
+
+        /* ── Suggestion Cards ── */
+        .vdb-suggestions-grid {
+          display: grid; grid-template-columns: repeat(3, 1fr);
+          gap: 12px; max-width: 640px; margin: 0 auto;
+        }
+        .vdb-suggestion-card {
+          padding: 20px 16px; border-radius: 14px;
+          border: 1px solid rgba(56, 189, 248, 0.12);
+          background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px);
+          color: #94a3b8; cursor: pointer; font-size: 13px;
+          text-align: left; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          line-height: 1.4; display: flex; flex-direction: column; gap: 6px;
+          font-family: inherit; position: relative; overflow: hidden;
+        }
+        .vdb-suggestion-card::before {
+          content: ''; position: absolute; inset: 0; border-radius: 14px;
+          background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08), transparent 70%);
+          opacity: 0; transition: opacity 0.3s;
+        }
+        .vdb-suggestion-card:hover {
+          border-color: rgba(56, 189, 248, 0.4); color: #e2e8f0;
+          transform: translateY(-4px);
+          box-shadow: 0 8px 32px rgba(56, 189, 248, 0.15), 0 0 20px rgba(56, 189, 248, 0.08);
+        }
+        .vdb-suggestion-card:hover::before { opacity: 1; }
+        .vdb-suggestion-icon { font-size: 24px; }
+        .vdb-suggestion-label { font-weight: 600; font-size: 13px; }
+
+        /* ── Messages ── */
+        .vdb-message {
+          display: flex; gap: 12px; padding: 20px 0;
+          animation: msgSlideIn 0.3s ease-out;
+        }
+        @keyframes msgSlideIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .vdb-message + .vdb-message {
+          border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .vdb-message-user { flex-direction: row-reverse; }
+        .vdb-message-user .vdb-message-body { align-items: flex-end; }
+        .vdb-message-user .vdb-message-sender { text-align: right; }
+
+        .vdb-avatar {
+          width: 36px; height: 36px; border-radius: 12px; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 16px; font-weight: 700;
+        }
+        .vdb-avatar-user {
+          background: linear-gradient(135deg, #2563eb, #3b82f6);
+          color: #fff;
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        .vdb-avatar-ai {
+          background: linear-gradient(135deg, #0f2847, #1e3a5f);
+          border: 1px solid rgba(56, 189, 248, 0.3);
+          color: #38bdf8;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          animation: anchorGlow 3s ease-in-out infinite;
+        }
+
+        .vdb-message-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .vdb-message-sender {
+          font-size: 11px; color: #64748b; margin-bottom: 6px;
+          font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .vdb-message-content { font-size: 14px; line-height: 1.7; }
+
+        .vdb-user-content {
+          background: linear-gradient(135deg, #1e40af, #2563eb);
+          padding: 12px 18px; border-radius: 16px 16px 4px 16px;
+          display: inline-block; max-width: 80%;
+          box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
+        }
+        .vdb-ai-content { color: #e2e8f0; }
+
+        /* ── Typing indicator ── */
+        .vdb-typing-indicator { display: inline-flex; gap: 4px; padding: 8px 0; }
+        .vdb-typing-dot {
+          width: 8px; height: 8px; border-radius: 50%;
+          background: #38bdf8; animation: typingBounce 1.4s infinite ease-in-out;
+        }
+        .vdb-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .vdb-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce {
+          0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+          40% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Blinking cursor */
+        .vdb-cursor-blink {
+          color: #38bdf8; font-weight: 300; font-size: 16px;
+          animation: cursorBlink 0.8s step-end infinite;
+        }
+        @keyframes cursorBlink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+
+        /* ── AI Content Styles ── */
+        .vdb-ship-link {
+          color: #22d3ee !important; text-decoration: none;
+          border-bottom: 1px dotted rgba(34, 211, 238, 0.4);
+          transition: all 0.2s;
+        }
+        .vdb-ship-link:hover {
+          color: #67e8f9 !important;
+          border-bottom-color: #67e8f9;
+          text-shadow: 0 0 8px rgba(34, 211, 238, 0.3);
+        }
+        .vdb-imo-link {
+          color: #38bdf8 !important; text-decoration: none; font-weight: 600;
+          border-bottom: 1px dotted rgba(56, 189, 248, 0.4);
+          transition: all 0.2s; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px;
+        }
+        .vdb-imo-link:hover {
+          color: #7dd3fc !important;
+          text-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+        }
+        .vdb-bold { color: #22d3ee; font-weight: 600; }
+        .vdb-code-block {
+          background: rgba(10, 15, 30, 0.8); padding: 14px 18px;
+          border-radius: 10px; overflow-x: auto; font-size: 12px;
+          border: 1px solid rgba(56, 189, 248, 0.15); margin: 10px 0;
+          font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+        .vdb-inline-code {
+          background: rgba(30, 41, 59, 0.8); padding: 2px 7px;
+          border-radius: 5px; font-size: 12px; color: #38bdf8;
+          font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+        .vdb-h1 {
+          font-size: 20px; font-weight: 800; color: #38bdf8;
+          margin: 18px 0 8px;
+        }
+        .vdb-h2 {
+          font-size: 17px; font-weight: 700; color: #e2e8f0;
+          margin: 16px 0 8px; border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+          padding-bottom: 6px;
+        }
+        .vdb-h3 {
+          font-size: 15px; font-weight: 700; color: #e2e8f0;
+          margin: 14px 0 6px; border-bottom: 1px solid rgba(56, 189, 248, 0.1);
+          padding-bottom: 4px;
+        }
+
+        /* Tables */
+        .vdb-table-wrap {
+          overflow-x: auto; margin: 10px 0;
+          border: 1px solid rgba(56, 189, 248, 0.15);
+          border-radius: 10px;
+        }
+        .vdb-table { width: 100%; border-collapse: collapse; }
+        .vdb-th {
+          padding: 10px 14px; background: rgba(15, 23, 42, 0.9);
+          font-weight: 600; font-size: 12px; text-align: left;
+          color: #94a3b8; border-bottom: 2px solid rgba(56, 189, 248, 0.3);
+          text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .vdb-td {
+          padding: 8px 14px; border-bottom: 1px solid rgba(30, 58, 95, 0.5);
+          font-size: 13px; white-space: nowrap;
+        }
+        .vdb-row-even { background: rgba(15, 23, 42, 0.3); }
+        .vdb-row-odd { background: rgba(10, 15, 25, 0.3); }
+        .vdb-row-even:hover, .vdb-row-odd:hover {
+          background: rgba(56, 189, 248, 0.05);
+        }
+
+        /* Lists */
+        .vdb-list-item { display: flex; gap: 8px; margin: 4px 0; }
+        .vdb-bullet { color: #38bdf8; flex-shrink: 0; }
+        .vdb-paragraph-break { height: 12px; }
+
+        /* ── Input Area ── */
+        .vdb-input-area {
+          background: rgba(10, 15, 25, 0.9); backdrop-filter: blur(20px);
+          border-top: 1px solid rgba(56, 189, 248, 0.1);
+          padding: 12px 16px 8px; flex-shrink: 0; position: relative; z-index: 10;
+        }
+        .vdb-input-inner {
+          max-width: 960px; margin: 0 auto;
+          display: flex; gap: 8px; align-items: flex-end;
+        }
+        .vdb-input-wrap {
+          flex: 1; display: flex; align-items: flex-end;
+          border-radius: 14px; border: 1px solid rgba(56, 189, 248, 0.15);
+          background: rgba(15, 23, 42, 0.8); transition: all 0.3s;
+          overflow: hidden;
+        }
+        .vdb-input-focused {
+          border-color: rgba(56, 189, 248, 0.5) !important;
+          box-shadow: 0 0 20px rgba(56, 189, 248, 0.1), 0 0 40px rgba(56, 189, 248, 0.05);
+        }
+        .vdb-input {
+          flex: 1; padding: 12px 16px; border: none; outline: none;
+          background: transparent; color: #e2e8f0; font-size: 14px;
+          resize: none; font-family: inherit; line-height: 1.5;
+          min-height: 44px; max-height: 120px;
+        }
+        .vdb-input::placeholder { color: #475569; }
+        .vdb-send-btn {
+          padding: 10px 18px; border: none; height: 44px;
+          background: linear-gradient(135deg, #2563eb, #38bdf8);
+          color: #fff; cursor: pointer; font-weight: 700; font-size: 16px;
+          transition: all 0.2s;
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        .vdb-send-disabled {
+          background: rgba(30, 41, 59, 0.8) !important;
+          color: #475569 !important; cursor: default !important;
+          box-shadow: none !important;
+        }
+        .vdb-send-btn:not(.vdb-send-disabled):hover {
+          box-shadow: 0 4px 20px rgba(56, 189, 248, 0.4);
+        }
+        .vdb-clear-btn {
+          width: 44px; height: 44px; border-radius: 12px;
+          border: 1px solid rgba(239, 68, 68, 0.2); background: rgba(30, 15, 15, 0.6);
+          color: #ef4444; cursor: pointer; font-size: 14px;
+          display: flex; align-items: center; justify-content: center;
+          transition: all 0.2s; flex-shrink: 0;
+        }
+        .vdb-clear-btn:hover {
+          background: rgba(239, 68, 68, 0.15);
+          border-color: rgba(239, 68, 68, 0.4);
+          box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+        }
+
+        /* ── Stats Bar ── */
+        .vdb-stats-bar {
+          max-width: 960px; margin: 8px auto 0; padding: 0 4px;
+          display: flex; justify-content: center; gap: 16px;
+          font-size: 11px; color: #475569;
+        }
+        .vdb-stat { display: flex; align-items: center; gap: 5px; }
+        .vdb-stat-dot {
+          width: 5px; height: 5px; border-radius: 50%;
+          animation: dotPulse 3s ease-in-out infinite;
+        }
+        .vdb-dot-blue { background: #3b82f6; box-shadow: 0 0 6px rgba(59, 130, 246, 0.5); }
+        .vdb-dot-green { background: #22c55e; box-shadow: 0 0 6px rgba(34, 197, 94, 0.5); }
+        .vdb-dot-cyan { background: #22d3ee; box-shadow: 0 0 6px rgba(34, 211, 238, 0.5); }
+        @keyframes dotPulse {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 1; }
+        }
+        .vdb-stat-sep { color: #334155; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+          .vdb-suggestions-grid { grid-template-columns: repeat(2, 1fr); }
+          .vdb-nav { display: none; }
+          .vdb-welcome-title { font-size: 26px; }
+          .vdb-welcome { padding-top: 40px; }
+          .vdb-user-content { max-width: 90%; }
+        }
+        @media (max-width: 480px) {
+          .vdb-suggestions-grid { grid-template-columns: 1fr; }
+          .vdb-welcome-title { font-size: 22px; }
+          .vdb-suggestion-card { padding: 14px 12px; }
+        }
+
+        /* ── Scrollbar ── */
+        .vdb-messages-area::-webkit-scrollbar { width: 6px; }
+        .vdb-messages-area::-webkit-scrollbar-track { background: transparent; }
+        .vdb-messages-area::-webkit-scrollbar-thumb {
+          background: rgba(56, 189, 248, 0.15); border-radius: 3px;
+        }
+        .vdb-messages-area::-webkit-scrollbar-thumb:hover {
+          background: rgba(56, 189, 248, 0.3);
+        }
+      `}</style>
     </div>
   );
 }
