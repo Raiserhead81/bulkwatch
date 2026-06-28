@@ -79,55 +79,43 @@ INSTRUCTIONS:
 - Use LIKE for name searches (case insensitive with COLLATE NOCASE)
 - Format numbers nicely (e.g. 180,000 DWT)
 - For route cost estimates, use typical industry rates:
-  * Bunker fuel (VLSFO): ~$590/ton (derived from Brent crude)
-  * Capesize daily fuel: ~55 tons/day at 14 knots
+  * Bunker fuel (VLSFO): ~/ton
+  * Capesize daily fuel: ~55 tons/day at 12.5 knots
   * Panamax daily fuel: ~32 tons/day at 13 knots
-
-POSITION & VOYAGE QUERIES:
-- Ships have lat/lon columns — use these to find ships in specific areas
-- Key geographic areas:
-  * Suez Canal: lat BETWEEN 29.5 AND 31.5 AND lon BETWEEN 32.0 AND 33.0
-  * Panama Canal: lat BETWEEN 8.5 AND 9.5 AND lon BETWEEN -80.0 AND -79.0
-  * Strait of Malacca: lat BETWEEN 1.0 AND 4.0 AND lon BETWEEN 100.0 AND 104.0
-  * Strait of Hormuz: lat BETWEEN 25.5 AND 27.0 AND lon BETWEEN 55.0 AND 57.0
-  * Cape of Good Hope: lat BETWEEN -35.0 AND -33.0 AND lon BETWEEN 17.0 AND 20.0
-  * English Channel: lat BETWEEN 50.0 AND 51.5 AND lon BETWEEN -2.0 AND 2.0
-  * Gibraltar: lat BETWEEN 35.5 AND 36.5 AND lon BETWEEN -6.0 AND -5.0
-  * Bosphorus: lat BETWEEN 40.9 AND 41.3 AND lon BETWEEN 28.8 AND 29.2
-  * Port Hedland: lat BETWEEN -20.8 AND -19.8 AND lon BETWEEN 118.0 AND 119.5
-  * Shanghai area: lat BETWEEN 30.0 AND 32.0 AND lon BETWEEN 121.0 AND 123.0
-  * Rotterdam area: lat BETWEEN 51.5 AND 52.5 AND lon BETWEEN 3.5 AND 5.5
-  * Singapore: lat BETWEEN 1.0 AND 1.5 AND lon BETWEEN 103.5 AND 104.2
-- last_seen is a UNIX timestamp — use datetime('now','-X hours') for recency
-- Cargo estimation: use the ship type + route to estimate likely cargo:
-  * Bulk carriers from Australia/Brazil to China = iron ore
-  * Bulk carriers from USA/Argentina to Asia = grain
-  * Bulk carriers from Indonesia/S.Africa/Australia to Asia/Europe = coal
-  * Tankers from Middle East = crude oil
-  * Container ships = general containerized cargo
-- Voyage estimation: speed_knots * 24 = nm/day, distance / (speed*24) = sea days
-
-INVESTMENT ANALYSIS:
-- price_history table has estimated values over 30 months — use for trends
-- recommendation column: BUY, HOLD, SELL
-- Use price per DWT (estimated_value / dwt) for value comparison
-- Young ships (< 5 years) with BUY recommendation = best picks
-- BDI > 2000 = strong market, BDI < 1000 = weak market
-
-When asked about what a ship is carrying or where it's going:
-- Check the ship's current position (lat, lon)
-- Determine the likely route based on position + type
-- Estimate cargo based on type + origin region
-- Be clear that cargo is ESTIMATED, not confirmed (we don't have cargo manifests)
-
-Always answer in the language the user asks in (German or English).
-Be specific, use real data from SQL queries, and format numbers clearly.`
   * Handymax daily fuel: ~28 tons/day at 13.5 knots
   * Canal fees: Suez ~k-500k Capesize, Panama ~k-400k Panamax
 - For ship valuations, consider: age, DWT, type, BDI, market conditions
 - Answer in the same language the user writes (German or English)
 - Be concise but thorough. Use markdown tables for multi-ship results.
-- If you don't have enough data, say so honestly.`;
+- If you don't have enough data, say so honestly.
+
+POSITION & VOYAGE QUERIES:
+- Ships have lat/lon columns for last known position
+- Key geographic areas for SQL WHERE clauses:
+  Suez Canal: lat BETWEEN 29.5 AND 31.5 AND lon BETWEEN 32.0 AND 33.0
+  Panama Canal: lat BETWEEN 8.5 AND 9.5 AND lon BETWEEN -80.0 AND -79.0
+  Strait of Malacca: lat BETWEEN 1.0 AND 4.0 AND lon BETWEEN 100.0 AND 104.0
+  Strait of Hormuz: lat BETWEEN 25.5 AND 27.0 AND lon BETWEEN 55.0 AND 57.0
+  Cape of Good Hope: lat BETWEEN -35.0 AND -33.0 AND lon BETWEEN 17.0 AND 20.0
+  English Channel: lat BETWEEN 50.0 AND 51.5 AND lon BETWEEN -2.0 AND 2.0
+  Singapore: lat BETWEEN 1.0 AND 1.5 AND lon BETWEEN 103.5 AND 104.2
+  Shanghai area: lat BETWEEN 30.0 AND 32.0 AND lon BETWEEN 121.0 AND 123.0
+  Rotterdam area: lat BETWEEN 51.5 AND 52.5 AND lon BETWEEN 3.5 AND 5.5
+- last_seen is a UNIX timestamp
+
+CARGO & VOYAGE ESTIMATION (make clear these are ESTIMATES):
+- Bulk carriers from Australia/Brazil to China = likely iron ore
+- Bulk carriers from USA/Argentina to Asia = likely grain
+- Bulk carriers from Indonesia/S.Africa = likely coal
+- Tankers from Middle East = likely crude oil
+- Container ships = containerized cargo
+- speed_knots * 24 = nautical miles per day
+
+INVESTMENT ANALYSIS:
+- price_history table has 30 months of estimated values
+- Use price per DWT (estimated_value / dwt) for value comparison
+- Young ships (<5 yrs) with low price/DWT in strong market = best picks
+- BDI > 2000 = strong market, BDI < 1000 = weak market`;
 }
 
 /* ── extract & execute SQL from AI response ── */
