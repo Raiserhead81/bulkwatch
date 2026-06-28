@@ -89,8 +89,19 @@ export default function ShipDetailPage({
     );
   }
 
-  const price = estimatePrice(ship);
-  const voyage = generateMockVoyage(ship);
+  let price, voyage;
+  try {
+    price = estimatePrice(ship);
+  } catch (e) {
+    console.error("Price estimation failed:", e);
+    price = { estimatedValueUSD: 0, confidenceScore: 0, reasoning: "Error", recommendation: "HOLD" as const, recommendationReasoning: "Error calculating price", factors: [] };
+  }
+  try {
+    voyage = generateMockVoyage(ship);
+  } catch (e) {
+    console.error("Voyage generation failed:", e);
+    voyage = { from: { code: "?", name: "Unknown", country: "", countryFlag: "🏗️", lat: 0, lon: 0, primaryCargo: "empty" as const }, to: { code: "?", name: "Unknown", country: "", countryFlag: "🚢", lat: 0, lon: 0, primaryCargo: "empty" as const }, cargo: "empty" as const, cargoDescription: "N/A", cargoLoadPercent: 0, currentStatus: "in_port" as const, currentPosition: { lat: 0, lon: 0 }, progressPercent: 0, speedKnots: 0, eta: new Date(), departureDate: new Date(), durationDays: 0, distanceNm: 0, vesselActivity: "N/A" };
+  }
   const nearbySurveyPorts = getNearbySurveyPorts(
     voyage?.currentPosition?.lat ?? 0,
     voyage?.currentPosition?.lon ?? 0,
