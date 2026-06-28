@@ -60,6 +60,9 @@ export async function GET(request: NextRequest) {
     conditions.push("lat IS NOT NULL AND lat != 0");
   }
 
+  const status = searchParams.get("status") || "";
+  if (status) { conditions.push("status = ?"); params.push(status); }
+
   const where = conditions.length ? "WHERE " + conditions.join(" AND ") : "";
   const orderMap: Record<string, string> = {
     name: "name ASC",
