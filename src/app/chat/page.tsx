@@ -232,7 +232,10 @@ export default function ChatPage() {
             const delta = parsed.choices?.[0]?.delta?.content;
             if (delta) {
               accumulated += delta;
-              setMessages([...newMessages, { role: "assistant", content: accumulated }]);
+              chunkCount++;
+              if (chunkCount % 3 === 0) {
+                setMessages([...newMessages, { role: "assistant", content: accumulated }]);
+              }
             }
           } catch {
             // skip malformed chunks
@@ -241,7 +244,7 @@ export default function ChatPage() {
       }
 
       if (!accumulated) {
-        setMessages([...newMessages, { role: "assistant", content: "No response received." }]);
+        setMessages([...newMessages, { role: "assistant", content: accumulated || "No response received." }]);
       }
     } catch (err: any) {
       setMessages([...newMessages, { role: "assistant", content: `Error: ${err.message}` }]);
@@ -744,7 +747,7 @@ export default function ChatPage() {
                     </div>
                     {/* Auto-chart after AI messages */}
                     {!isUser && msg.content && (() => {
-                      const chartData = extractChartData(msg.content);
+                      const chartData = (!loading || i !== messages.length - 1) ? extractChartData(msg.content) : null;
                       if (!chartData) return null;
                       const maxVal = Math.max(...chartData.map(d => d.value));
                       return (
