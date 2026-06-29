@@ -64,29 +64,37 @@ def search_and_detail(opener, imo):
         r2 = opener.open("https://www.equasis.org/EquasisWeb/restricted/ShipInfo?fs=Search", dd, timeout=20)
         html = r2.read().decode("utf-8", errors="ignore")
 
-        # DWT — pattern: title="DWT"... followed by value
-        m = re.search(r'title="DWT"[^>]*>.*?</th>\s*<td[^>]*>\s*([\d,]+)', html, re.DOTALL | re.I)
-        if not m:
-            m = re.search(r'DWT\s*</t[hd]>\s*<td[^>]*>\s*([\d,]+)', html, re.DOTALL | re.I)
-        if m:
-            result["dwt"] = int(m.group(1).replace(",", ""))
+        # Equasis uses Bootstrap div grid, not tables. Pattern:
+        # <b>LABEL </b>...</div>...<div class="col-...">VALUE</div>
+        def extract_field(label, html_text):
+            m = re.search(label + r'\s*</b>.*?<div[^>]*class="col-[^"]*"[^>]*>\s*([^<\r\n]+)', html_text, re.DOTALL | re.I)
+            return m.group(1).strip() if m else None
+
+        # DWT
+        val = extract_field("DWT", html)
+        if val and val.replace(",", "").isdigit():
+            result["dwt"] = int(val.replace(",", ""))
 
         # MMSI
-        m = re.search(r'MMSI\s*</t[hd]>\s*<td[^>]*>\s*(\d{9})', html, re.DOTALL | re.I)
-        if m:
-            result["mmsi"] = m.group(1)
+        val = extract_field("MMSI", html)
+        if val and re.match(r"\d{9}$", val):
+            result["mmsi"] = val
 
         # Call Sign
-        m = re.search(r'Call Sign\s*</t[hd]>\s*<td[^>]*>\s*([A-Z0-9]{3,10})', html, re.DOTALL | re.I)
-        if m:
-            result["call_sign"] = m.group(1)
+        val = extract_field("Call Sign", html)
+        if val and re.match(r"[A-Z0-9]{3,10}$", val):
+            result["call_sign"] = val
+
+        # Gross Tonnage (from detail, more reliable)
+        val = extract_field("Gross tonnage", html)
+        if val and val.replace(",", "").isdigit():
+            result["gross_tonnage"] = int(val.replace(",", ""))
 
         # Status
-        m = re.search(r'Status\s*</t[hd]>\s*<td[^>]*>\s*([^<]+)', html, re.DOTALL | re.I)
-        if m:
-            status_text = m.group(1).strip()
+        val = extract_field("Status", html)
+        if val:
             for key in STATUS_MAP:
-                if key.lower() in status_text.lower():
+                if key.lower() in val.lower():
                     result["equasis_status"] = STATUS_MAP[key]
                     break
 
@@ -96,14 +104,7 @@ def search_and_detail(opener, imo):
                 result["classification"] = cls
                 break
 
-        # P&I
-        m = re.search(r'P&amp;I Information.*?<td[^>]*>\s*([^<]{5,80})', html, re.DOTALL | re.I)
-        if m:
-            pi = re.sub(r"<[^>]+>", "", m.group(1)).strip()
-            if pi and "Equasis" not in pi and len(pi) > 3:
-                result["p_and_i"] = pi[:100]
-
-        # Paris/Tokyo MOU
+        # Paris/Tokyo MOU (in main page, not AJAX)
         m = re.search(r'Paris MOU.*?(White|Grey|Black)', html, re.DOTALL | re.I)
         if m:
             result["flag_paris_mou"] = m.group(1)
@@ -116,28 +117,22 @@ def search_and_detail(opener, imo):
         if m:
             result["detention_pct"] = float(m.group(1))
 
-        # Management: Owner, Manager, ISM
-        mgmt = html[html.find("Management detail"):html.find("Classification")] if "Management detail" in html else ""
+        # Management: Owner, Manager, ISM — uses <td> with lots of whitespace
+        mgmt_start = html.find("Management detail")
+        mgmt_end = html.find("Classification", mgmt_start + 20) if mgmt_start > 0 else -1
+        mgmt = html[mgmt_start:mgmt_end] if mgmt_start > 0 and mgmt_end > 0 else ""
         if mgmt:
-            m = re.search(r'Registered owner\s*</td>\s*<td[^>]*>\s*([^<]+)', mgmt, re.DOTALL | re.I)
-            if m:
-                result["owner"] = re.sub(r"<[^>]+>", "", m.group(1)).strip()[:100]
-            m = re.search(r'Ship manager[^<]*</td>\s*<td[^>]*>\s*([^<]+)', mgmt, re.DOTALL | re.I)
-            if m:
-                result["manager"] = re.sub(r"<[^>]+>", "", m.group(1)).strip()[:100]
-            m = re.search(r'ISM Manager\s*</td>\s*<td[^>]*>\s*([^<]+)', mgmt, re.DOTALL | re.I)
-            if m:
-                result["ism_manager"] = re.sub(r"<[^>]+>", "", m.group(1)).strip()[:100]
+            def extract_role(role_name, section):
+                m = re.search(role_name + r'</td>\s*<td[^>]*>(.*?)</td>', section, re.DOTALL | re.I)
+                if m:
+                    val = re.sub(r'<[^>]+>', ' ', m.group(1)).strip()
+                    val = re.sub(r'\s+', ' ', val).strip()
+                    return val[:100] if val and len(val) > 2 else None
+                return None
 
-        # Fallback: parse management from text if HTML parsing missed it
-        if not result.get("owner"):
-            text = re.sub(r"<[^>]+>", "\n", mgmt)
-            for line in text.split("\n"):
-                line = line.strip()
-                if not line or len(line) < 4:
-                    continue
-                # Lines after "Registered owner" role
-                m2 = re.search(r"(\d{7})\s+(Registered owner|ISM Manager|Ship manager)", text)
+            result["owner"] = extract_role("Registered owner", mgmt)
+            result["manager"] = extract_role("Ship manager", mgmt) or extract_role("Commercial manager", mgmt)
+            result["ism_manager"] = extract_role("ISM Manager", mgmt)
 
     except urllib.error.HTTPError as e:
         if e.code == 429:
