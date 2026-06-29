@@ -385,7 +385,7 @@ export default function ChatPage() {
           padding: 20px;
         }
         .vdb-messages-inner {
-          max-width: min(95%, 1400px);
+          max-width: 95%;
           margin: 0 auto;
         }
 
@@ -397,7 +397,7 @@ export default function ChatPage() {
         .vdb-msg-user { justify-content: flex-end; }
         .vdb-msg-ai { justify-content: flex-start; }
         .vdb-msg-bubble {
-          max-width: 85%;
+          max-width: 90%;
           padding: 12px 16px;
           border-radius: 12px;
           word-wrap: break-word;
@@ -565,7 +565,7 @@ export default function ChatPage() {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 12px;
-          max-width: min(95%, 1200px);
+          max-width: 95%;
           width: 100%;
         }
         .vdb-sug-card {
@@ -592,7 +592,7 @@ export default function ChatPage() {
           padding: 12px 20px;
         }
         .vdb-input-inner {
-          max-width: min(95%, 1400px);
+          max-width: 95%;
           margin: 0 auto;
         }
         .vdb-input-row {
