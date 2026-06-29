@@ -18,6 +18,11 @@ function toShip(row: Record<string, unknown>) {
     builder: row.builder,
     flag: row.flag || "Unknown",
     operator: row.operator,
+    operatorWebsite: row.op_website || null,
+    operatorEmail: row.op_email || null,
+    operatorPhone: row.op_phone || null,
+    operatorCity: row.op_city || null,
+    operatorCountry: row.op_country || null,
     homePort: row.home_port,
     imageUrl: row.image_url,
     imageAttribution: row.image_attribution,
@@ -102,7 +107,18 @@ export async function GET(request: NextRequest) {
   const order = orderMap[sort] || "name ASC";
 
   const total = (db.prepare(`SELECT COUNT(*) as c FROM ships ${where}`).get(...params) as Record<string, number>).c;
-  const ships = (db.prepare(`SELECT * FROM ships ${where} ORDER BY ${order} LIMIT ? OFFSET ?`).all(...params, limit, offset) as Record<string, unknown>[]).map(toShip);
+  // Enrich with operator contact details
+  const rawShips = (db.prepare(`SELECT * FROM ships ${where} ORDER BY ${order} LIMIT ? OFFSET ?`).all(...params, limit, offset) as Record<string, unknown>[]);
+  const opCache = new Map<string, Record<string, unknown>>();
+  const ships = rawShips.map(row => {
+    const op = row.operator as string;
+    if (op && !opCache.has(op)) {
+      const opRow = db.prepare("SELECT website, email, phone, city, country FROM operators WHERE name = ?").get(op) as Record<string, unknown> | undefined;
+      opCache.set(op, opRow || {});
+    }
+    const opData = op ? opCache.get(op) || {} : {};
+    return toShip({ ...row, op_website: opData.website, op_email: opData.email, op_phone: opData.phone, op_city: opData.city, op_country: opData.country });
+  });
 
   return NextResponse.json({ ships, total, page, totalPages: Math.ceil(total / limit) });
 }

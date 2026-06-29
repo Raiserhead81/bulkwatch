@@ -14,6 +14,11 @@ interface NewbuildShip {
   yearBuilt: number;
   builder?: string;
   operator?: string;
+  operatorWebsite?: string;
+  operatorEmail?: string;
+  operatorPhone?: string;
+  operatorCity?: string;
+  operatorCountry?: string;
   flag: string;
   imageUrl?: string;
   status: string;
@@ -195,8 +200,24 @@ export default function NewbuildsPage() {
                           </span>
                         )}
                       </div>
+                      {(ship.operatorWebsite || ship.operatorEmail || ship.operatorPhone) && (
+                        <div style={{ marginTop: 8, padding: "8px 10px", borderRadius: 8, background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.12)", fontSize: 11, color: "#94a3b8", display: "flex", flexWrap: "wrap", gap: "6px 14px" }}>
+                          {ship.operatorWebsite && (
+                            <a href={ship.operatorWebsite} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ color: "#38bdf8", textDecoration: "none", display: "flex", alignItems: "center", gap: 3 }}>🌐 Website</a>
+                          )}
+                          {ship.operatorEmail && (
+                            <a href={`mailto:${ship.operatorEmail}`} onClick={e => e.stopPropagation()} style={{ color: "#38bdf8", textDecoration: "none", display: "flex", alignItems: "center", gap: 3 }}>✉️ {ship.operatorEmail}</a>
+                          )}
+                          {ship.operatorPhone && (
+                            <a href={`tel:${ship.operatorPhone}`} onClick={e => e.stopPropagation()} style={{ color: "#38bdf8", textDecoration: "none", display: "flex", alignItems: "center", gap: 3 }}>📞 {ship.operatorPhone}</a>
+                          )}
+                          {ship.operatorCity && (
+                            <span style={{ display: "flex", alignItems: "center", gap: 3 }}>📍 {ship.operatorCity}{ship.operatorCountry ? `, ${ship.operatorCountry}` : ""}</span>
+                          )}
+                        </div>
+                      )}
                       <div style={{
-                        marginTop: 10, padding: "4px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600,
+                        marginTop: 8, padding: "4px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600,
                         background: "rgba(251,191,36,0.12)", color: "#fbbf24", display: "inline-block",
                       }}>
                         Under Construction · ETA {ship.deliveryDate || ship.yearBuilt}

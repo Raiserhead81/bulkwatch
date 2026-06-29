@@ -522,45 +522,68 @@ export default function ShipDetailPage({
                       </div>
                     </div>
                     {/* SVG Chart */}
-                    <div className="w-full" style={{ height: 140 }}>
-                      <svg viewBox="0 0 600 140" className="w-full h-full" preserveAspectRatio="none">
+                    {/* Current price prominent */}
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <span className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Current </span>
+                        <span className="text-lg font-bold text-blue-400">${(priceHistory.history[priceHistory.history.length - 1]?.value / 1e6).toFixed(1)}M</span>
+                      </div>
+                      <div className="flex gap-3 text-[11px]">
+                        <span className="text-red-400">Low ${(priceHistory.min / 1e6).toFixed(1)}M</span>
+                        <span className="text-emerald-400">High ${(priceHistory.max / 1e6).toFixed(1)}M</span>
+                      </div>
+                    </div>
+                    {/* SVG Chart with Y-axis */}
+                    <div className="w-full" style={{ height: 160 }}>
+                      <svg viewBox="0 0 660 160" className="w-full h-full">
                         {(() => {
                           const h = priceHistory.history;
                           const vals = h.map((p: any) => p.value);
                           const minV = Math.min(...vals) * 0.95;
                           const maxV = Math.max(...vals) * 1.05;
                           const range = maxV - minV || 1;
+                          const cl = 55, cw = 595;
                           const points = h.map((p: any, i: number) => {
-                            const x = (i / (h.length - 1)) * 600;
-                            const y = 130 - ((p.value - minV) / range) * 120;
+                            const x = cl + (i / (h.length - 1)) * cw;
+                            const y = 145 - ((p.value - minV) / range) * 130;
                             return `${x},${y}`;
                           }).join(" ");
-                          const areaPoints = points + ` 600,135 0,135`;
+                          const areaPoints = points + ` ${cl+cw},150 ${cl},150`;
                           const lastVal = vals[vals.length - 1];
                           const firstVal = vals[0];
                           const color = lastVal >= firstVal ? "#10b981" : "#ef4444";
+                          const ySteps = [0, 0.25, 0.5, 0.75, 1];
                           return (
                             <>
                               <defs>
                                 <linearGradient id="priceGrad" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+                                  <stop offset="0%" stopColor={color} stopOpacity="0.25" />
                                   <stop offset="100%" stopColor={color} stopOpacity="0.02" />
                                 </linearGradient>
                               </defs>
+                              {ySteps.map((pct, i) => {
+                                const val = minV + pct * range;
+                                const y = 145 - pct * 130;
+                                return (
+                                  <g key={i}>
+                                    <line x1={cl} y1={y} x2={cl+cw} y2={y} stroke="#334155" strokeWidth="0.5" strokeDasharray="3,3" />
+                                    <text x={cl-4} y={y+3} textAnchor="end" fill="#64748b" fontSize="9" fontFamily="system-ui">${(val/1e6).toFixed(1)}M</text>
+                                  </g>
+                                );
+                              })}
                               <polygon points={areaPoints} fill="url(#priceGrad)" />
                               <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" />
-                              {/* Current price dot */}
                               {(() => {
-                                const lastX = 600;
-                                const lastY = 130 - ((lastVal - minV) / range) * 120;
-                                return <circle cx={lastX} cy={lastY} r="4" fill={color} stroke="#fff" strokeWidth="1.5" />;
+                                const lastX = cl + cw;
+                                const lastY = 145 - ((lastVal - minV) / range) * 130;
+                                return <circle cx={lastX} cy={lastY} r="4" fill={color} stroke="#0f172a" strokeWidth="2" />;
                               })()}
                             </>
                           );
                         })()}
                       </svg>
                     </div>
-                    <div className="flex justify-between text-[9px] text-slate-500 dark:text-white/30 mt-1">
+                    <div className="flex justify-between text-[9px] text-slate-500 dark:text-white/30 mt-1" style={{ paddingLeft: 55 }}>
                       <span>{priceHistory.history[0]?.date}</span>
                       <span>{priceHistory.history[priceHistory.history.length - 1]?.date}</span>
                     </div>
