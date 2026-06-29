@@ -1,61 +1,80 @@
 {
   "wikidata": {
-    "last_run": 0,
+    "last_run": 1782703802,
     "offset": 0,
     "done": false
   },
   "commons_cats": {
-    "last_run": 1782617407,
+    "last_run": 1782703806,
     "done_cats": [
-      "Oil tankers",
-      "General cargo ships",
-      "Bulk carriers (ships)",
       "Maersk ships",
-      "Chemical tankers",
-      "Ro-ro ships",
-      "CMA CGM ships",
-      "LNG carriers",
-      "Container ships",
-      "Ships of Norway",
-      "Ships of Netherlands",
-      "Hapag-Lloyd ships",
-      "Ships of Germany",
-      "Evergreen Marine ships",
+      "Ships of Panama",
       "MSC (container ships)",
+      "Ships of Greece",
+      "Ships of Germany",
+      "General cargo ships",
+      "Oil tankers",
+      "Bulk carriers (ships)",
+      "Ships of Netherlands",
+      "Container ships",
+      "CMA CGM ships",
+      "Ships of Liberia",
+      "Chemical tankers",
+      "LNG carriers",
+      "Ships of Marshall Islands",
+      "Hapag-Lloyd ships",
+      "Evergreen Marine ships",
+      "Ships of Norway",
+      "Ro-ro ships",
+      "Container ships at port",
+      "Ships of Bahamas",
+      "Bulk carriers at port",
       "Oldendorff Carriers"
     ]
   },
   "commons_search": {
-    "last_run": 1782617491,
+    "last_run": 1782703861,
     "done_queries": [
       "cargo vessel IMO",
-      "mv IMO ship",
+      "vessel IMO 9",
+      "ore carrier IMO 9",
       "ship IMO 9",
-      "container ship IMO 9",
       "tanker IMO 9",
-      "vessel IMO 9"
+      "ms IMO ship",
+      "cargo ship IMO 9",
+      "containership IMO 9",
+      "container ship IMO 9",
+      "bulkcarrier IMO",
+      "bulk carrier IMO 9",
+      "mv IMO ship"
     ]
   },
   "wikipedia": {
-    "last_run": 1782617549,
+    "last_run": 1782703919,
     "done_langs": []
   },
   "flickr": {
-    "last_run": 1782617561,
+    "last_run": 1782703929,
     "done_tags": [
-      "vessel,IMO,harbor",
-      "bulkcarrier,IMO",
+      "ship,IMO,Hamburg",
+      "vessel,IMO,port",
       "containership,IMO",
-      "cargo,IMO,ship",
-      "cargo ship,port,IMO",
-      "tanker,IMO,vessel",
       "shipspotting,IMO",
-      "schip,IMO,haven"
+      "schip,IMO,haven",
+      "cargo,IMO,ship",
+      "ship,IMO,bulker",
+      "bulkcarrier,IMO",
+      "cargo ship,port,IMO",
+      "vessel,IMO,harbor",
+      "ship,IMO,IJmuiden",
+      "tanker,IMO,vessel",
+      "ship,IMO,Antwerp",
+      "ship,IMO,Rotterdam"
     ]
   },
   "stats": {
-    "total_added": 2,
-    "runs": 1,
-    "last_run": 1782617561
+    "total_added": 73,
+    "runs": 2,
+    "last_run": 1782703929
   }
 }
