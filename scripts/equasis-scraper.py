@@ -6,11 +6,11 @@ import sqlite3, urllib.request, urllib.parse, http.cookiejar, re, time, sys
 
 DB = "/opt/bulkwatch/db/ships.db"
 MAX_PER_RUN = 5000
-DELAY = 2.0  # HTTP is fast, 2s is safe
+DELAY = 5.0  # Equasis aggressively limits sessions, need 5s+ between requests
 EMAIL = "kayconrad@posteo.de"
 PASSWORD = "!nfinitY!981"
 
-DEFAULT_DWTS = {0, 5000, 10000, 15000, 20000, 45000, 50000, 55000}
+DEFAULT_DWTS = {0, 5000, 10000, 12000, 15000, 18000, 20000, 45000, 46000, 47000, 50000, 55000}
 STATUS_MAP = {
     "In Service": "active", "In Service/Commission": "active",
     "Under Construction": "under_construction",
@@ -138,6 +138,8 @@ def search_and_detail(opener, imo):
         if e.code == 429:
             print("  Rate limited, waiting 60s...", flush=True)
             time.sleep(60)
+        elif e.code in (404, 403):
+            result["_session_expired"] = True
     except Exception as e:
         pass
 
@@ -152,7 +154,7 @@ def main():
         SELECT imo, name, dwt, year_built, gross_tonnage FROM ships
         WHERE imo NOT LIKE 'cat-%'
         AND (
-            (dwt IN (0,5000,10000,15000,20000,45000,50000,55000))
+            dwt IN (0,5000,10000,12000,15000,18000,20000,45000,46000,47000,50000,55000)
             OR (year_built IS NULL OR year_built = 0)
             OR (gross_tonnage IS NULL OR gross_tonnage = 0)
             OR (classification IS NULL OR classification = '')
@@ -181,7 +183,23 @@ def main():
             print(f"  [{i}/{len(ships)}] enriched={enriched}", flush=True)
 
         data = search_and_detail(opener, imo)
-        if not data:
+
+        # Session expired? Wait and re-login
+        if data.get("_session_expired"):
+            print("  Session expired, waiting 120s before re-login...", flush=True)
+            time.sleep(120)
+            opener = login()
+            if not opener:
+                print("  Re-login failed, waiting 300s...", flush=True)
+                time.sleep(300)
+                opener = login()
+                if not opener:
+                    print("  Still failed, stopping.", flush=True)
+                    break
+            print("  Re-login OK", flush=True)
+            data = search_and_detail(opener, imo)
+
+        if not data or data.get("_session_expired"):
             time.sleep(DELAY)
             continue
 
