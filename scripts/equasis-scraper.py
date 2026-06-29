@@ -5,8 +5,8 @@ Cron: 0 2 * * * (nightly, max 100 ships per run — Equasis rate limits aggressi
 import sqlite3, time, re, sys
 
 DB = "/opt/bulkwatch/db/ships.db"
-MAX_PER_RUN = 100
-DELAY = 6.0  # Equasis limits to ~10 req/min
+MAX_PER_RUN = 2000
+DELAY = 4.0  # ~15 req/min, Equasis seems OK with this
 
 EMAIL = "kayconrad@posteo.de"
 PASSWORD = "!nfinitY!981"
@@ -106,6 +106,7 @@ def main():
     # Ships needing enrichment
     DEFAULT_DWTS = (5000, 10000, 15000, 20000, 45000, 50000, 55000)
     placeholders = ",".join("?" * len(DEFAULT_DWTS))
+    # Priority: Arklow + Oldendorff first, then rest by DWT desc
     ships = con.execute(f"""
         SELECT imo, name, dwt, year_built, gross_tonnage FROM ships
         WHERE imo NOT LIKE 'cat-%'
@@ -114,7 +115,11 @@ def main():
             OR (year_built IS NULL OR year_built = 0)
             OR (gross_tonnage IS NULL OR gross_tonnage = 0)
         )
-        ORDER BY dwt DESC
+        ORDER BY
+            CASE WHEN UPPER(name) LIKE '%ARKLOW%' THEN 0
+                 WHEN UPPER(name) LIKE '%OLDENDORFF%' THEN 1
+                 ELSE 2 END,
+            dwt DESC
         LIMIT ?
     """, (*DEFAULT_DWTS, MAX_PER_RUN)).fetchall()
 
@@ -179,6 +184,18 @@ def main():
 
     con.close()
     print(f"\nDone: {enriched} ships enriched from Equasis", flush=True)
+
+    # Recalculate valuations with new data
+    if enriched > 0:
+        print(f"\nRecalculating daily valuations...", flush=True)
+        import subprocess
+        result = subprocess.run(
+            ["python3", "/opt/bulkwatch/scripts/daily-valuations.py"],
+            capture_output=True, text=True, cwd="/opt/bulkwatch"
+        )
+        print(result.stdout, flush=True)
+        if result.stderr:
+            print(result.stderr, flush=True)
 
 
 if __name__ == "__main__":

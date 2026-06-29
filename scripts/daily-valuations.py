@@ -48,8 +48,9 @@ def main():
 
     existing = con.execute("SELECT COUNT(*) FROM price_history WHERE date = ?", (today,)).fetchone()[0]
     if existing > 100:
-        print(f"Already {existing} valuations for {today}, skipping.")
-        return
+        # Delete old valuations and recalculate (data may have been enriched)
+        con.execute("DELETE FROM price_history WHERE date = ?", (today,))
+        con.commit()
 
     # Exclude ships with default/placeholder DWT values (45000, 15000, 55000 etc. with no year_built)
     ships = con.execute("""
