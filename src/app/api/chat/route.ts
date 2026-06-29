@@ -337,128 +337,106 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const apiKey = process.env.ZAI_API_KEY;
-  const baseUrl = process.env.ZAI_BASE_URL || "https://open.bigmodel.cn/api/paas/v4";
-  const model = process.env.ZAI_MODEL || "glm-4-plus";
+  const anthropicKey = process.env.ANTHROPIC_API_KEY || "";
+  const useAnthropic = !!anthropicKey;
+  const zaiKey = process.env.ZAI_API_KEY || "";
+  const zaiBase = process.env.ZAI_BASE_URL || "https://open.bigmodel.cn/api/paas/v4";
+  const zaiModel = process.env.ZAI_MODEL || "glm-4-plus";
 
-  if (!apiKey) {
+  if (!anthropicKey && !zaiKey) {
     return new Response(JSON.stringify({ error: "AI not configured" }), {
       status: 500, headers: { "Content-Type": "application/json" }
     });
   }
 
-  const systemPrompt = buildSystemPrompt();
-
-  /* ── First pass: ask AI (non-streaming) to get SQL, execute it, then stream final answer ── */
-  // Step 1: Get initial response with potential SQL queries
-  const firstRes = await fetch(`${baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: systemPrompt + "\n\nIMPORTANT: If you need data from the database, output your SQL queries wrapped in <SQL>...</SQL> tags. The system will execute them and you will see the results." },
-        ...messages.slice(-10) // last 10 messages for context
-      ],
-      stream: false,
-      temperature: 0.7,
-      max_tokens: 2000
-    })
-  });
-
-  if (!firstRes.ok) {
-    const err = await firstRes.text();
-    return new Response(JSON.stringify({ error: "AI request failed", detail: err }), {
-      status: 502, headers: { "Content-Type": "application/json" }
+  // Helper: call AI (non-streaming)
+  async function aiCall(sys: string, msgs: {role:string,content:string}[]): Promise<string> {
+    if (useAnthropic) {
+      const r = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-api-key": anthropicKey, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({ model: "claude-haiku-4-5-20251001", system: sys, messages: msgs, max_tokens: 2000, temperature: 0.7 })
+      });
+      const j = await r.json();
+      return j.content?.[0]?.text || "";
+    }
+    const r = await fetch(`${zaiBase}/chat/completions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${zaiKey}` },
+      body: JSON.stringify({ model: zaiModel, messages: [{ role: "system", content: sys }, ...msgs], stream: false, temperature: 0.7, max_tokens: 2000 })
     });
+    const j = await r.json();
+    return j.choices?.[0]?.message?.content || "";
   }
 
-  const firstJson = await firstRes.json();
-  const firstContent = firstJson.choices?.[0]?.message?.content || "";
+  // Helper: call AI (streaming) — returns Response with SSE
+  async function aiStream(sys: string, msgs: {role:string,content:string}[]): Promise<Response> {
+    if (useAnthropic) {
+      const r = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-api-key": anthropicKey, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({ model: "claude-haiku-4-5-20251001", system: sys, messages: msgs, stream: true, max_tokens: 2000, temperature: 0.7 })
+      });
+      // Transform Anthropic SSE to OpenAI-compatible format
+      const reader = r.body!.getReader();
+      const stream = new ReadableStream({
+        async start(controller) {
+          const enc = new TextEncoder();
+          const dec = new TextDecoder();
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) { controller.enqueue(enc.encode("data: [DONE]\n\n")); controller.close(); break; }
+            const chunk = dec.decode(value);
+            for (const line of chunk.split("\n")) {
+              if (!line.startsWith("data: ")) continue;
+              const d = line.slice(6).trim();
+              if (!d) continue;
+              try {
+                const j = JSON.parse(d);
+                if (j.type === "content_block_delta" && j.delta?.text) {
+                  controller.enqueue(enc.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: j.delta.text } }] })}\n\n`));
+                } else if (j.type === "message_stop") {
+                  controller.enqueue(enc.encode("data: [DONE]\n\n"));
+                  controller.close();
+                  return;
+                }
+              } catch {}
+            }
+          }
+        }
+      });
+      return new Response(stream, { headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive" } });
+    }
+    // ZAI fallback
+    const r = await fetch(`${zaiBase}/chat/completions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${zaiKey}` },
+      body: JSON.stringify({ model: zaiModel, messages: [{ role: "system", content: sys }, ...msgs], stream: true, temperature: 0.7, max_tokens: 2000 })
+    });
+    return new Response(r.body, { headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive" } });
+  }
 
-  // Step 2: Execute any SQL tags
+  const systemPrompt = buildSystemPrompt();
+
+  /* ── First pass: non-streaming to check for SQL ── */
+  const firstContent = await aiCall(
+    systemPrompt + "\n\nIMPORTANT: If you need data from the database, output your SQL queries wrapped in <SQL>...</SQL> tags.",
+    messages.slice(-10)
+  );
+
   const db = getDb();
   const hasSql = /<SQL>/i.test(firstContent);
 
   if (!hasSql) {
-    // No SQL needed — stream the answer directly
-    const streamRes = await fetch(`${baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages.slice(-10)
-        ],
-        stream: true,
-        temperature: 0.7,
-        max_tokens: 2000
-      })
-    });
-
-    if (!streamRes.ok || !streamRes.body) {
-      return new Response(JSON.stringify({ error: "Stream failed" }), {
-        status: 502, headers: { "Content-Type": "application/json" }
-      });
-    }
-
-    return new Response(streamRes.body, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        "Connection": "keep-alive"
-      }
-    });
+    return aiStream(systemPrompt, messages.slice(-10));
   }
 
-  // Step 3: SQL was found — execute it and ask AI to summarize with real data
+  // SQL found — execute and ask AI to present results
   const withResults = executeSqlTags(firstContent, db);
 
-  const finalRes = await fetch(`${baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...messages.slice(-10),
-        { role: "assistant", content: "I queried the database. Here are the results:" },
-        { role: "user", content: `Based on these database query results, give a clear, data-driven answer. ALWAYS use markdown tables for structured data. Include visual indicators (emoji, arrows). For financial questions show profit breakdowns. End with a brief verdict.\n\nQuery Results:\n${withResults}` }
-      ],
-      stream: true,
-      temperature: 0.7,
-      max_tokens: 2000
-    })
-  });
-
-  if (!finalRes.ok || !finalRes.body) {
-    // Fallback: return the raw results
-    const encoder = new TextEncoder();
-    const fallback = `data: ${JSON.stringify({ choices: [{ delta: { content: withResults } }] })}\n\ndata: [DONE]\n\n`;
-    return new Response(encoder.encode(fallback), {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        "Connection": "keep-alive"
-      }
-    });
-  }
-
-  return new Response(finalRes.body, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      "Connection": "keep-alive"
-    }
-  });
+  return aiStream(systemPrompt, [
+    ...messages.slice(-10),
+    { role: "assistant", content: "I queried the database." },
+    { role: "user", content: `Present these database results clearly with markdown tables, emojis, and a verdict. NEVER show SQL.\n\n${withResults}` }
+  ]);
 }
