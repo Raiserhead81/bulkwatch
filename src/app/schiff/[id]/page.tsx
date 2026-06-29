@@ -27,6 +27,9 @@ import {
   Users,
   Cog,
   Box,
+  Shield,
+  Radio,
+  AlertTriangle,
 } from "lucide-react";
 import { type Ship } from "@/data/ships";
 import {
@@ -134,6 +137,12 @@ export default function ShipDetailPage({
     ...(ship.grainCapacity > 0 ? [{ icon: Box, label: "Grain Capacity", value: ship.grainCapacity.toLocaleString("en-US") + " m³" }] : []),
     ...(ship.teu > 0 ? [{ icon: Box, label: "TEU Capacity", value: ship.teu.toLocaleString("en-US") + " TEU" }] : []),
     ...(ship.cranes ? [{ icon: Cog, label: "Cranes", value: ship.cranes }] : []),
+    ...((ship as any).classification ? [{ icon: Shield, label: "Classification", value: (ship as any).classification }] : []),
+    ...((ship as any).pAndI ? [{ icon: Shield, label: "P&I Insurance", value: (ship as any).pAndI }] : []),
+    ...((ship as any).callSign ? [{ icon: Radio, label: "Call Sign", value: (ship as any).callSign }] : []),
+    ...((ship as any).flagParisMou ? [{ icon: Flag, label: "Paris MOU", value: (ship as any).flagParisMou }] : []),
+    ...((ship as any).flagTokyoMou ? [{ icon: Flag, label: "Tokyo MOU", value: (ship as any).flagTokyoMou }] : []),
+    ...((ship as any).detentionPct != null ? [{ icon: AlertTriangle, label: "Detention Rate", value: (ship as any).detentionPct + "%" }] : []),
   ];
 
   return (

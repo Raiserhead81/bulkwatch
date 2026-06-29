@@ -88,7 +88,7 @@ def search_ship(page, imo):
             # Try space-separated
             m = re.match(r"(\d{7})\s+(.+?)\s+(\d+)\s+(.*?)\s+(\d{4})\s+(.+)", line)
             if m:
-                return {
+                result = {
                     "imo": m.group(1),
                     "name": m.group(2).strip(),
                     "gross_tonnage": int(m.group(3)),
@@ -96,7 +96,72 @@ def search_ship(page, imo):
                     "year_built": int(m.group(5)),
                     "flag": m.group(6).strip(),
                 }
-    return None
+                break
+    else:
+        return None
+
+    # Open detail page for DWT, MMSI, Classification, P&I, Flag Performance
+    try:
+        page.evaluate(f"document.formShip.P_IMO.value='{imo}';document.formShip.submit();")
+        page.wait_for_timeout(4000)
+
+        # Expand all sections
+        for section in ["Classification", "P&I Information", "Management detail", "Safety management"]:
+            try:
+                page.click(f"text={section}", timeout=2000)
+                page.wait_for_timeout(800)
+            except:
+                pass
+
+        detail = page.inner_text("body")
+
+        # DWT
+        m = re.search(r"DWT\s*\n?\s*([\d,]+)", detail)
+        if m:
+            result["dwt"] = int(m.group(1).replace(",", ""))
+
+        # MMSI
+        m = re.search(r"MMSI\s*\n?\s*(\d{9})", detail)
+        if m:
+            result["mmsi"] = m.group(1)
+
+        # Call Sign
+        m = re.search(r"Call Sign\s*\n?\s*([A-Z0-9]{4,10})", detail)
+        if m:
+            result["call_sign"] = m.group(1)
+
+        # Classification
+        for cls_name in ["Lloyd's Register", "DNV", "Bureau Veritas", "Nippon Kaiji Kyokai",
+                         "American Bureau of Shipping", "ClassNK", "RINA", "Korean Register",
+                         "China Classification Society", "Indian Register", "Russian Maritime"]:
+            if cls_name in detail:
+                result["classification"] = cls_name
+                break
+
+        # P&I
+        m = re.search(r"P&I Information\s*\n?\s*([^\n]+)", detail)
+        if m:
+            pi = m.group(1).strip()
+            if pi and len(pi) > 3 and "Equasis" not in pi:
+                result["p_and_i"] = pi
+
+        # Flag Performance (Paris MOU / Tokyo MOU)
+        m = re.search(r"Paris MOU\s*\n?\s*(White|Grey|Black)", detail)
+        if m:
+            result["flag_paris_mou"] = m.group(1)
+        m = re.search(r"Tokyo MOU\s*\n?\s*(White|Grey|Black)", detail)
+        if m:
+            result["flag_tokyo_mou"] = m.group(1)
+
+        # Detention percentage
+        m = re.search(r"([\d.]+)%\s*Of inspections.*detention", detail)
+        if m:
+            result["detention_pct"] = float(m.group(1))
+
+    except Exception:
+        pass
+
+    return result
 
 
 def main():
@@ -161,6 +226,46 @@ def main():
                     updates.append("flag = ?")
                     params.append(flag)
 
+            # DWT from detail page (replaces placeholder values)
+            if data.get("dwt") and data["dwt"] > 0:
+                cur_dwt = con.execute("SELECT dwt FROM ships WHERE imo=?", (imo,)).fetchone()
+                if cur_dwt and cur_dwt[0] in (0, 5000, 10000, 15000, 20000, 45000, 50000, 55000):
+                    updates.append("dwt = ?")
+                    params.append(data["dwt"])
+
+            # MMSI
+            if data.get("mmsi"):
+                updates.append("mmsi = COALESCE(NULLIF(mmsi, ''), ?)")
+                params.append(data["mmsi"])
+
+            # Call Sign
+            if data.get("call_sign"):
+                updates.append("call_sign = COALESCE(NULLIF(call_sign, ''), ?)")
+                params.append(data["call_sign"])
+
+            # Classification
+            if data.get("classification"):
+                updates.append("classification = ?")
+                params.append(data["classification"])
+
+            # P&I
+            if data.get("p_and_i"):
+                updates.append("p_and_i = ?")
+                params.append(data["p_and_i"])
+
+            # Flag Performance
+            if data.get("flag_paris_mou"):
+                updates.append("flag_paris_mou = ?")
+                params.append(data["flag_paris_mou"])
+            if data.get("flag_tokyo_mou"):
+                updates.append("flag_tokyo_mou = ?")
+                params.append(data["flag_tokyo_mou"])
+
+            # Detention
+            if data.get("detention_pct") is not None:
+                updates.append("detention_pct = ?")
+                params.append(data["detention_pct"])
+
             if updates:
                 params.append(imo)
                 con.execute(f"UPDATE ships SET {', '.join(updates)} WHERE imo = ?", params)
@@ -170,10 +275,20 @@ def main():
                 changes = []
                 if data.get("gross_tonnage"):
                     changes.append(f"GT={data['gross_tonnage']}")
+                if data.get("dwt"):
+                    changes.append(f"DWT={data['dwt']}")
                 if data.get("year_built") and (not year_built or year_built == 0):
                     changes.append(f"Year={data['year_built']}")
                 if data.get("flag"):
                     changes.append(f"Flag={data['flag']}")
+                if data.get("mmsi"):
+                    changes.append(f"MMSI={data['mmsi']}")
+                if data.get("classification"):
+                    changes.append(f"Class={data['classification'][:15]}")
+                if data.get("p_and_i"):
+                    changes.append(f"P&I={data['p_and_i'][:20]}")
+                if data.get("flag_paris_mou"):
+                    changes.append(f"MOU={data['flag_paris_mou']}")
                 print(f"  OK  {name[:25]:25} {' | '.join(changes)}", flush=True)
 
             time.sleep(DELAY)

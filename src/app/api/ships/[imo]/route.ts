@@ -38,6 +38,12 @@ function toShip(row: Record<string, unknown>) {
     hatches: row.hatches || 0,
     cranes: row.cranes,
     classSociety: row.class_society,
+    classification: row.classification,
+    pAndI: row.p_and_i,
+    flagParisMou: row.flag_paris_mou,
+    flagTokyoMou: row.flag_tokyo_mou,
+    detentionPct: row.detention_pct,
+    callSign: row.call_sign,
     deliveryDate: row.delivery_date,
   };
 }
