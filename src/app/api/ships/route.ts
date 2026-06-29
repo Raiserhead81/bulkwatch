@@ -62,8 +62,8 @@ export async function GET(request: NextRequest) {
   if (type) { conditions.push("type = ?"); params.push(type); }
   if (flag) { conditions.push("flag = ?"); params.push(flag); }
   if (operator) {
-    conditions.push("(operator LIKE ? OR name LIKE ?)");
-    params.push(`%${operator}%`, `%${operator}%`);
+    conditions.push("operator LIKE ?");
+    params.push(`%${operator}%`);
   }
   if (hasPosition) {
     conditions.push("lat IS NOT NULL AND lat != 0");

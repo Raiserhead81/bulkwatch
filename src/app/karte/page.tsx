@@ -27,16 +27,30 @@ export default function KartePage() {
 
   const fetchShips = useCallback((operator: string) => {
     setIsLoading(true);
-    const params = new URLSearchParams({ has_position: "true", limit: "5000" });
-    if (operator.trim()) params.set("operator", operator.trim());
-    fetch(`/api/ships?${params}`)
-      .then(r => r.json())
-      .then(d => {
-        setShips(d.ships || []);
-        setTotalWithPosition(d.total || 0);
-        setIsLoading(false);
-      })
-      .catch(() => setIsLoading(false));
+    if (operator.trim()) {
+      // When filtering: load ALL ships of this operator (even without position)
+      // so Live AIS can match by name
+      const params = new URLSearchParams({ limit: "5000", operator: operator.trim() });
+      fetch(`/api/ships?${params}`)
+        .then(r => r.json())
+        .then(d => {
+          setShips(d.ships || []);
+          setTotalWithPosition(d.total || 0);
+          setIsLoading(false);
+        })
+        .catch(() => setIsLoading(false));
+    } else {
+      // No filter: only ships with position (too many otherwise)
+      const params = new URLSearchParams({ has_position: "true", limit: "5000" });
+      fetch(`/api/ships?${params}`)
+        .then(r => r.json())
+        .then(d => {
+          setShips(d.ships || []);
+          setTotalWithPosition(d.total || 0);
+          setIsLoading(false);
+        })
+        .catch(() => setIsLoading(false));
+    }
   }, []);
 
   useEffect(() => {
@@ -69,7 +83,9 @@ export default function KartePage() {
             </div>
             <Badge variant="outline" className="border-blue-500/20 text-blue-400 text-xs">
               <ShipIcon className="h-3 w-3 mr-1" />
-              {isLoading ? "..." : ships.length.toLocaleString()} shown
+              {isLoading ? "..." : operatorFilter.trim()
+                ? `${ships.filter(s => s.position?.lat).length} on map / ${ships.length} total`
+                : `${ships.length.toLocaleString()} shown`}
             </Badge>
             <div className="relative hidden sm:block">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-500" />

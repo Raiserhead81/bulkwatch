@@ -176,11 +176,17 @@ export default function WorldMap({ ships, height = "100%", typeFilter = "" }: Wo
 
   const { ships: liveShips, stats } = useAllLiveShips(120000); // 2-min refresh — ships barely move at world-zoom
 
-  // Index DB ships by IMO for fast lookup
+  // Index DB ships by IMO and by name for fast lookup
   const dbByImo = useMemo(() => {
     const m = new Map<string, Ship>();
     for (const s of ships) if (s.imo) m.set(s.imo, s);
     return m;
+  }, [ships]);
+
+  const dbNameSet = useMemo(() => {
+    const s = new Set<string>();
+    for (const ship of ships) if (ship.name) s.add(ship.name.toUpperCase());
+    return s;
   }, [ships]);
 
   // ── Init map ────────────────────────────────────────────────────────────────
@@ -307,12 +313,24 @@ export default function WorldMap({ ships, height = "100%", typeFilter = "" }: Wo
     cluster.clearLayers();
     if (!showLive) return;
 
+    // When a filter is active (ships prop is a subset), only show live markers
+    // for ships that are in the filtered set
+    const isFiltered = ships.length > 0 && ships.length < 5000;
+
     const markers: L.Marker[] = [];
     for (const live of liveShips) {
       if (!live.lat || !live.lon || (live.lat === 0 && live.lon === 0)) continue;
 
       const dbShip = live.imo ? dbByImo.get(live.imo) : undefined;
       const color = dbShip ? getTypeColor(dbShip.type) : navStatusColor(live.navStatus);
+
+      // If filtered by operator/search, only show live ships that match the filter
+      // Match by IMO or by ship name (AIS ships often have no IMO)
+      if (isFiltered) {
+        const imoMatch = live.imo && dbByImo.has(live.imo);
+        const nameMatch = live.name && dbNameSet.has(live.name.toUpperCase());
+        if (!imoMatch && !nameMatch) continue;
+      }
 
       if (activeType && dbShip && !dbShip.type.toLowerCase().includes(activeType.toLowerCase())) continue;
       if (activeType && !dbShip) continue;
@@ -333,7 +351,7 @@ export default function WorldMap({ ships, height = "100%", typeFilter = "" }: Wo
       );
     }
     (cluster as any).addLayers(markers); // batch add — much faster than individual addTo()
-  }, [liveShips, showLive, dbByImo, activeType]);
+  }, [liveShips, showLive, dbByImo, dbNameSet, activeType, ships]);
 
   // ── Layer visibility ─────────────────────────────────────────────────────
   useEffect(() => {
