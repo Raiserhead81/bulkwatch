@@ -77,7 +77,7 @@ export default function NewbuildsPage() {
       </div>
 
       <div className="page-header" style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "16px 24px" }}>
-        <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ maxWidth: "95%", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#38bdf8", display: "flex", alignItems: "center", gap: 10 }}>
               <Hammer style={{ width: 24, height: 24 }} /> Newbuilds
@@ -96,7 +96,7 @@ export default function NewbuildsPage() {
       </div>
 
       <div style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "12px 24px" }}>
-        <div className="stats-bar" style={{ maxWidth: 1400, margin: "0 auto", display: "flex", gap: 32, fontSize: 13 }}>
+        <div className="stats-bar" style={{ maxWidth: "95%", margin: "0 auto", display: "flex", gap: 32, fontSize: 13 }}>
           {[
             ["Total Orders", ships.length.toString()],
             ["Types", types.length.toString()],
@@ -112,7 +112,7 @@ export default function NewbuildsPage() {
         </div>
       </div>
 
-      <div className="page-content" style={{ maxWidth: 1400, margin: "0 auto", padding: "16px 24px" }}>
+      <div className="page-content" style={{ maxWidth: "95%", margin: "0 auto", padding: "16px 24px" }}>
         <div className="newbuild-filter-bar" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
           <button
             onClick={() => setTypeFilter("")}

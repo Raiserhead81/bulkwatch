@@ -385,7 +385,7 @@ export default function ChatPage() {
           padding: 20px;
         }
         .vdb-messages-inner {
-          max-width: 800px;
+          max-width: min(95%, 1400px);
           margin: 0 auto;
         }
 
@@ -565,7 +565,7 @@ export default function ChatPage() {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 12px;
-          max-width: 700px;
+          max-width: min(95%, 1200px);
           width: 100%;
         }
         .vdb-sug-card {
@@ -592,7 +592,7 @@ export default function ChatPage() {
           padding: 12px 20px;
         }
         .vdb-input-inner {
-          max-width: 800px;
+          max-width: min(95%, 1400px);
           margin: 0 auto;
         }
         .vdb-input-row {

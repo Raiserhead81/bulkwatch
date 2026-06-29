@@ -144,7 +144,7 @@ export default function Home() {
       </div>
 
       <div className="page-header" style={{ background: cardBg, borderBottom: `1px solid ${border}`, padding: "16px 24px" }}>
-        <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ maxWidth: "95%", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: accent }}>Vessel Database</h1>
             <p style={{ margin: "4px 0 0", fontSize: 13, color: textMuted }}>
@@ -165,14 +165,14 @@ export default function Home() {
       </div>
 
       <div style={{ background: cardBg, borderBottom: `1px solid ${theme === "light" ? "#cbd5e1" : "#1e3a5f"}`, padding: "12px 24px" }}>
-        <div className="stats-bar" style={{ maxWidth: 1400, margin: "0 auto", display: "flex", gap: 32, fontSize: 13 }}>
+        <div className="stats-bar" style={{ maxWidth: "95%", margin: "0 auto", display: "flex", gap: 32, fontSize: 13 }}>
           {[["Total Ships", stats.total.toLocaleString()],["Photos", stats.withImage.toLocaleString()],["GPS", stats.withPosition.toLocaleString()],["DWT", `${fmtM(stats.totalDwt)} M`]].map(([l,v]) => (
             <div key={l}><div style={{ color: textDim }}>{l}</div><div className="stat-value" style={{ color: accent, fontWeight: 600, fontSize: 16 }}>{v}</div></div>
           ))}
         </div>
       </div>
 
-      <div className="page-content" style={{ maxWidth: 1400, margin: "0 auto", padding: "24px" }}>
+      <div className="page-content" style={{ maxWidth: "95%", margin: "0 auto", padding: "24px" }}>
         <div className="filter-row" style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
           <input type="text" placeholder="Search ships, IMO, operator..." value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, flex: 1, minWidth: 200, outline: "none" }} />
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={inp}>

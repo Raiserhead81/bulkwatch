@@ -268,7 +268,7 @@ export default function VoyageCalcPage() {
       </div>
 
       <div className="page-header" style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "16px 24px" }}>
-        <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ maxWidth: "95%", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#38bdf8" }}>Voyage Calculator</h1>
             <p style={{ margin: "4px 0 0", fontSize: 13, color: "#94a3b8" }}>Estimate costs, duration and TCE</p>
@@ -282,7 +282,7 @@ export default function VoyageCalcPage() {
         </div>
       </div>
 
-      <div className="page-content" style={{ maxWidth: 1400, margin: "0 auto", padding: "24px" }}>
+      <div className="page-content" style={{ maxWidth: "95%", margin: "0 auto", padding: "24px" }}>
         <div className="voyage-layout" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={box}>
