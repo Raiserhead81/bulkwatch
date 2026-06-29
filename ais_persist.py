@@ -16,10 +16,17 @@ try:
     conn.execute("PRAGMA journal_mode=WAL")
     cur = conn.cursor()
 
-    # Build name->imo index for name-based matching
+    # Build name->imo index for name-based matching (only unique names!)
+    name_counts = {}
     name_index = {}
     for row in cur.execute("SELECT imo, UPPER(name) FROM ships WHERE name IS NOT NULL"):
-        name_index[row[1]] = row[0]
+        uname = row[1]
+        name_counts[uname] = name_counts.get(uname, 0) + 1
+        name_index[uname] = row[0]
+    # Remove ambiguous names (multiple ships with same name)
+    for uname, cnt in name_counts.items():
+        if cnt > 1:
+            del name_index[uname]
 
     updated_imo = 0
     updated_name = 0
