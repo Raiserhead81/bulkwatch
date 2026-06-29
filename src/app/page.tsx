@@ -174,16 +174,16 @@ export default function Home() {
 
       <div className="page-content" style={{ maxWidth: "95%", margin: "0 auto", padding: "24px" }}>
         <div className="filter-row" style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
-          <input type="text" placeholder="Search ships, IMO, operator..." value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, flex: 1, minWidth: 200, outline: "none" }} />
-          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={inp}>
+          <input type="text" placeholder="Search ships, IMO, operator..." value={search} onChange={e => setSearch(e.target.value)} autoComplete="off" style={{ ...inp, flex: 1, minWidth: 200, outline: "none" }} />
+          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} autoComplete="off" style={inp}>
             <option value="">All Types</option>
             {SHIP_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
-          <select value={flagFilter} onChange={e => setFlagFilter(e.target.value)} style={{ ...inp, maxWidth: 180 }}>
+          <select value={flagFilter} onChange={e => setFlagFilter(e.target.value)} autoComplete="off" style={{ ...inp, maxWidth: 180 }}>
             <option value="">All Flags</option>
             {flags.map(f => <option key={f} value={f}>{f}</option>)}
           </select>
-          <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={inp}>
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)} autoComplete="off" style={inp}>
             <option value="name">Name</option>
             <option value="dwt">DWT</option>
             <option value="year">Year</option>
@@ -205,7 +205,7 @@ export default function Home() {
             <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={inp}>
               {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
-            <select value={operatorFilter} onChange={e => setOperatorFilter(e.target.value)} style={{ ...inp, minWidth: 180 }}>
+            <select value={operatorFilter} onChange={e => setOperatorFilter(e.target.value)} autoComplete="off" style={{ ...inp, minWidth: 180 }}>
               <option value="">All Operators</option>
               {operators.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
