@@ -57,6 +57,7 @@ def main():
         SELECT imo, name, type, dwt, year_built, builder, flag, status
         FROM ships WHERE type IS NOT NULL AND type != '' AND dwt > 0
         AND NOT (dwt IN (45000, 15000, 55000, 50000, 20000, 10000, 5000) AND (year_built IS NULL OR year_built = 0))
+        AND status NOT IN ('scrapped', 'lost')
     """).fetchall()
 
     print(f"Valuating {len(ships)} ships for {today}...")

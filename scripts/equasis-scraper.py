@@ -19,7 +19,7 @@ def create_session():
     page = browser.new_page(viewport={"width": 1280, "height": 800})
 
     # Login
-    page.goto("https://www.equasis.org/EquasisWeb/public/HomePage", wait_until="networkidle", timeout=20000)
+    page.goto("https://www.equasis.org/EquasisWeb/public/HomePage", wait_until="networkidle", timeout=90000)
     page.wait_for_timeout(2000)
 
     inputs = page.query_selector_all("input[name=j_email]")
@@ -159,7 +159,7 @@ def search_ship(page, imo):
         if m:
             result["detention_pct"] = float(m.group(1))
 
-        # Status from Equasis (In Service, Broken Up, Total Loss, etc.)
+        # Status from Equasis
         m = re.search(r"Status\s*\n?\s*(In Service|Broken Up|Total Loss|Laid Up|Hulked|Scuttled|Sunk|Cancelled|Under Construction|Converting)", detail, re.I)
         if m:
             equasis_status = m.group(1).strip()
@@ -171,6 +171,35 @@ def search_ship(page, imo):
                 "Laid Up": "laid_up", "Cancelled": "scrapped",
             }
             result["equasis_status"] = status_map.get(equasis_status, "active")
+
+        # Management detail: Owner, Manager
+        try:
+            page.click("text=Management detail", timeout=2000)
+            page.wait_for_timeout(1500)
+            mgmt = page.inner_text("body")
+
+            # Registered owner
+            m = re.search(r"Registered owner\s+([^\n]+)", mgmt)
+            if m:
+                owner = m.group(1).strip().split("\t")[0].strip()
+                if owner and len(owner) > 2:
+                    result["owner"] = owner[:100]
+
+            # Ship manager
+            m = re.search(r"Ship manager[^\n]*\s+([^\n]+)", mgmt)
+            if m:
+                manager = m.group(1).strip().split("\t")[0].strip()
+                if manager and len(manager) > 2:
+                    result["manager"] = manager[:100]
+
+            # ISM Manager (often the operator)
+            m = re.search(r"ISM Manager\s+([^\n]+)", mgmt)
+            if m:
+                ism = m.group(1).strip().split("\t")[0].strip()
+                if ism and len(ism) > 2:
+                    result["ism_manager"] = ism[:100]
+        except:
+            pass
 
     except Exception:
         pass
@@ -287,6 +316,22 @@ def main():
                 updates.append("status = ?")
                 params.append(data["equasis_status"])
 
+            # Owner / Manager from Management detail
+            if data.get("owner"):
+                updates.append("owner = ?")
+                params.append(data["owner"])
+            if data.get("manager"):
+                updates.append("manager = ?")
+                params.append(data["manager"])
+            if data.get("ism_manager"):
+                updates.append("ism_manager = ?")
+                params.append(data["ism_manager"])
+                # If no operator set, use ISM Manager as operator
+                cur_op = con.execute("SELECT operator FROM ships WHERE imo=?", (imo,)).fetchone()
+                if cur_op and (not cur_op[0] or cur_op[0] == ""):
+                    updates.append("operator = ?")
+                    params.append(data["ism_manager"])
+
             if updates:
                 params.append(imo)
                 con.execute(f"UPDATE ships SET {', '.join(updates)} WHERE imo = ?", params)
@@ -310,6 +355,12 @@ def main():
                     changes.append(f"P&I={data['p_and_i'][:20]}")
                 if data.get("flag_paris_mou"):
                     changes.append(f"MOU={data['flag_paris_mou']}")
+                if data.get("owner"):
+                    changes.append(f"Owner={data['owner'][:20]}")
+                if data.get("ism_manager"):
+                    changes.append(f"ISM={data['ism_manager'][:20]}")
+                if data.get("equasis_status") and data["equasis_status"] != "active":
+                    changes.append(f"STATUS={data['equasis_status']}")
                 print(f"  OK  {name[:25]:25} {' | '.join(changes)}", flush=True)
 
             time.sleep(DELAY)

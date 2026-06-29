@@ -44,6 +44,9 @@ function toShip(row: Record<string, unknown>) {
     flagTokyoMou: row.flag_tokyo_mou,
     detentionPct: row.detention_pct,
     callSign: row.call_sign,
+    owner: row.owner,
+    manager: row.manager,
+    ismManager: row.ism_manager,
     deliveryDate: row.delivery_date,
   };
 }
