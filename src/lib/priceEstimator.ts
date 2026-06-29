@@ -96,10 +96,29 @@ const MARKET_FACTORS = {
   freightRateMultiplier: 1.0,
 };
 
-// DWT-zu-Wert Multiplikator (pro tausend DWT) — calibrated:
-// A 35k DWT Handysize should get ~$3M bonus on top of base
-// 35 × 85 = $2.975M ✓
-const DWT_VALUE_PER_1000 = 85; // USD pro 1000 DWT (was 250, too high)
+// $/DWT factors by type — optimized against 86 real S&P comps (MAE 22%)
+// Price = DWT × factor × age_multiplier
+const DWT_FACTORS: Partial<Record<string, number>> = {
+  // Bulk (calibrated against NautiSNP/Xclusiv/Clarksons Jun 2026)
+  Handysize: 847, Handymax: 862, Supramax: 546, Ultramax: 561,
+  Panamax: 507, Kamsarmax: 431, Capesize: 319, Newcastlemax: 265,
+  "Post-Panamax": 592, Valemax: 220, VLOC: 250,
+  "Bulk Carrier": 500, "General Cargo": 809, "Mini-Bulker": 500,
+  Gearless: 400, Geared: 500,
+  // Tanker
+  VLCC: 604, Suezmax: 500, Aframax: 500,
+  "Product Tanker": 1293, "Chemical Tanker": 2117, "Oil/Chemical Tanker": 1500,
+  "Crude Oil Tanker": 450, Tanker: 500,
+  "LNG Tanker": 1300, "LPG Tanker": 4881,
+  // Container (TEU-based, DWT is rough proxy)
+  "Container Ship": 700, ULCV: 600, "Neo-Panamax": 600, Feeder: 800,
+  // Other
+  Multipurpose: 700, Reefer: 800, "Heavy Lift": 1000,
+  RoRo: 1000, RoPax: 1200, "Car Carrier": 2500,
+  Passenger: 3000, "Cruise Ship": 3000, Ferry: 1500,
+  Offshore: 2000, OSV: 2000, Tug: 6000, Dredger: 1500,
+  Other: 500,
+};
 
 /**
  * Berechnet eine Preis-Schätzung für ein Schiff basierend auf:
@@ -110,16 +129,14 @@ const DWT_VALUE_PER_1000 = 85; // USD pro 1000 DWT (was 250, too high)
  * - Status (aktiv, stillgelegt, etc.)
  */
 export function estimatePrice(ship: Ship): PriceEstimate {
-  // DWT-adjusted base price: larger ships within the same type are worth more
-  // A 47k DWT "General Cargo" should price closer to Handymax than a 5k DWT one
-  let basePrice = BASE_PRICES[ship.type] ?? BASE_PRICES["Other"] ?? 8_000_000;
-  if (ship.dwt > 0) {
-    // DWT scaling: price per DWT is roughly $300-500/DWT for bulk, less for others
-    const dwtBase = ship.dwt * 350; // $/DWT for a 5yr old bulk ship
-    // Use the higher of type-base or DWT-base, blended
-    const dwtEstimate = Math.max(dwtBase, basePrice);
-    basePrice = basePrice * 0.4 + dwtEstimate * 0.6; // 60% DWT-driven, 40% type-driven
-  }
+  // DWT × $/DWT factor — calibrated against 86 real S&P transactions (Q2 2026)
+  // For "General Cargo" with high DWT, use bulk carrier factors (they're misclassified)
+  let effectiveType = ship.type;
+  if (ship.type === "General Cargo" && ship.dwt >= 40000) effectiveType = "Handymax";
+  else if (ship.type === "General Cargo" && ship.dwt >= 25000) effectiveType = "Handysize";
+  const dwtFactor = DWT_FACTORS[effectiveType] ?? DWT_FACTORS[ship.type] ?? DWT_FACTORS["Other"] ?? 500;
+  const typeFallback = BASE_PRICES[ship.type] ?? BASE_PRICES["Other"] ?? 8_000_000;
+  let basePrice = ship.dwt > 0 ? Math.max(ship.dwt * dwtFactor, typeFallback * 0.3) : typeFallback;
   const factors: PriceEstimate["factors"] = [];
   let priceMultiplier = 1.0;
   // Start confidence based on available data quality
