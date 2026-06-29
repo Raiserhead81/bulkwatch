@@ -181,6 +181,12 @@ def main():
     for i, (imo, name, dwt, year_built, gt) in enumerate(ships):
         if i % 100 == 0 and i > 0:
             print(f"  [{i}/{len(ships)}] enriched={enriched}", flush=True)
+            # Recalc valuations every 100 ships
+            if enriched > 0:
+                import subprocess
+                subprocess.run(["python3", "/opt/bulkwatch/scripts/daily-valuations.py"],
+                               capture_output=True, cwd="/opt/bulkwatch")
+                print(f"  Valuations recalculated", flush=True)
 
         data = search_and_detail(opener, imo)
 
