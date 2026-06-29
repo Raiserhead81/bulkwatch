@@ -193,6 +193,22 @@ export default function ShipDetailPage({
           <p className="text-sm text-slate-600 dark:text-white/50">
             {ship.operator || "Unknown Operator"} · 🇺🇳 {ship.flag} · {ship.homePort || "Home Port Unknown"}
           </p>
+          {(ship as any).operatorDetails && (
+            <div className="flex flex-wrap gap-3 mt-2 text-xs">
+              {(ship as any).operatorDetails.website && (
+                <a href={(ship as any).operatorDetails.website} target="_blank" rel="noopener" className="text-blue-400 hover:text-blue-300 flex items-center gap-1">🌐 Website</a>
+              )}
+              {(ship as any).operatorDetails.email && (
+                <a href={`mailto:${(ship as any).operatorDetails.email}`} className="text-blue-400 hover:text-blue-300 flex items-center gap-1">✉️ {(ship as any).operatorDetails.email}</a>
+              )}
+              {(ship as any).operatorDetails.phone && (
+                <a href={`tel:${(ship as any).operatorDetails.phone}`} className="text-blue-400 hover:text-blue-300 flex items-center gap-1">📞 {(ship as any).operatorDetails.phone}</a>
+              )}
+              {(ship as any).operatorDetails.city && (
+                <span className="text-slate-400">📍 {(ship as any).operatorDetails.city}{(ship as any).operatorDetails.country ? `, ${(ship as any).operatorDetails.country}` : ""}</span>
+              )}
+            </div>
+          )}
         </section>
 
         {/* Main Grid */}
@@ -523,32 +539,32 @@ export default function ShipDetailPage({
                     </div>
                     {/* SVG Chart */}
                     {/* Current price prominent */}
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-3">
                       <div>
-                        <span className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Current </span>
-                        <span className="text-lg font-bold text-blue-400">${(priceHistory.history[priceHistory.history.length - 1]?.value / 1e6).toFixed(1)}M</span>
+                        <span className="text-xs text-slate-500 dark:text-white/40 uppercase">Current </span>
+                        <span className="text-2xl font-bold text-blue-400">${(priceHistory.history[priceHistory.history.length - 1]?.value / 1e6).toFixed(1)}M</span>
                       </div>
-                      <div className="flex gap-3 text-[11px]">
-                        <span className="text-red-400">Low ${(priceHistory.min / 1e6).toFixed(1)}M</span>
-                        <span className="text-emerald-400">High ${(priceHistory.max / 1e6).toFixed(1)}M</span>
+                      <div className="flex gap-4 text-sm">
+                        <span className="text-red-400 font-semibold">▼ ${(priceHistory.min / 1e6).toFixed(1)}M</span>
+                        <span className="text-emerald-400 font-semibold">▲ ${(priceHistory.max / 1e6).toFixed(1)}M</span>
                       </div>
                     </div>
                     {/* SVG Chart with Y-axis */}
-                    <div className="w-full" style={{ height: 160 }}>
-                      <svg viewBox="0 0 660 160" className="w-full h-full">
+                    <div className="w-full" style={{ height: 200 }}>
+                      <svg viewBox="0 0 660 200" className="w-full h-full">
                         {(() => {
                           const h = priceHistory.history;
                           const vals = h.map((p: any) => p.value);
                           const minV = Math.min(...vals) * 0.95;
                           const maxV = Math.max(...vals) * 1.05;
                           const range = maxV - minV || 1;
-                          const cl = 55, cw = 595;
+                          const cl = 75, cw = 575;
                           const points = h.map((p: any, i: number) => {
                             const x = cl + (i / (h.length - 1)) * cw;
-                            const y = 145 - ((p.value - minV) / range) * 130;
+                            const y = 185 - ((p.value - minV) / range) * 170;
                             return `${x},${y}`;
                           }).join(" ");
-                          const areaPoints = points + ` ${cl+cw},150 ${cl},150`;
+                          const areaPoints = points + ` ${cl+cw},190 ${cl},190`;
                           const lastVal = vals[vals.length - 1];
                           const firstVal = vals[0];
                           const color = lastVal >= firstVal ? "#10b981" : "#ef4444";
@@ -563,11 +579,11 @@ export default function ShipDetailPage({
                               </defs>
                               {ySteps.map((pct, i) => {
                                 const val = minV + pct * range;
-                                const y = 145 - pct * 130;
+                                const y = 185 - pct * 170;
                                 return (
                                   <g key={i}>
                                     <line x1={cl} y1={y} x2={cl+cw} y2={y} stroke="#334155" strokeWidth="0.5" strokeDasharray="3,3" />
-                                    <text x={cl-4} y={y+3} textAnchor="end" fill="#64748b" fontSize="9" fontFamily="system-ui">${(val/1e6).toFixed(1)}M</text>
+                                    <text x={cl-4} y={y+5} textAnchor="end" fill="#e2e8f0" fontSize="16" fontWeight="600" fontFamily="system-ui">${(val/1e6).toFixed(1)}M</text>
                                   </g>
                                 );
                               })}
@@ -575,7 +591,7 @@ export default function ShipDetailPage({
                               <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" />
                               {(() => {
                                 const lastX = cl + cw;
-                                const lastY = 145 - ((lastVal - minV) / range) * 130;
+                                const lastY = 185 - ((lastVal - minV) / range) * 170;
                                 return <circle cx={lastX} cy={lastY} r="4" fill={color} stroke="#0f172a" strokeWidth="2" />;
                               })()}
                             </>

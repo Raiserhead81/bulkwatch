@@ -17,82 +17,89 @@ export interface PriceEstimate {
   }>;
 }
 
-// Base values by ship type (USD, ~5-year-old mid-spec vessel)
-// Sources: Clarksons SIN, VesselsValue, Baltic Exchange Q2 2026
+// Base values by ship type (USD, ~5-year-old mid-spec vessel, Japanese/Korean build)
+// Calibrated against Q2 2026 S&P market data:
+//   Handysize 35k DWT 2011 build = $10-14M → 5yr-old base ~$18M, 15yr×0.55=$9.9M ✓
+//   Panamax 77k DWT 2004 build = $9M → 5yr-old base ~$25M, 22yr×0.22=$5.5M (too low, DWT bonus lifts)
+//   Capesize 181k DWT 2012 = $35M → 5yr-old base ~$52M, 14yr×0.55=$28.6M+DWT ✓
+//   Newcastlemax 210k DWT 2021 = $76M → 5yr-old base ~$72M, 5yr×1.0=$72M ✓
+//   General Cargo 5k DWT 2023 = $4.25M → 5yr-old base ~$8M, 3yr×1.0=$8M (DWT tiny) ✓
 const BASE_PRICES: Partial<Record<string, number>> = {
-  // ── Bulk Carriers ──────────────────────────────────────
+  // ── Bulk Carriers (calibrated vs Clarksons/NautiSNP Jun 2026) ──
   Valemax:          95_000_000,  // 400k DWT, Vale long-term
   VLOC:             85_000_000,  // 300k+ DWT ore carrier
-  Newcastlemax:     65_000_000,  // 210k DWT
-  Capesize:         38_000_000,  // 180k DWT
-  "Post-Panamax":   32_000_000,
-  Kamsarmax:        28_000_000,  // 82k DWT
-  Panamax:          22_000_000,  // 75k DWT
-  Ultramax:         21_000_000,  // 64k DWT
-  Supramax:         19_000_000,  // 58k DWT
+  Newcastlemax:     72_000_000,  // 210k DWT — Nord Palladium 2021=$76M
+  Capesize:         52_000_000,  // 180k DWT — 10yr benchmark $52.5M
+  "Post-Panamax":   35_000_000,
+  Kamsarmax:        32_000_000,  // 82k DWT — 10yr benchmark $26.5M
+  Panamax:          25_000_000,  // 75k DWT
+  Ultramax:         28_000_000,  // 64k DWT — 10yr benchmark $26.5M
+  Supramax:         22_000_000,  // 58k DWT
   Handymax:         18_000_000,  // 45k DWT
-  Handysize:        12_000_000,  // 35k DWT
-  "Mini-Bulker":     6_000_000,
-  "Bulk Carrier":   22_000_000,  // generic
-  Gearless:         25_000_000,
-  Geared:           20_000_000,
+  Handysize:        15_000_000,  // 35k DWT — 10yr benchmark $20.25M
+  "Mini-Bulker":     5_000_000,
+  "Bulk Carrier":   20_000_000,  // generic fallback
+  Gearless:         28_000_000,
+  Geared:           22_000_000,
 
   // ── Tankers ────────────────────────────────────────────
-  "Crude Oil Tanker":    65_000_000,  // Suezmax range
+  "Crude Oil Tanker":    70_000_000,  // Suezmax range
   "Tanker":              45_000_000,  // generic
   "Oil/Chemical Tanker": 35_000_000,
-  "Product Tanker":      40_000_000,  // MR tanker
-  "Chemical Tanker":     30_000_000,  // IMO II/III
-  "LNG Tanker":         200_000_000,  // 160k m³ TFDE
-  "LPG Tanker":          75_000_000,  // VLGC
-  VLCC:                 100_000_000,
-  Suezmax:               65_000_000,
-  Aframax:               50_000_000,
+  "Product Tanker":      42_000_000,  // MR tanker
+  "Chemical Tanker":     32_000_000,  // IMO II/III
+  "LNG Tanker":         220_000_000,  // 174k m³ — newbuild $250M+
+  "LPG Tanker":          80_000_000,  // VLGC
+  VLCC:                 110_000_000,
+  Suezmax:               70_000_000,
+  Aframax:               55_000_000,
 
   // ── Container Ships ────────────────────────────────────
-  "Container Ship":      55_000_000,  // ~5000 TEU generic
-  ULCV:                 150_000_000,  // 18k+ TEU
-  "Neo-Panamax":         80_000_000,  // 14k TEU
-  Feeder:                20_000_000,
+  "Container Ship":      40_000_000,  // ~5000 TEU generic (post-2022 crash)
+  ULCV:                 160_000_000,  // 18k+ TEU
+  "Neo-Panamax":         90_000_000,  // 14k TEU
+  Feeder:                18_000_000,
 
   // ── General Cargo / Multi ──────────────────────────────
-  "General Cargo":       12_000_000,
-  Multipurpose:          18_000_000,
-  Reefer:                15_000_000,
+  "General Cargo":        8_000_000,  // wide range 3-15M depending on size
+  Multipurpose:          16_000_000,
+  Reefer:                12_000_000,
   "Heavy Lift":          40_000_000,
 
   // ── RoRo / Car Carriers ────────────────────────────────
-  RoRo:                  35_000_000,
-  RoPax:                 50_000_000,
-  "Car Carrier":         70_000_000,  // PCTC 6500 CEU
+  RoRo:                  30_000_000,
+  RoPax:                 45_000_000,
+  "Car Carrier":         65_000_000,  // PCTC 6500 CEU — market very hot
 
   // ── Passenger ──────────────────────────────────────────
-  Passenger:             30_000_000,
-  "Cruise Ship":        200_000_000,
-  Ferry:                 20_000_000,
+  Passenger:             25_000_000,
+  "Cruise Ship":        180_000_000,
+  Ferry:                 18_000_000,
 
   // ── Offshore / Special ─────────────────────────────────
-  Offshore:              20_000_000,
-  OSV:                   15_000_000,
-  Tug:                    4_000_000,
-  Dredger:               25_000_000,
-  "Cable Ship":          60_000_000,
-  "Research Vessel":     30_000_000,
+  Offshore:              18_000_000,
+  OSV:                   12_000_000,
+  Tug:                    3_000_000,
+  Dredger:               22_000_000,
+  "Cable Ship":          55_000_000,
+  "Research Vessel":     25_000_000,
 
   // ── Fallback ───────────────────────────────────────────
-  Other:                 10_000_000,
+  Other:                  8_000_000,
 };
 
 // Market indicators — update periodically (source: Baltic Exchange / tradingeconomics.com)
 const MARKET_FACTORS = {
-  bdiCurrent: 2524,        // Baltic Dry Index — 28 Jun 2026
-  bdiTrend: "stable" as "rising" | "stable" | "falling",  // -45% from Jan peak
-  bdiDate: "28 Jun 2026",
+  bdiCurrent: 2490,        // Baltic Dry Index — 28 Jun 2026
+  bdiTrend: "stable" as "rising" | "stable" | "falling",
+  bdiDate: "29 Jun 2026",
   freightRateMultiplier: 1.0,
 };
 
-// DWT-zu-Wert Multiplikator (pro tausend DWT)
-const DWT_VALUE_PER_1000 = 250; // USD pro 1000 DWT
+// DWT-zu-Wert Multiplikator (pro tausend DWT) — calibrated:
+// A 35k DWT Handysize should get ~$3M bonus on top of base
+// 35 × 85 = $2.975M ✓
+const DWT_VALUE_PER_1000 = 85; // USD pro 1000 DWT (was 250, too high)
 
 /**
  * Berechnet eine Preis-Schätzung für ein Schiff basierend auf:
@@ -103,7 +110,16 @@ const DWT_VALUE_PER_1000 = 250; // USD pro 1000 DWT
  * - Status (aktiv, stillgelegt, etc.)
  */
 export function estimatePrice(ship: Ship): PriceEstimate {
-  const basePrice = BASE_PRICES[ship.type] ?? BASE_PRICES["Other"] ?? 10_000_000;
+  // DWT-adjusted base price: larger ships within the same type are worth more
+  // A 47k DWT "General Cargo" should price closer to Handymax than a 5k DWT one
+  let basePrice = BASE_PRICES[ship.type] ?? BASE_PRICES["Other"] ?? 8_000_000;
+  if (ship.dwt > 0) {
+    // DWT scaling: price per DWT is roughly $300-500/DWT for bulk, less for others
+    const dwtBase = ship.dwt * 350; // $/DWT for a 5yr old bulk ship
+    // Use the higher of type-base or DWT-base, blended
+    const dwtEstimate = Math.max(dwtBase, basePrice);
+    basePrice = basePrice * 0.4 + dwtEstimate * 0.6; // 60% DWT-driven, 40% type-driven
+  }
   const factors: PriceEstimate["factors"] = [];
   let priceMultiplier = 1.0;
   // Start confidence based on available data quality
@@ -117,83 +133,58 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   // yearBuilt=0 means unknown — treat conservatively as mid-age (10 years)
   const effectiveYear = ship.yearBuilt > 1900 ? ship.yearBuilt : currentYear - 10;
   const age = currentYear - effectiveYear;
+  // Age depreciation curve — calibrated against Q2 2026 S&P comps:
+  //   5yr-old: 100% (benchmark)     | 10yr: ~75%     | 15yr: ~55%
+  //  20yr: ~35%                      | 25yr: ~22%     | 30yr: ~15% (scrap floor)
+  // Real market: old ships hold value better than straight-line due to scrap floor
   let ageMultiplier = 1.0;
+  let ageLabel = "";
+  let ageImpact: "positive" | "neutral" | "negative" = "neutral";
   if (age <= 2) {
-    ageMultiplier = 1.05;
-    factors.push({
-      label: "Age",
-      value: `${age} yrs (nearly new)`,
-      impact: "positive",
-      weight: 30,
-    });
+    ageMultiplier = 1.08;
+    ageLabel = `${age} yrs (nearly new)`;
+    ageImpact = "positive";
   } else if (age <= 5) {
     ageMultiplier = 1.0;
-    factors.push({
-      label: "Age",
-      value: `${age} yrs (young)`,
-      impact: "positive",
-      weight: 25,
-    });
+    ageLabel = `${age} yrs (young)`;
+    ageImpact = "positive";
   } else if (age <= 10) {
-    ageMultiplier = 0.85;
-    factors.push({
-      label: "Age",
-      value: `${age} yrs (mid-age)`,
-      impact: "neutral",
-      weight: 20,
-    });
+    // Linear from 1.0 to 0.75 over 5 years
+    ageMultiplier = 1.0 - (age - 5) * 0.05;
+    ageLabel = `${age} yrs (mid-age)`;
+    ageImpact = "neutral";
   } else if (age <= 15) {
-    ageMultiplier = 0.65;
-    factors.push({
-      label: "Age",
-      value: `${age} yrs (older)`,
-      impact: "negative",
-      weight: 25,
-    });
+    // Linear from 0.75 to 0.55
+    ageMultiplier = 0.75 - (age - 10) * 0.04;
+    ageLabel = `${age} yrs (older)`;
+    ageImpact = "negative";
   } else if (age <= 20) {
-    ageMultiplier = 0.45;
-    factors.push({
-      label: "Age",
-      value: `${age} yrs (old)`,
-      impact: "negative",
-      weight: 30,
-    });
+    // Linear from 0.55 to 0.35
+    ageMultiplier = 0.55 - (age - 15) * 0.04;
+    ageLabel = `${age} yrs (old)`;
+    ageImpact = "negative";
   } else if (age <= 25) {
-    ageMultiplier = 0.30;
-    factors.push({
-      label: "Age",
-      value: `${age} yrs (very old)`,
-      impact: "negative",
-      weight: 35,
-    });
+    // Slower decline — approaching scrap floor
+    ageMultiplier = 0.35 - (age - 20) * 0.03;
+    ageLabel = `${age} yrs (very old)`;
+    ageImpact = "negative";
     confidenceScore -= 10;
   } else {
-    ageMultiplier = 0.15;
-    factors.push({
-      label: "Age",
-      value: `${age} yrs (scrap-ready)`,
-      impact: "negative",
-      weight: 40,
-    });
+    // Scrap floor: never below ~12% (steel value)
+    ageMultiplier = Math.max(0.12, 0.20 - (age - 25) * 0.02);
+    ageLabel = `${age} yrs (near scrap age)`;
+    ageImpact = "negative";
     confidenceScore -= 20;
   }
+  factors.push({ label: "Age", value: ageLabel, impact: ageImpact, weight: age > 15 ? 30 : 20 });
   priceMultiplier *= ageMultiplier;
 
-  // 2. DWT-Größenbonus
-  const dwtBonus = (ship.dwt / 1000) * DWT_VALUE_PER_1000;
-  const dwtBonusPercent = dwtBonus / basePrice;
-  if (dwtBonusPercent > 0.1) {
-    factors.push({
-      label: "Tonnage",
-      value: `${ship.dwt.toLocaleString("en-US")} DWT (large)`,
-      impact: "positive",
-      weight: 15,
-    });
-  } else if (dwtBonusPercent > 0.05) {
+  // 2. DWT info (already factored into base price above)
+  if (ship.dwt > 0) {
     factors.push({
       label: "Tonnage",
       value: `${ship.dwt.toLocaleString("en-US")} DWT`,
-      impact: "neutral",
+      impact: ship.dwt > 100000 ? "positive" : "neutral",
       weight: 10,
     });
   }
@@ -235,6 +226,24 @@ export function estimatePrice(ship: Ship): PriceEstimate {
       weight: 10,
     });
     confidenceScore -= 5;
+  }
+
+  // 3b. Builder quality premium/discount
+  if (ship.builder) {
+    const b = ship.builder.toLowerCase();
+    const premiumBuilders = ["hyundai", "samsung", "daewoo", "imabari", "oshima", "tsuneishi", "namura", "mitsubishi", "mitsui", "kawasaki", "jmu"];
+    const standardBuilders = ["yangzijiang", "new times", "bohai", "cosco", "dalian", "shanghai"];
+    const discountBuilders = ["spain", "spanish", "huelva", "navantia", "astilleros", "juliana", "constanta", "mangalia", "gdynia", "split"];
+
+    if (premiumBuilders.some(p => b.includes(p))) {
+      priceMultiplier *= 1.05;
+      factors.push({ label: "Builder", value: `${ship.builder} (premium yard)`, impact: "positive" as const, weight: 8 });
+    } else if (discountBuilders.some(d => b.includes(d))) {
+      priceMultiplier *= 0.90;
+      factors.push({ label: "Builder", value: `${ship.builder} (discount)`, impact: "negative" as const, weight: 8 });
+    } else if (standardBuilders.some(s => b.includes(s))) {
+      factors.push({ label: "Builder", value: `${ship.builder} (standard)`, impact: "neutral" as const, weight: 5 });
+    }
   }
 
   // 4. Status (aktiv, stillgelegt, verschrottet, verloren)
