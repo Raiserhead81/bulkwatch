@@ -1,101 +1,94 @@
 #!/usr/bin/env python3
-"""Vessel image scraper v2 — respects Wikimedia rate limits."""
-import sqlite3, urllib.request, urllib.parse, json, time, sys, re
+"""Image scraper v3 — strict matching, only accepts images that reference the ship."""
+import sqlite3, urllib.request, urllib.parse, json, time, re, sys
 
 DB = "/opt/bulkwatch/db/ships.db"
-BATCH = 2000
-DELAY = 2.0  # 2 seconds between calls — Wikimedia allows ~200/min for bots
+DELAY = 2.0
+UA = "VesselDB/1.0 (hallo@gemivo.de; vessel image enrichment)"
 
-def search_wikimedia(query):
+def search_wikimedia(query, ship_name, ship_imo):
     url = "https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode({
-        "action": "query",
-        "list": "search",
-        "srsearch": query,
-        "srnamespace": "6",
-        "srlimit": "1",
-        "format": "json",
+        "action": "query", "list": "search", "srsearch": query,
+        "srnamespace": "6", "srlimit": "5", "format": "json",
     })
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "VesselDB/1.0 (hallo@gemivo.de; vessel image enrichment)"})
+        req = urllib.request.Request(url, headers={"User-Agent": UA})
         with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read())
         results = data.get("query", {}).get("search", [])
         if not results:
             return None, None
 
-        title = results[0]["title"]
-        info_url = "https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode({
-            "action": "query",
-            "titles": title,
-            "prop": "imageinfo",
-            "iiprop": "url|extmetadata",
-            "iiurlwidth": "960",
-            "format": "json",
-        })
-        req2 = urllib.request.Request(info_url, headers={"User-Agent": "VesselDB/1.0 (hallo@gemivo.de; vessel image enrichment)"})
-        with urllib.request.urlopen(req2, timeout=15) as resp2:
-            info = json.loads(resp2.read())
+        name_parts = [p.lower() for p in re.split(r'[\s._\-]+', ship_name.lower()) if len(p) > 2 and not p.isdigit()]
 
-        pages = info.get("query", {}).get("pages", {})
-        for page in pages.values():
-            ii = page.get("imageinfo", [{}])[0]
-            thumb = ii.get("thumburl", ii.get("url", ""))
-            meta = ii.get("extmetadata", {})
-            artist = re.sub(r"<[^>]+>", "", meta.get("Artist", {}).get("value", "")).strip()
-            license_ = meta.get("LicenseShortName", {}).get("value", "")
-            if thumb and not any(x in thumb.lower() for x in ["logo", "flag", "icon", "map"]):
+        for r in results:
+            title = r["title"]
+            title_lower = title.lower()
+
+            # STRICT: title must contain ship name part or IMO
+            has_ref = ship_imo in title or any(p in title_lower for p in name_parts)
+            if not has_ref:
+                continue
+
+            # Skip obvious non-ship results
+            bad = ["flag", "logo", "emblem", "coat", "seal", "stamp", "coin", "medal",
+                   "portrait", "painting", "drawing", "sketch", "map", "chart",
+                   "museum", "ancient", "pottery", "ceramic", "statue"]
+            if any(b in title_lower for b in bad):
+                continue
+
+            # Get image URL
+            info_url = "https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode({
+                "action": "query", "titles": title, "prop": "imageinfo",
+                "iiprop": "url|extmetadata", "iiurlwidth": "960", "format": "json",
+            })
+            req2 = urllib.request.Request(info_url, headers={"User-Agent": UA})
+            with urllib.request.urlopen(req2, timeout=15) as resp2:
+                info = json.loads(resp2.read())
+
+            pages = info.get("query", {}).get("pages", {})
+            for page in pages.values():
+                ii = page.get("imageinfo", [{}])[0]
+                thumb = ii.get("thumburl", ii.get("url", ""))
+                if not thumb:
+                    continue
+                meta = ii.get("extmetadata", {})
+                artist = re.sub(r"<[^>]+>", "", meta.get("Artist", {}).get("value", "")).strip()
+                license_ = meta.get("LicenseShortName", {}).get("value", "")
                 attr = f"{artist} ({license_})" if artist else license_
                 return thumb, attr
+
     except urllib.error.HTTPError as e:
         if e.code == 429:
-            print(f"  Rate limited, waiting 30s...", flush=True)
+            print("  Rate limited, waiting 30s...", flush=True)
             time.sleep(30)
-            return "RETRY", None
-        print(f"  HTTP {e.code}", file=sys.stderr, flush=True)
     except Exception as e:
-        print(f"  Error: {e}", file=sys.stderr, flush=True)
+        pass
     return None, None
 
 def main():
     db = sqlite3.connect(DB)
     ships = db.execute(
-        "SELECT imo, name FROM ships WHERE (image_url IS NULL OR image_url = '') ORDER BY dwt DESC LIMIT ?",
-        (BATCH,)
+        "SELECT imo, name FROM ships WHERE (image_url IS NULL OR image_url = '') ORDER BY dwt DESC LIMIT 3000"
     ).fetchall()
 
-    print(f"Searching images for {len(ships)} ships...", flush=True)
+    print(f"Searching images for {len(ships)} ships (strict mode)...", flush=True)
     found = 0
-    skipped = 0
 
     for i, (imo, name) in enumerate(ships):
         if i % 100 == 0:
-            print(f"  [{i}/{len(ships)}] found={found} skipped={skipped}", flush=True)
+            print(f"  [{i}/{len(ships)}] found={found}", flush=True)
 
-        # Search with IMO number
-        url, attr = search_wikimedia(f'IMO {imo} ship')
-        if url == "RETRY":
-            url, attr = search_wikimedia(f'IMO {imo} ship')
-
-        if not url or url == "RETRY":
-            # Try ship name
-            url, attr = search_wikimedia(f'"{name}" vessel')
-            if url == "RETRY":
-                url, attr = search_wikimedia(f'"{name}" vessel')
-
-        if url and url != "RETRY":
-            db.execute("UPDATE ships SET image_url=?, image_attribution=? WHERE imo=?", (url, attr or "", imo))
-            found += 1
-        else:
-            skipped += 1
-
-        if found % 20 == 0 and found > 0:
-            db.commit()
-
+        for query in [f'IMO {imo}', f'"{name}" ship', f'"{name}" vessel IMO']:
+            url, attr = search_wikimedia(query, name, imo)
+            if url:
+                db.execute("UPDATE ships SET image_url=?, image_attribution=? WHERE imo=?", (url, attr or "", imo))
+                found += 1
+                db.commit()
+                break
         time.sleep(DELAY)
 
-    db.commit()
-    db.close()
-    print(f"\nDone! Found {found} images out of {len(ships)} ships ({found*100//max(len(ships),1)}%)", flush=True)
+    print(f"\nDone! Found {found} verified images for {len(ships)} ships", flush=True)
 
 if __name__ == "__main__":
     main()
