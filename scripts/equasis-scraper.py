@@ -77,7 +77,7 @@ def search_ship(page, imo):
         if str(imo) in line:
             parts = line.split("\t")
             if len(parts) >= 6:
-                return {
+                result = {
                     "imo": parts[0].strip(),
                     "name": parts[1].strip(),
                     "gross_tonnage": int(parts[2].strip()) if parts[2].strip().isdigit() else None,
@@ -85,6 +85,7 @@ def search_ship(page, imo):
                     "year_built": int(parts[4].strip()) if parts[4].strip().isdigit() else None,
                     "flag": parts[5].strip(),
                 }
+                break
             # Try space-separated
             m = re.match(r"(\d{7})\s+(.+?)\s+(\d+)\s+(.*?)\s+(\d{4})\s+(.+)", line)
             if m:
