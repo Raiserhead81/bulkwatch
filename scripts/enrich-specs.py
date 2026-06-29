@@ -1,162 +1,237 @@
 #!/usr/bin/env python3
-"""Enrich vessel specs with estimated fuel consumption, engine power, speed, GT etc.
-Based on industry-standard formulas and type-specific averages from Clarksons/DNV."""
-import sqlite3, math
+"""Enrich ship specs (DWT, year_built, builder) from public vessel databases.
+Targets ships with placeholder/missing data. Sources: MarineTraffic, VesselFinder.
+Cron: 0 2 * * * (nightly, max 200 ships per run to avoid rate limits)"""
+import sqlite3, urllib.request, re, json, time, sys
 
 DB = "/opt/bulkwatch/db/ships.db"
-db = sqlite3.connect(DB)
+UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+DELAY = 5.0
+MAX_PER_RUN = 200
 
-# Type-specific defaults based on industry data (Clarksons, MAN Energy Solutions, DNV)
-# Format: { type: (speed_kn, fuel_tons_day, engine_type, engine_kw_per_1000dwt, gt_ratio, crew) }
-TYPE_SPECS = {
-    # Bulk Carriers
-    "Valemax":       (14.5, 65, "MAN B&W 7S80ME-C9", 0.45, 0.50, 25),
-    "VLOC":          (14.5, 60, "MAN B&W 7S80ME-C9", 0.45, 0.50, 25),
-    "Newcastlemax":  (14.5, 55, "MAN B&W 6S80ME-C9", 0.42, 0.50, 24),
-    "Capesize":      (14.0, 45, "MAN B&W 6S70ME-C8", 0.40, 0.52, 23),
-    "Post-Panamax":  (14.0, 38, "MAN B&W 6S60ME-C8", 0.38, 0.52, 22),
-    "Kamsarmax":     (14.0, 32, "MAN B&W 6S50ME-C8", 0.36, 0.53, 22),
-    "Panamax":       (14.0, 30, "MAN B&W 6S50ME-C8", 0.35, 0.53, 22),
-    "Ultramax":      (14.0, 28, "MAN B&W 6S50ME-B9", 0.34, 0.54, 21),
-    "Supramax":      (14.0, 27, "MAN B&W 6S50ME-B9", 0.33, 0.55, 21),
-    "Handymax":      (13.5, 25, "MAN B&W 6S46ME-B8", 0.32, 0.55, 20),
-    "Handysize":     (13.0, 20, "MAN B&W 5S46ME-B8", 0.30, 0.56, 19),
-    "Mini-Bulker":   (12.0, 12, "MAN B&W 5S35ME-B9", 0.28, 0.58, 15),
-    "Gearless":      (14.0, 32, "MAN B&W 6S50ME-C8", 0.36, 0.53, 22),
-    "Geared":        (13.5, 28, "MAN B&W 6S46ME-B8", 0.34, 0.54, 21),
-    "Bulk Carrier":  (13.5, 28, "MAN B&W 6S50ME", 0.34, 0.54, 21),
+# Default DWT values that need replacing
+DEFAULT_DWTS = {5000, 10000, 15000, 20000, 45000, 50000, 55000}
 
-    # Tankers
-    "Crude Oil Tanker": (15.0, 55, "MAN B&W 6S70ME-C8", 0.38, 0.55, 28),
-    "Tanker":           (14.5, 40, "MAN B&W 6S60ME-C8", 0.36, 0.55, 25),
-    "Oil/Chemical Tanker": (14.0, 35, "MAN B&W 6S50ME-C8", 0.34, 0.56, 24),
-    "Product Tanker":   (14.5, 30, "MAN B&W 6S50ME-B9", 0.35, 0.56, 23),
-    "Chemical Tanker":  (14.0, 28, "MAN B&W 6S46ME-B8", 0.33, 0.57, 22),
-    "LNG Tanker":       (19.5, 130, "Winterthur DFDE / ME-GI", 0.55, 0.65, 30),
-    "LPG Tanker":       (16.5, 45, "MAN B&W 6G60ME-C9", 0.42, 0.60, 26),
 
-    # Container
-    "Container Ship":   (18.0, 80, "MAN B&W 8S80ME-C9", 0.55, 0.70, 24),
-    "ULCV":             (22.0, 200, "MAN B&W 12S90ME-C10", 0.60, 0.72, 26),
-    "Neo-Panamax":      (21.0, 150, "MAN B&W 11S90ME-C10", 0.58, 0.71, 25),
-    "Feeder":           (16.0, 35, "MAN B&W 6S50ME-C8", 0.45, 0.68, 18),
+def fetch_page(url):
+    try:
+        req = urllib.request.Request(url, headers={
+            "User-Agent": UA,
+            "Accept": "text/html,application/xhtml+xml",
+            "Accept-Language": "en-US,en;q=0.9",
+        })
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return resp.read().decode("utf-8", errors="ignore")
+    except urllib.error.HTTPError as e:
+        if e.code == 429:
+            print("  Rate limited, waiting 60s...", flush=True)
+            time.sleep(60)
+        return None
+    except Exception:
+        return None
 
-    # General Cargo
-    "General Cargo":    (13.0, 18, "MAN B&W 5S42ME-B9", 0.30, 0.60, 18),
-    "Multipurpose":     (14.0, 22, "MAN B&W 6S46ME-B8", 0.32, 0.58, 20),
 
-    # RoRo / Car
-    "RoRo":             (18.0, 60, "MAN B&W 8S60ME-C8", 0.50, 0.55, 24),
-    "Car Carrier":      (19.0, 55, "MAN B&W 7S60ME-C8", 0.48, 0.30, 25),
+def scrape_marinetraffic(imo):
+    """Extract specs from MarineTraffic public page."""
+    html = fetch_page(f"https://www.marinetraffic.com/en/ais/details/ships/imo:{imo}")
+    if not html:
+        return {}
 
-    # Passenger
-    "Passenger":        (16.0, 40, "Wärtsilä 12V46F", 0.45, 0.85, 80),
-    "Cruise Ship":      (21.0, 250, "Wärtsilä 14V46F + ABB Azipod", 0.60, 0.90, 1200),
-    "Ferry":            (18.0, 35, "Wärtsilä 8L46F", 0.50, 0.80, 40),
+    specs = {}
 
-    # Other
-    "Reefer":           (20.0, 45, "MAN B&W 6S60ME-C8", 0.50, 0.65, 22),
-    "Offshore":         (13.0, 20, "Caterpillar 3516", 0.35, 0.60, 30),
-    "Tug":              (12.0, 8, "Caterpillar 3516C", 0.80, 0.70, 8),
-    "OSV":              (14.0, 18, "Bergen B35:40", 0.40, 0.62, 20),
-    "Other":            (12.0, 15, "Diesel", 0.30, 0.60, 15),
-}
+    # DWT
+    m = re.search(r'Deadweight[^:]*:\s*([\d,]+)', html, re.I)
+    if m:
+        specs["dwt"] = int(m.group(1).replace(",", ""))
 
-updated = 0
-ships = db.execute("SELECT imo, type, dwt, length FROM ships WHERE dwt > 0").fetchall()
+    # Year Built
+    m = re.search(r'Year Built[^:]*:\s*(\d{4})', html, re.I)
+    if not m:
+        m = re.search(r'Built[^:]*:\s*(\d{4})', html, re.I)
+    if m:
+        yr = int(m.group(1))
+        if 1950 <= yr <= 2030:
+            specs["year_built"] = yr
 
-for imo, ship_type, dwt, length in ships:
-    specs = TYPE_SPECS.get(ship_type, TYPE_SPECS.get("Other"))
-    if not specs:
-        continue
+    # Builder/Shipyard
+    m = re.search(r'Shipyard[^:]*:\s*([^<\n]+)', html, re.I)
+    if not m:
+        m = re.search(r'Builder[^:]*:\s*([^<\n]+)', html, re.I)
+    if m:
+        builder = m.group(1).strip()
+        if len(builder) > 2 and builder != "-":
+            specs["builder"] = builder[:100]
 
-    speed, fuel, engine, kw_ratio, gt_ratio, crew = specs
+    # Gross Tonnage
+    m = re.search(r'Gross Tonnage[^:]*:\s*([\d,]+)', html, re.I)
+    if m:
+        specs["gross_tonnage"] = int(m.group(1).replace(",", ""))
 
-    # Calculate engine power from DWT
-    engine_kw = int(dwt * kw_ratio)
+    # Length
+    m = re.search(r'Length[^:]*:\s*([\d.]+)\s*m', html, re.I)
+    if m:
+        specs["length"] = float(m.group(1))
 
-    # Adjust fuel consumption based on actual DWT vs type average
-    type_avg_fuel = fuel
-    # Fuel scales roughly with DWT^0.66 (admiralty coefficient)
-    if ship_type in TYPE_SPECS:
-        type_avg_dwt = {
-            "Valemax": 400000, "VLOC": 300000, "Newcastlemax": 210000,
-            "Capesize": 180000, "Kamsarmax": 82000, "Panamax": 75000,
-            "Ultramax": 64000, "Supramax": 58000, "Handymax": 45000,
-            "Handysize": 35000, "Container Ship": 50000, "ULCV": 230000,
-            "Neo-Panamax": 150000, "Crude Oil Tanker": 300000,
-            "LNG Tanker": 174000, "Cruise Ship": 50000,
-        }.get(ship_type, 50000)
-        if type_avg_dwt > 0 and dwt > 0:
-            fuel_adjusted = type_avg_fuel * (dwt / type_avg_dwt) ** 0.66
-        else:
-            fuel_adjusted = type_avg_fuel
-    else:
-        fuel_adjusted = fuel
+    # Beam
+    m = re.search(r'Beam[^:]*:\s*([\d.]+)\s*m', html, re.I)
+    if m:
+        specs["beam"] = float(m.group(1))
 
-    fuel_adjusted = round(fuel_adjusted, 1)
+    return specs
 
-    # Gross tonnage estimate
-    gt = int(dwt * gt_ratio)
 
-    # Net tonnage (typically ~30-40% of GT)
-    nt = int(gt * 0.35)
+def scrape_vesselfinder(imo):
+    """Extract specs from VesselFinder public page."""
+    html = fetch_page(f"https://www.vesselfinder.com/vessels/details/{imo}")
+    if not html:
+        return {}
 
-    # Fuel type based on year
-    year = db.execute("SELECT year_built FROM ships WHERE imo=?", (imo,)).fetchone()
-    year_built = year[0] if year and year[0] else 2010
-    if year_built >= 2020:
-        fuel_type = "VLSFO 0.5%S / LNG-ready"
-    elif year_built >= 2015:
-        fuel_type = "VLSFO 0.5%S"
-    else:
-        fuel_type = "IFO 380 / VLSFO 0.5%S"
+    specs = {}
 
-    # Bulk carrier specific: holds, hatches, grain capacity
-    holds = 0
-    hatches = 0
-    grain_cap = 0
-    if "bulk" in ship_type.lower() or ship_type in ["Capesize", "Newcastlemax", "Kamsarmax", "Panamax",
-            "Ultramax", "Supramax", "Handymax", "Handysize", "Valemax", "VLOC", "Geared", "Gearless"]:
-        if dwt >= 200000: holds, hatches = 9, 9
-        elif dwt >= 150000: holds, hatches = 9, 9
-        elif dwt >= 80000: holds, hatches = 7, 7
-        elif dwt >= 60000: holds, hatches = 5, 5
-        elif dwt >= 40000: holds, hatches = 5, 5
-        elif dwt >= 25000: holds, hatches = 5, 5
-        else: holds, hatches = 4, 4
-        grain_cap = int(dwt * 1.25)  # grain capacity ~125% of DWT
+    # DWT
+    m = re.search(r'"deadweight"\s*:\s*(\d+)', html)
+    if not m:
+        m = re.search(r'DWT[^:]*:\s*([\d,]+)', html, re.I)
+    if m:
+        val = int(str(m.group(1)).replace(",", ""))
+        if val > 0:
+            specs["dwt"] = val
 
-    # TEU for container ships
-    teu = 0
-    if "container" in ship_type.lower() or ship_type in ["ULCV", "Neo-Panamax", "Feeder"]:
-        teu = int(dwt / 14)  # rough conversion
+    # Year Built
+    m = re.search(r'"yearBuilt"\s*:\s*(\d{4})', html)
+    if not m:
+        m = re.search(r'Year[^:]*Built[^:]*:\s*(\d{4})', html, re.I)
+    if m:
+        yr = int(m.group(1))
+        if 1950 <= yr <= 2030:
+            specs["year_built"] = yr
 
-    # Cranes for geared bulkers
-    cranes = ""
-    if ship_type in ["Geared", "Handysize", "Handymax", "Supramax", "Ultramax"]:
-        num_cranes = holds - 1 if holds > 1 else 2
-        crane_cap = 30 if dwt < 50000 else 35
-        cranes = f"{num_cranes}x {crane_cap}t"
+    # Builder
+    m = re.search(r'"builder"\s*:\s*"([^"]+)"', html)
+    if not m:
+        m = re.search(r'Builder[^:]*:\s*([^<\n]+)', html, re.I)
+    if m:
+        builder = m.group(1).strip()
+        if len(builder) > 2 and builder != "-":
+            specs["builder"] = builder[:100]
 
-    db.execute("""UPDATE ships SET
-        gross_tonnage=?, net_tonnage=?, engine_type=?, engine_power_kw=?,
-        speed_knots=?, fuel_consumption_tons_day=?, fuel_type=?,
-        crew_size=?, grain_capacity=?, holds=?, hatches=?, teu=?, cranes=?
-        WHERE imo=?""",
-        (gt, nt, engine, engine_kw, speed, fuel_adjusted, fuel_type,
-         crew, grain_cap, holds, hatches, teu, cranes, imo))
-    updated += 1
+    # Gross Tonnage
+    m = re.search(r'"grossTonnage"\s*:\s*(\d+)', html)
+    if m:
+        specs["gross_tonnage"] = int(m.group(1))
 
-db.commit()
-print(f"Updated specs for {updated} ships")
+    # Length
+    m = re.search(r'"length"\s*:\s*([\d.]+)', html)
+    if m:
+        specs["length"] = float(m.group(1))
 
-# Verify
-print(f"\nWith fuel consumption: {db.execute('SELECT COUNT(*) FROM ships WHERE fuel_consumption_tons_day > 0').fetchone()[0]}")
-print(f"With engine type: {db.execute("SELECT COUNT(*) FROM ships WHERE engine_type IS NOT NULL AND engine_type != ''").fetchone()[0]}")
-print(f"With GT: {db.execute('SELECT COUNT(*) FROM ships WHERE gross_tonnage > 0').fetchone()[0]}")
+    # Beam
+    m = re.search(r'"beam"\s*:\s*([\d.]+)', html)
+    if m:
+        specs["beam"] = float(m.group(1))
 
-# Show example
-print("\nExample:")
-for row in db.execute("SELECT name, type, dwt, speed_knots, fuel_consumption_tons_day, engine_type, gross_tonnage, crew_size FROM ships WHERE fuel_consumption_tons_day > 0 LIMIT 5"):
-    print(f"  {row[0]} | {row[1]} | {row[2]} DWT | {row[3]} kn | {row[4]} t/day | {row[5]} | GT {row[6]} | crew {row[7]}")
+    return specs
+
+
+def main():
+    con = sqlite3.connect(DB)
+    con.execute("PRAGMA journal_mode=WAL")
+
+    # Find ships needing enrichment: placeholder DWT or missing year_built
+    ships = con.execute("""
+        SELECT imo, name, dwt, year_built, builder FROM ships
+        WHERE imo NOT LIKE 'cat-%'
+        AND (
+            (dwt IN (5000,10000,15000,20000,45000,50000,55000) AND (year_built IS NULL OR year_built = 0))
+            OR (year_built IS NULL OR year_built = 0)
+            OR (builder IS NULL OR builder = '')
+        )
+        ORDER BY dwt DESC
+        LIMIT ?
+    """, (MAX_PER_RUN,)).fetchall()
+
+    print(f"Enriching specs for {len(ships)} ships...", flush=True)
+    enriched = 0
+    blocked = False
+
+    for i, (imo, name, dwt, year_built, builder) in enumerate(ships):
+        if blocked:
+            break
+
+        if i % 50 == 0 and i > 0:
+            print(f"  [{i}/{len(ships)}] enriched={enriched}", flush=True)
+
+        # Try VesselFinder first (usually has better data)
+        specs = scrape_vesselfinder(imo)
+
+        # Fallback: MarineTraffic
+        if not specs or ("dwt" not in specs and "year_built" not in specs):
+            time.sleep(DELAY)
+            specs2 = scrape_marinetraffic(imo)
+            # Merge (VF takes priority)
+            for k, v in specs2.items():
+                if k not in specs:
+                    specs[k] = v
+
+        if not specs:
+            time.sleep(DELAY)
+            continue
+
+        # Build UPDATE query — only update fields that are missing/placeholder
+        updates = []
+        params = []
+
+        new_dwt = specs.get("dwt")
+        if new_dwt and new_dwt > 100 and (dwt in DEFAULT_DWTS or dwt == 0):
+            updates.append("dwt = ?")
+            params.append(new_dwt)
+
+        new_year = specs.get("year_built")
+        if new_year and (not year_built or year_built == 0):
+            updates.append("year_built = ?")
+            params.append(new_year)
+
+        new_builder = specs.get("builder")
+        if new_builder and (not builder or builder == ""):
+            updates.append("builder = ?")
+            params.append(new_builder)
+
+        new_gt = specs.get("gross_tonnage")
+        if new_gt:
+            updates.append("gross_tonnage = COALESCE(NULLIF(gross_tonnage, 0), ?)")
+            params.append(new_gt)
+
+        new_len = specs.get("length")
+        if new_len and new_len > 10:
+            updates.append("length = COALESCE(NULLIF(length, 0), ?)")
+            params.append(new_len)
+
+        new_beam = specs.get("beam")
+        if new_beam and new_beam > 5:
+            updates.append("beam = COALESCE(NULLIF(beam, 0), ?)")
+            params.append(new_beam)
+
+        if updates:
+            params.append(imo)
+            sql = f"UPDATE ships SET {', '.join(updates)} WHERE imo = ?"
+            con.execute(sql, params)
+            con.commit()
+            enriched += 1
+
+            changes = []
+            if new_dwt and (dwt in DEFAULT_DWTS or dwt == 0):
+                changes.append(f"DWT {dwt}→{new_dwt}")
+            if new_year and (not year_built or year_built == 0):
+                changes.append(f"Year →{new_year}")
+            if new_builder and (not builder or builder == ""):
+                changes.append(f"Builder →{new_builder[:20]}")
+            print(f"  OK  {name[:25]:25} {' | '.join(changes)}", flush=True)
+
+        time.sleep(DELAY)
+
+    con.close()
+    print(f"\nDone: {enriched} ships enriched out of {len(ships)}", flush=True)
+
+
+if __name__ == "__main__":
+    main()
