@@ -180,6 +180,8 @@ def main():
             (dwt IN ({placeholders}) AND (year_built IS NULL OR year_built = 0))
             OR (year_built IS NULL OR year_built = 0)
             OR (gross_tonnage IS NULL OR gross_tonnage = 0)
+            OR (classification IS NULL OR classification = '')
+            OR (p_and_i IS NULL OR p_and_i = '')
         )
         ORDER BY
             CASE WHEN UPPER(name) LIKE '%ARKLOW%' THEN 0
