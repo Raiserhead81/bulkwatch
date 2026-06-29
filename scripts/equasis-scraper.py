@@ -5,8 +5,8 @@ Cron: 0 2 * * * (nightly, max 100 ships per run — Equasis rate limits aggressi
 import sqlite3, time, re, sys
 
 DB = "/opt/bulkwatch/db/ships.db"
-MAX_PER_RUN = 2000
-DELAY = 4.0  # ~15 req/min, Equasis seems OK with this
+MAX_PER_RUN = 5000
+DELAY = 3.0  # Detail page takes ~4s anyway, so effective rate is ~7s/ship
 
 EMAIL = "kayconrad@posteo.de"
 PASSWORD = "!nfinitY!981"
@@ -159,6 +159,19 @@ def search_ship(page, imo):
         if m:
             result["detention_pct"] = float(m.group(1))
 
+        # Status from Equasis (In Service, Broken Up, Total Loss, etc.)
+        m = re.search(r"Status\s*\n?\s*(In Service|Broken Up|Total Loss|Laid Up|Hulked|Scuttled|Sunk|Cancelled|Under Construction|Converting)", detail, re.I)
+        if m:
+            equasis_status = m.group(1).strip()
+            status_map = {
+                "In Service": "active", "In Service/Commission": "active",
+                "Under Construction": "under_construction",
+                "Broken Up": "scrapped", "Hulked": "scrapped",
+                "Total Loss": "lost", "Sunk": "lost", "Scuttled": "lost",
+                "Laid Up": "laid_up", "Cancelled": "scrapped",
+            }
+            result["equasis_status"] = status_map.get(equasis_status, "active")
+
     except Exception:
         pass
 
@@ -268,6 +281,11 @@ def main():
             if data.get("detention_pct") is not None:
                 updates.append("detention_pct = ?")
                 params.append(data["detention_pct"])
+
+            # Status from Equasis (overrides our guess)
+            if data.get("equasis_status"):
+                updates.append("status = ?")
+                params.append(data["equasis_status"])
 
             if updates:
                 params.append(imo)
