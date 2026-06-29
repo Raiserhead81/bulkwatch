@@ -51,9 +51,11 @@ def main():
         print(f"Already {existing} valuations for {today}, skipping.")
         return
 
+    # Exclude ships with default/placeholder DWT values (45000, 15000, 55000 etc. with no year_built)
     ships = con.execute("""
         SELECT imo, name, type, dwt, year_built, builder, flag, status
         FROM ships WHERE type IS NOT NULL AND type != '' AND dwt > 0
+        AND NOT (dwt IN (45000, 15000, 55000, 50000, 20000, 10000, 5000) AND (year_built IS NULL OR year_built = 0))
     """).fetchall()
 
     print(f"Valuating {len(ships)} ships for {today}...")
