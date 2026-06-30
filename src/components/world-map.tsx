@@ -165,7 +165,7 @@ const LEGEND = [
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function WorldMap({ ships, height = "100%", typeFilter = "" }: WorldMapProps) {
+export default function WorldMap({ ships, height = "100%", typeFilter = "", focusLat, focusLon, focusZoom, focusImo }: WorldMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const liveClusterRef = useRef<L.MarkerClusterGroup | null>(null);
