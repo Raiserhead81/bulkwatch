@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
 import L from "leaflet";
-import { findSeaRoute } from "@/lib/seaRouting";
 import "leaflet/dist/leaflet.css";
 
 interface RouteMapProps {
@@ -212,6 +211,73 @@ function getSeaRouteWaypoints(lat1: number, lon1: number, lat2: number, lon2: nu
     wp.push(C.englishCh);
   }
   
+  // ═══ FALLBACK: Check great circle segments for land crossings ═══
+  // If no specific route was matched above, check for common land barriers
+  if (wp.length <= 1) {
+    // Define land barriers as boxes: if a GC line crosses these, insert waypoint
+    const barriers: Array<{name: string; latMin:number; latMax:number; lonMin:number; lonMax:number; wp:[number,number]}> = [
+      // Indonesia/Malaysia/Philippines barrier
+      {name:"Indonesia-W", latMin:-10, latMax:5, lonMin:95, lonMax:120, wp:[1.2, 103.8]},    // Singapore
+      {name:"Indonesia-E", latMin:-10, latMax:5, lonMin:120, lonMax:140, wp:[-5.0, 155.0]},   // east of PNG
+      {name:"Philippines", latMin:5, latMax:20, lonMin:117, lonMax:127, wp:[15.0, 128.0]},     // east of PH
+      // India
+      {name:"India-S", latMin:5, latMax:22, lonMin:72, lonMax:88, wp:[6.0, 80.0]},            // south of Sri Lanka
+      // Arabian Peninsula
+      {name:"Arabia", latMin:12, latMax:30, lonMin:35, lonMax:56, wp:[12.5, 43.5]},            // Bab el-Mandeb
+      // Africa
+      {name:"Africa-W", latMin:-35, latMax:5, lonMin:-20, lonMax:20, wp:[-34.4, 18.5]},       // Cape Good Hope
+      {name:"Africa-E", latMin:-15, latMax:12, lonMin:30, lonMax:52, wp:[-12.0, 49.0]},       // north Madagascar
+      // Central America
+      {name:"CentralAm", latMin:5, latMax:20, lonMin:-90, lonMax:-75, wp:[9.0, -79.5]},       // Panama
+      // Italy/Greece  
+      {name:"Italy", latMin:37, latMax:45, lonMin:8, lonMax:20, wp:[36.5, 15.0]},             // south of Sicily
+      // Malay Peninsula
+      {name:"Malay", latMin:1, latMax:8, lonMin:99, lonMax:105, wp:[1.2, 103.8]},             // Singapore
+      // Japan (Honshu)
+      {name:"Japan", latMin:33, latMax:42, lonMin:130, lonMax:142, wp:[30.0, 132.0]},         // south of Japan
+      // Scandinavia/Denmark
+      {name:"Denmark", latMin:54, latMax:58, lonMin:8, lonMax:13, wp:[57.7, 10.6]},           // Skagen
+      // Australia (north)
+      {name:"Australia-N", latMin:-20, latMax:-10, lonMin:120, lonMax:145, wp:[-8.5, 115.7]},  // Lombok
+      // Suez (land bridge)
+      {name:"Suez", latMin:28, latMax:33, lonMin:30, lonMax:36, wp:[31.3, 32.3]},             // Suez Canal
+      // Taiwan
+      {name:"Taiwan", latMin:22, latMax:26, lonMin:119, lonMax:122, wp:[21.5, 121.5]},        // south of Taiwan
+      // New Zealand
+      {name:"NZ", latMin:-47, latMax:-34, lonMin:166, lonMax:178, wp:[-48.0, 166.0]},         // south of NZ
+      // Madagascar
+      {name:"Madagascar", latMin:-26, latMax:-12, lonMin:43, lonMax:50, wp:[-12.0, 49.0]},    // north of Madagascar
+      // UK / Ireland
+      {name:"UK", latMin:50, latMax:59, lonMin:-11, lonMax:2, wp:[50.0, -1.5]},               // English Channel
+    ];
+    
+    // Check if GC from start to end crosses any barrier
+    const gcMid = [(lat1+lat2)/2, (lon1+lon2)/2];
+    const crossesBarrier = (b: typeof barriers[0]) => {
+      // Simple check: does the midpoint or any interpolated point fall in the barrier box?
+      for (let f = 0.1; f <= 0.9; f += 0.1) {
+        const pLat = lat1 + (lat2 - lat1) * f;
+        const pLon = lon1 + (lon2 - lon1) * f;
+        if (pLat >= b.latMin && pLat <= b.latMax && pLon >= b.lonMin && pLon <= b.lonMax) {
+          // Check that start and end are on DIFFERENT sides of the barrier
+          const startIn = lat1 >= b.latMin && lat1 <= b.latMax && lon1 >= b.lonMin && lon1 <= b.lonMax;
+          const endIn = lat2 >= b.latMin && lat2 <= b.latMax && lon2 >= b.lonMin && lon2 <= b.lonMax;
+          if (!startIn && !endIn) return true; // crosses through, neither endpoint is in it
+          if (startIn !== endIn) return true; // one side in, one out
+        }
+      }
+      return false;
+    };
+    
+    const crossedBarriers = barriers.filter(b => crossesBarrier(b));
+    if (crossedBarriers.length > 0) {
+      // Sort waypoints by distance from start
+      const dist = (p: [number,number]) => Math.sqrt((p[0]-lat1)**2 + (p[1]-lon1)**2);
+      const sorted = crossedBarriers.map(b => b.wp).sort((a, b) => dist(a) - dist(b));
+      wp.push(...sorted);
+    }
+  }
+  
   wp.push([lat2, lon2]);
   return wp;
 }
@@ -241,7 +307,7 @@ export default function RouteMap({
     }).addTo(map);
 
     // Build sea route with waypoints to avoid land
-    const waypoints = findSeaRoute(fromLat, fromLon, toLat, toLon);
+    const waypoints = getSeaRouteWaypoints(fromLat, fromLon, toLat, toLon);
     let gcPoints: [number, number][] = [];
     for (let i = 0; i < waypoints.length - 1; i++) {
       const seg = greatCirclePoints(waypoints[i][0], waypoints[i][1], waypoints[i+1][0], waypoints[i+1][1], 20);
