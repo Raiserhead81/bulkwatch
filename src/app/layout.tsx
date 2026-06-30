@@ -69,7 +69,7 @@ export default function RootLayout({
           {children}
           <Toaster />
         </I18nProvider>
-        <script dangerouslySetInnerHTML={{ __html: `if("serviceWorker"in navigator){navigator.serviceWorker.register("/sw.js").catch(function(){});}` }} />
+        <script dangerouslySetInnerHTML={{ __html: `if("serviceWorker"in navigator){navigator.serviceWorker.getRegistrations().then(function(regs){regs.forEach(function(r){r.unregister()})});caches.keys().then(function(k){k.forEach(function(n){caches.delete(n)})})}` }} />
       </body>
     </html>
   );
