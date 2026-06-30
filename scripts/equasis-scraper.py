@@ -7,7 +7,7 @@ import sqlite3, urllib.request, urllib.parse, http.cookiejar, re, time, sys
 DB = "/opt/bulkwatch/db/ships.db"
 import sys as _sys
 MAX_PER_RUN = int(_sys.argv[_sys.argv.index("--limit")+1]) if "--limit" in _sys.argv else 800
-DELAY = 5.0
+DELAY = 8.0
 ACCOUNTS = [
     ("kayconrad@posteo.de", "!nfinitY!981"),
     ("kayconrad81@googlemail.com", "!nfinitY!981"),
