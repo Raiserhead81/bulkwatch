@@ -13,9 +13,8 @@ export function middleware(req: NextRequest) {
   }
 
   const session = req.cookies.get("vessel_session")?.value;
-  // Accept both old "authenticated" and new JSON session
   if (session) {
-    if (session === "authenticated") return NextResponse.next();
+    // Only accept JSON sessions with username (not old "authenticated" string)
     try {
       const data = JSON.parse(session);
       if (data.username) return NextResponse.next();

@@ -43,15 +43,7 @@ export async function POST(req: NextRequest) {
     });
     return res;
   } catch (error) {
-    // Fallback: old single-password mode
-    const VALID_PASSWORD = process.env.VESSEL_PASSWORD || "vessel2026";
-    if (password === VALID_PASSWORD || (username === "admin" && password === VALID_PASSWORD)) {
-      const res = NextResponse.json({ ok: true });
-      res.cookies.set("vessel_session", "authenticated", {
-        httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 30 * 24 * 60 * 60,
-      });
-      return res;
-    }
-    return NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 });
+    console.error("Login error:", error);
+    return NextResponse.json({ ok: false, error: "Login failed" }, { status: 500 });
   }
 }
