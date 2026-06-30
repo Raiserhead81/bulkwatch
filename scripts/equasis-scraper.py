@@ -5,10 +5,13 @@ Detention%, Owner, Manager, ISM Manager, Status."""
 import sqlite3, urllib.request, urllib.parse, http.cookiejar, re, time, sys
 
 DB = "/opt/bulkwatch/db/ships.db"
-MAX_PER_RUN = 5000
-DELAY = 5.0  # Equasis aggressively limits sessions, need 5s+ between requests
-EMAIL = "kayconrad@posteo.de"
-PASSWORD = "!nfinitY!981"
+MAX_PER_RUN = 800
+DELAY = 5.0
+ACCOUNTS = [
+    ("kayconrad@posteo.de", "!nfinitY!981"),
+    ("kayconrad81@googlemail.com", "!nfinitY!981"),
+]
+account_idx = 0
 
 DEFAULT_DWTS = {0, 5000, 10000, 12000, 15000, 18000, 20000, 45000, 46000, 47000, 50000, 55000}
 STATUS_MAP = {
@@ -24,17 +27,29 @@ CLASS_NAMES = ["Lloyd's Register", "DNV", "Bureau Veritas", "Nippon Kaiji Kyokai
                "Registro Italiano Navale"]
 
 
-def login():
+def login(idx=None):
+    global account_idx
+    if idx is not None:
+        account_idx = idx
+    email, password = ACCOUNTS[account_idx % len(ACCOUNTS)]
     cj = http.cookiejar.CookieJar()
     opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
     opener.addheaders = [("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")]
     try:
         opener.open("https://www.equasis.org/EquasisWeb/public/HomePage", timeout=30)
-        data = urllib.parse.urlencode({"j_email": EMAIL, "j_password": PASSWORD}).encode()
-        opener.open("https://www.equasis.org/EquasisWeb/authen/HomePage?fs=HomePage", data, timeout=30)
+        data = urllib.parse.urlencode({"j_email": email, "j_password": password}).encode()
+        r = opener.open("https://www.equasis.org/EquasisWeb/authen/HomePage?fs=HomePage", data, timeout=30)
+        html = r.read().decode("utf-8", errors="ignore")
+        if "locked" in html.lower():
+            print(f"  Account {email} locked, trying next...", flush=True)
+            account_idx += 1
+            if account_idx < len(ACCOUNTS) * 2:  # try each account once
+                return login(account_idx)
+            return None
+        print(f"  Logged in as {email}", flush=True)
         return opener
     except Exception as e:
-        print(f"Login failed: {e}", flush=True)
+        print(f"Login failed ({email}): {e}", flush=True)
         return None
 
 
@@ -190,19 +205,20 @@ def main():
 
         data = search_and_detail(opener, imo)
 
-        # Session expired? Wait and re-login
+        # Session expired? Switch account and re-login
         if data.get("_session_expired"):
-            print("  Session expired, waiting 120s before re-login...", flush=True)
-            time.sleep(120)
+            account_idx += 1
+            print(f"  Session expired, switching to account {account_idx % len(ACCOUNTS) + 1}...", flush=True)
+            time.sleep(30)
             opener = login()
             if not opener:
-                print("  Re-login failed, waiting 300s...", flush=True)
+                print("  All accounts failed, waiting 300s...", flush=True)
                 time.sleep(300)
+                account_idx = 0
                 opener = login()
                 if not opener:
                     print("  Still failed, stopping.", flush=True)
                     break
-            print("  Re-login OK", flush=True)
             data = search_and_detail(opener, imo)
 
         if not data or data.get("_session_expired"):
