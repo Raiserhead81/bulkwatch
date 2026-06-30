@@ -72,10 +72,10 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
   const age = ship.yearBuilt > 1900 ? new Date().getFullYear() - ship.yearBuilt : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-blue-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white">
       {/* Header */}
-      <header className="sticky top-0 z-20 border-b border-blue-500/10 backdrop-blur-md bg-white/80 dark:bg-slate-950/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+      <header className="sticky top-0 z-20 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2 text-sm hover:text-blue-600 dark:hover:text-cyan-400">
             <ArrowLeft className="h-4 w-4" /> Back
           </Link>
@@ -83,20 +83,20 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
             <Badge className={`${getRecommendationColor(price.recommendation)} border`}>
               {getRecommendationEmoji(price.recommendation)} {getRecommendationLabel(price.recommendation)}
             </Badge>
-            <Button variant="outline" size="sm" onClick={() => toggleWatch(ship.imo)} className="border-amber-500/30">
+            <Button variant="outline" size="sm" onClick={() => toggleWatch(ship.imo)} className="border-slate-200 dark:border-slate-800">
               {isWatched ? <><Star className="h-4 w-4 mr-1 text-amber-500 fill-amber-500" /> Watchlist</> : <><StarOff className="h-4 w-4 mr-1" /> Save</>}
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+      <main className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
 
         {/* ═══ HERO: Ship Name + Image ═══ */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Image */}
           <div className="lg:col-span-3">
-            <Card className="overflow-hidden border-blue-500/20">
+            <Card className="overflow-hidden border-slate-200 dark:border-slate-800">
               <div className="aspect-[16/9] bg-slate-200 dark:bg-slate-800">
                 {ship.imageUrl ? (
                   <img src={ship.imageUrl} alt={ship.name} className="w-full h-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
@@ -130,10 +130,10 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
 
             {/* Key Numbers */}
             {ship.dwt > 0 && (
-              <Card className="border-blue-500/20 overflow-hidden">
-                <div className="bg-gradient-to-br from-blue-600 to-cyan-500 text-white p-5">
+              <Card className="border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div className="bg-slate-800 text-white p-5">
                   <p className="text-xs uppercase tracking-wider text-white/70 mb-1">Estimated Value</p>
-                  <p className="text-4xl font-bold tabular-nums">{formatPrice(price.estimatedValueUSD)}</p>
+                  <p className="text-3xl font-bold tabular-nums text-white">{formatPrice(price.estimatedValueUSD)}</p>
                   <div className="mt-2 flex items-center gap-2 text-xs">
                     <span>Confidence:</span>
                     <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
@@ -163,11 +163,11 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
 
             {/* Actions */}
             <div className="flex gap-2 flex-wrap">
-              <Link href={`/vergleich?ships=${ship.imo}`}><Button variant="outline" size="sm" className="border-blue-500/30">⚖ Compare</Button></Link>
-              <a href={`/api/ships/${ship.imo}/pdf`} target="_blank" rel="noopener noreferrer"><Button variant="outline" size="sm" className="border-cyan-500/30"><Download className="h-3 w-3 mr-1" /> PDF</Button></a>
+              <Link href={`/vergleich?ships=${ship.imo}`}><Button variant="outline" size="sm" className="border-blue-500/30">Compare</Button></Link>
+              <a href={`/api/ships/${ship.imo}/pdf`} target="_blank" rel="noopener noreferrer"><Button variant="outline" size="sm" className="border-slate-200 dark:border-slate-800"><Download className="h-3 w-3 mr-1" /> PDF</Button></a>
               {ship.position && (
                 <Link href={`/karte?lat=${ship.position.lat}&lon=${ship.position.lon}&zoom=8&imo=${ship.imo}`}>
-                  <Button variant="outline" size="sm" className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400"><MapPin className="h-3 w-3 mr-1" /> Map</Button>
+                  <Button variant="outline" size="sm" className="border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400"><MapPin className="h-3 w-3 mr-1" /> Map</Button>
                 </Link>
               )}
             </div>
@@ -176,7 +176,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* ═══ LIVE POSITION ═══ */}
         {ship.position && (
-          <div className="text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 border border-emerald-500/20 rounded-lg px-4 py-2 flex items-center justify-between gap-2">
+          <div className="text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2 flex items-center justify-between gap-2">
             <span>
               \u2713 Live AIS \u00b7 {ship.position.lat.toFixed(4)}\u00b0N {ship.position.lon.toFixed(4)}\u00b0E
               {ship.lastSeen ? ` \u00b7 ${new Date(ship.lastSeen * 1000).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}` : ""}
@@ -194,32 +194,32 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
             <Card className={`border-2 ${getRecommendationColor(price.recommendation).split(" ").find(c => c.startsWith("border-"))}`}>
               <CardContent className="p-5 space-y-3">
                 <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-white/40">Recommendation</p>
-                <p className="text-3xl font-bold">{getRecommendationEmoji(price.recommendation)} {getRecommendationLabel(price.recommendation)}</p>
+                <p className="text-2xl font-bold">{getRecommendationEmoji(price.recommendation)} {getRecommendationLabel(price.recommendation)}</p>
                 <Separator />
                 <p className="text-xs text-slate-700 dark:text-white/70 leading-relaxed">{price.recommendationReasoning}</p>
               </CardContent>
             </Card>
 
             {/* Net Earnings */}
-            <Card className="border-emerald-500/20 overflow-hidden">
-              <div className={`p-5 text-white ${opex.netEarningsPerDay > 0 ? "bg-gradient-to-br from-emerald-600 to-teal-500" : "bg-gradient-to-br from-red-600 to-rose-500"}`}>
+            <Card className="border-slate-200 dark:border-slate-800 overflow-hidden">
+              <div className={`p-5 text-white ${opex.netEarningsPerDay > 0 ? "bg-slate-800" : "bg-slate-800"}`}>
                 <p className="text-xs uppercase tracking-wider text-white/70 mb-1">Net Earnings (TC)</p>
-                <p className="text-3xl font-bold tabular-nums">{opex.netEarningsPerDay > 0 ? "+" : ""}${opex.netEarningsPerDay.toLocaleString()}/d</p>
+                <p className="text-2xl font-bold tabular-nums text-white">{opex.netEarningsPerDay > 0 ? "+" : ""}${opex.netEarningsPerDay.toLocaleString()}/d</p>
                 <p className="text-xs text-white/60 mt-1">Charter ${opex.charterRatePerDay.toLocaleString()}/d \u2212 OPEX ${opex.totalFixedOpex.toLocaleString()}/d</p>
               </div>
               <CardContent className="p-4">
                 <div className="grid grid-cols-2 gap-3 text-center">
-                  <div><p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">ROI</p><p className={"text-lg font-bold " + ((opex.roiPercent||0) > 0 ? "text-emerald-500" : "text-red-500")}>{opex.roiPercent}%</p></div>
+                  <div><p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">ROI</p><p className={"text-lg font-bold " + ((opex.roiPercent||0) > 0 ? "text-green-400" : "text-red-400")}>{opex.roiPercent}%</p></div>
                   <div><p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Payback</p><p className="text-lg font-bold text-amber-500">{opex.paybackYears ? opex.paybackYears + "yr" : "n/a"}</p></div>
                 </div>
               </CardContent>
             </Card>
 
             {/* OPEX Summary */}
-            <Card className="border-blue-500/20">
+            <Card className="border-slate-200 dark:border-slate-800">
               <CardContent className="p-5">
                 <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-white/40 mb-2">Daily OPEX Breakdown</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-cyan-400 mb-3">${opex.totalFixedOpex.toLocaleString()}/day</p>
+                <p className="text-2xl font-bold text-slate-700 dark:text-slate-300 mb-3">${opex.totalFixedOpex.toLocaleString()}/day</p>
                 {[
                   ["Crew (" + opex.crewCount + ")", opex.crewCostPerDay],
                   ["Insurance", opex.insuranceTotalPerDay],
@@ -242,8 +242,8 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* Technical Specs */}
-          <Card className="border-blue-500/20">
-            <CardHeader><CardTitle className="text-lg flex items-center gap-2"><ShipIcon className="h-5 w-5 text-blue-600 dark:text-cyan-400" /> Technical Specifications</CardTitle></CardHeader>
+          <Card className="border-slate-200 dark:border-slate-800">
+            <CardHeader><CardTitle className="text-lg flex items-center gap-2"><ShipIcon className="h-5 w-5 text-slate-700 dark:text-slate-300" /> Technical Specifications</CardTitle></CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                 {[
@@ -277,8 +277,8 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
           </Card>
 
           {/* Ownership & Classification */}
-          <Card className="border-blue-500/20">
-            <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Shield className="h-5 w-5 text-blue-600 dark:text-cyan-400" /> Ownership & Classification</CardTitle></CardHeader>
+          <Card className="border-slate-200 dark:border-slate-800">
+            <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Shield className="h-5 w-5 text-slate-700 dark:text-slate-300" /> Ownership & Classification</CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {[
@@ -314,8 +314,8 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
         {ship.dwt > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Price Factors */}
-            <Card className="border-blue-500/20">
-              <CardHeader><CardTitle className="text-sm flex items-center gap-2"><BarChart3 className="h-4 w-4 text-blue-600 dark:text-cyan-400" /> Value Factors</CardTitle></CardHeader>
+            <Card className="border-slate-200 dark:border-slate-800">
+              <CardHeader><CardTitle className="text-sm flex items-center gap-2"><BarChart3 className="h-4 w-4 text-slate-700 dark:text-slate-300" /> Value Factors</CardTitle></CardHeader>
               <CardContent className="space-y-2">
                 {price.factors.map((f, i) => (
                   <div key={i} className="flex items-center justify-between gap-2 text-xs">
@@ -332,17 +332,17 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
 
             {/* Price History */}
             {priceHistory?.history?.length > 0 ? (
-              <Card className="border-blue-500/20 overflow-hidden">
+              <Card className="border-slate-200 dark:border-slate-800 overflow-hidden">
                 <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><TrendingUp className="h-4 w-4 text-blue-500" /> Price History (30mo)</CardTitle></CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-3 gap-2 mb-3">
                     <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
                       <p className="text-[9px] text-slate-500 dark:text-white/40 uppercase">30d</p>
-                      <p className={`text-sm font-bold ${priceHistory.change30dPct > 0 ? "text-emerald-500" : priceHistory.change30dPct < 0 ? "text-red-500" : "text-slate-500"}`}>{priceHistory.change30dPct > 0 ? "+" : ""}{priceHistory.change30dPct}%</p>
+                      <p className={`text-sm font-bold ${priceHistory.change30dPct > 0 ? "text-green-400" : priceHistory.change30dPct < 0 ? "text-red-400" : "text-slate-500"}`}>{priceHistory.change30dPct > 0 ? "+" : ""}{priceHistory.change30dPct}%</p>
                     </div>
                     <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
                       <p className="text-[9px] text-slate-500 dark:text-white/40 uppercase">1Y</p>
-                      <p className={`text-sm font-bold ${priceHistory.change1yPct > 0 ? "text-emerald-500" : priceHistory.change1yPct < 0 ? "text-red-500" : "text-slate-500"}`}>{priceHistory.change1yPct > 0 ? "+" : ""}{priceHistory.change1yPct}%</p>
+                      <p className={`text-sm font-bold ${priceHistory.change1yPct > 0 ? "text-green-400" : priceHistory.change1yPct < 0 ? "text-red-400" : "text-slate-500"}`}>{priceHistory.change1yPct > 0 ? "+" : ""}{priceHistory.change1yPct}%</p>
                     </div>
                     <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
                       <p className="text-[9px] text-slate-500 dark:text-white/40 uppercase">Range</p>
@@ -379,19 +379,19 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                 </CardContent>
               </Card>
             ) : (
-              <Card className="border-purple-500/30 bg-gradient-to-br from-purple-500/5 to-fuchsia-500/5">
-                <CardHeader className="pb-3"><CardTitle className="text-sm flex items-center gap-2"><Stethoscope className="h-4 w-4 text-purple-300" /> Nearby Survey Ports</CardTitle></CardHeader>
+              <Card className="border-slate-200 dark:border-slate-800 ">
+                <CardHeader className="pb-3"><CardTitle className="text-sm flex items-center gap-2"><Stethoscope className="h-4 w-4 text-slate-300" /> Nearby Survey Ports</CardTitle></CardHeader>
                 <CardContent className="space-y-2">
                   {nearbySurveyPorts.length === 0 ? <p className="text-xs text-slate-500">No survey ports in range.</p> : nearbySurveyPorts.map(({ port, distanceNm }) => (
                     <div key={port.id} className="flex items-center gap-3 p-2 rounded-lg bg-white/50 dark:bg-slate-900/50">
                       <span className="text-xl">{port.countryFlag}</span>
                       <div className="flex-1">
-                        <div className="flex justify-between"><p className="font-semibold text-sm">{port.name}</p><Badge variant="outline" className="text-[10px] border-amber-500/30">\u2B50 {port.rating}</Badge></div>
-                        <div className="flex justify-between text-xs text-slate-500"><span>{Math.round(distanceNm)} nm</span><span className="text-purple-400 font-medium">{formatSurveyCost(port.typicalSurveyCost)}</span></div>
+                        <div className="flex justify-between"><p className="font-semibold text-sm">{port.name}</p><Badge variant="outline" className="text-[10px] border-slate-200 dark:border-slate-800">\u2B50 {port.rating}</Badge></div>
+                        <div className="flex justify-between text-xs text-slate-500"><span>{Math.round(distanceNm)} nm</span><span className="text-slate-400 font-medium">{formatSurveyCost(port.typicalSurveyCost)}</span></div>
                       </div>
                     </div>
                   ))}
-                  <Link href="/survey-haefen"><Button variant="outline" size="sm" className="w-full border-purple-500/30 text-purple-300">All Survey Ports</Button></Link>
+                  <Link href="/survey-haefen"><Button variant="outline" size="sm" className="w-full border-slate-200 dark:border-slate-800 text-slate-300">All Survey Ports</Button></Link>
                 </CardContent>
               </Card>
             )}
@@ -399,8 +399,8 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
         )}
 
         {/* ═══ VOYAGE (if available) ═══ */}
-        <Card className={ship.position ? "border-emerald-500/30" : "border-blue-500/20"}>
-          <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Navigation className="h-5 w-5 text-blue-600 dark:text-cyan-400" /> {ship.position ? "Current Voyage" : "Estimated Voyage"} <Badge className={`${getStatusColor(voyage.currentStatus)} border ml-auto`}>{getStatusLabel(voyage.currentStatus)}</Badge></CardTitle></CardHeader>
+        <Card className={ship.position ? "border-slate-200 dark:border-slate-800" : "border-slate-200 dark:border-slate-800"}>
+          <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Navigation className="h-5 w-5 text-slate-700 dark:text-slate-300" /> {ship.position ? "Current Voyage" : "Estimated Voyage"} <Badge className={`${getStatusColor(voyage.currentStatus)} border ml-auto`}>{getStatusLabel(voyage.currentStatus)}</Badge></CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50">
               <div className="text-2xl">{voyage.from.countryFlag}</div>
@@ -416,7 +416,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
             </div>
             <div>
               <div className="flex justify-between text-xs mb-1"><span className="text-slate-500">Progress</span><span className="font-semibold tabular-nums">{voyage.progressPercent}%</span></div>
-              <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full" style={{ width: `${voyage.progressPercent}%` }} /></div>
+              <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${voyage.progressPercent}%` }} /></div>
             </div>
             {!ship.position && <p className="text-[10px] text-slate-500 dark:text-white/30 bg-slate-500/5 border border-slate-500/20 rounded px-2 py-1">\u26A0 Illustrative voyage \u2014 no live AIS data</p>}
           </CardContent>
