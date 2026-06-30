@@ -36,7 +36,6 @@ const STATUS_OPTIONS = [
   { label: "Lost", value: "lost" },
 ];
 
-const NAV_LINKS: [string,string,string][] = [["Ships","/","⚓"],["Map","/karte","🗺️"],["Live","/live","📡"],["Top Picks","/top-picks","🏆"],["Compare","/vergleich","⚖️"],["Watchlist","/watchlist","⭐"],["Newbuilds","/newbuilds","🚢"],["Voyage Calc","/voyage-calc","🧮"],["Valuation","/valuation","💰"],["AI Chat","/chat","🤖"]];
 
 interface Ship {
   id: string; imo: string; name: string; type: string;
@@ -69,7 +68,6 @@ export default function Home() {
   const [operators, setOperators] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [theme, setTheme] = useState<"dark"|"light">("dark");
-  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("vessel-theme") || "dark";
@@ -132,20 +130,6 @@ export default function Home() {
 
   return (
     <main style={{ fontFamily: "system-ui,sans-serif", background: bg, minHeight: "100vh", color: text }}>
-      {/* Mobile menu overlay */}
-      <div className={`mobile-nav-overlay${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
-      <div className={`mobile-nav-panel${menuOpen ? " open" : ""}`}>
-        <button className="mobile-nav-close" onClick={() => setMenuOpen(false)}>&#x2715;</button>
-        {NAV_LINKS.map(([l,h,icon]) => (
-          <a key={h} href={h} className={h==="/" ? "active" : ""} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 16 }}><span style={{ width: 24, textAlign: "center" }}>{icon}</span>{l}</a>
-        ))}
-        <button onClick={() => { toggleTheme(); setMenuOpen(false); }}
-          style={{ background: "none", border: `1px solid #334155`, borderRadius: 8, padding: "12px 16px", cursor: "pointer", fontSize: 15, color: "#e2e8f0", textAlign: "left", marginTop: 8 }}>
-          {theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode"}
-        </button>
-        <a href="/api/auth/logout" style={{ display: "block", padding: "12px 16px", color: "#64748b", fontSize: 14, marginTop: 8 }}>Logout</a>
-      </div>
-
       <div className="page-header" style={{ background: cardBg, borderBottom: `1px solid ${border}`, padding: "16px 24px" }}>
         <div style={{ maxWidth: "95%", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -165,25 +149,6 @@ export default function Home() {
               </div>
             )}
           </div>
-          <button className="mobile-menu-btn" onClick={() => setMenuOpen(true)}>&#9776;</button>
-          <nav className="nav-links">
-            {NAV_LINKS.map(([l,h,icon]) => (
-              <a key={h} href={h} style={{ color: h==="/" ? accent : textMuted, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}><span style={{ fontSize: 14 }}>{icon}</span>{l}</a>
-            ))}
-            <button onClick={toggleTheme} title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              style={{ background: "none", border: `1px solid ${border}`, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 16, color: text, marginLeft: 8 }}>
-              {theme === "dark" ? "☀️" : "🌙"}
-            </button>
-
-            {currentUser && currentUser.username !== "kay" && currentUser.username !== "admin" && (
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: 12 }}>
-                <img src="/icon-maritime-ai.png" alt="" style={{ width: 24, height: 24, borderRadius: "50%" }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: accent }}>Maritime AI</span>
-              </div>
-            )}
-            <a href="/api/auth/logout" style={{ color: textDim, textDecoration: "none", fontSize: 12, marginLeft: 12 }}>Logout</a>
-
-          </nav>
         </div>
       </div>
 

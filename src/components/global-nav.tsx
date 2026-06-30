@@ -14,10 +14,8 @@ export default function GlobalNav() {
   const [path, setPath] = useState("/");
   
 
-  const [show, setShow] = useState(true);
   useEffect(() => {
     setPath(window.location.pathname);
-    if (window.location.pathname === "/" || window.location.pathname === "/login") setShow(false);
 
     const saved = localStorage.getItem("vessel-theme") || "dark";
     setTheme(saved as "dark"|"light");
@@ -30,8 +28,6 @@ export default function GlobalNav() {
     document.documentElement.classList.toggle("light", next === "light");
     document.documentElement.classList.toggle("dark", next !== "light");
   };
-
-  if (!show) return null;
 
   return (
     <>
