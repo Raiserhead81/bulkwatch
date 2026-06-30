@@ -50,6 +50,7 @@ interface Stats { total: number; withImage: number; withPosition: number; totalD
 const LIMIT = 24;
 
 export default function Home() {
+  const [currentUser, setCurrentUser] = useState<{username:string;company:string;role:string}|null>(null);
   const [ships, setShips] = useState<Ship[]>([]);
   const [stats, setStats] = useState<Stats>({ total: 0, withImage: 0, withPosition: 0, totalDwt: 0 });
   const [total, setTotal] = useState(0);
@@ -84,6 +85,7 @@ export default function Home() {
   };
 
   useEffect(() => {
+    fetch("/api/auth/me").then(r=>r.json()).then(d=>{if(d.user) setCurrentUser(d.user)}).catch(()=>{});
     fetch("/api/ships/stats").then(r => r.ok ? r.json() : null).then(d => { if (d) setStats(d); }).catch(() => {});
     fetch("/api/ships/flags").then(r => r.ok ? r.json() : null).then(d => { if (d?.flags) setFlags(d.flags.slice(0, 100)); }).catch(() => {});
     fetch("/api/ships/operators").then(r => r.ok ? r.json() : null).then(d => { if (d?.operators) setOperators(d.operators); }).catch(() => {});
@@ -146,9 +148,12 @@ export default function Home() {
       <div className="page-header" style={{ background: cardBg, borderBottom: `1px solid ${border}`, padding: "16px 24px" }}>
         <div style={{ maxWidth: "95%", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: accent }}>Vessel Database</h1>
+            {currentUser ? (
+              <img src={`/logos/${currentUser.username}.svg`} alt={currentUser.company} style={{ height: 32, filter: theme === "dark" ? "brightness(0) invert(1)" : "none" }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
+            ) : null}
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: accent }}>Maritime AI</h1>
             <p style={{ margin: "4px 0 0", fontSize: 13, color: textMuted }}>
-              Intelligence for <strong style={{ color: text }}>{stats.total.toLocaleString()}</strong> ships worldwide
+              Ship Intelligence for <strong style={{ color: text }}>{stats.total.toLocaleString()}</strong> ships worldwide
             </p>
           </div>
           <button className="mobile-menu-btn" onClick={() => setMenuOpen(true)}>&#9776;</button>
@@ -160,6 +165,10 @@ export default function Home() {
               style={{ background: "none", border: `1px solid ${border}`, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 16, color: text, marginLeft: 8 }}>
               {theme === "dark" ? "Light" : "Dark"}
             </button>
+            {currentUser && (
+              <span style={{ fontSize: 11, color: textMuted, marginLeft: 8 }}>{currentUser.company}</span>
+            )}
+            <a href="/api/auth/logout" style={{ color: textDim, textDecoration: "none", fontSize: 12, marginLeft: 8 }}>Logout</a>
           </nav>
         </div>
       </div>

@@ -80,7 +80,7 @@ export default function LoginPage() {
             Vessel Database
           </h1>
           <p style={{ fontSize: 14, color: "#64748b", marginTop: 6 }}>
-            Global Ship Intelligence — Restricted Access
+            Ship Intelligence Platform — Restricted Access
           </p>
         </div>
 

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vessel Database — Global Ship Intelligence",
+  title: "Maritime AI — Global Ship Intelligence",
   description:
     "Global database of vessels worldwide with specs, AIS tracking, price estimates and Buy/Hold/Sell recommendations.",
   keywords: [
@@ -28,12 +28,12 @@ export const metadata: Metadata = {
     "Handysize",
     "Valemax",
   ],
-  authors: [{ name: "Vessel Database" }],
+  authors: [{ name: "Maritime AI" }],
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Vessel DB",
+    title: "Maritime AI",
   },
   formatDetection: { telephone: false },
   icons: {
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     apple: [{ url: "/icon-192.png", sizes: "192x192" }],
   },
   openGraph: {
-    title: "Vessel Database",
+    title: "Maritime AI",
     description: "Global Ship Intelligence Database",
     type: "website",
   },
