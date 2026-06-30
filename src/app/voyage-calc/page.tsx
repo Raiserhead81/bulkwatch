@@ -2,6 +2,7 @@
 
 import { getRoutingFactors } from "@/lib/voyageRouting";
 import { calculateFreightRates, getRateForDwt } from "@/lib/freightRates";
+import { calculateOpex } from "@/lib/opex";
 
 import { useState, useMemo, useEffect } from "react";
 
@@ -220,10 +221,16 @@ export default function VoyageCalcPage() {
     const warRiskPremium = rf.piracyRisk ? dwt * 0.15 : 0; // ~$0.15/DWT
     const totalVoyageCost = fuelCost + portCosts + canalCost + warRiskPremium;
 
+    // OPEX (crew, insurance, maintenance, etc.)
+    const opex = calculateOpex(dwt, 2016, "Bulk Carrier", dwt * 400, undefined, fuelConsumption);
+    const opexTotal = Math.round(opex.totalFixedOpex * totalDays);
+    const totalCostWithOpex = totalVoyageCost + opexTotal;
+
     const revenue = dwt * freightRate;
-    const profit = revenue - totalVoyageCost;
-    const tce = (revenue - totalVoyageCost) / totalDays;
-    const breakEvenRate = totalVoyageCost / dwt;
+    const profit = revenue - totalCostWithOpex;
+    const tce = (revenue - totalVoyageCost) / totalDays; // TCE excludes OPEX (industry standard)
+    const netTce = (revenue - totalCostWithOpex) / totalDays; // Net after OPEX
+    const breakEvenRate = totalCostWithOpex / dwt;
 
     return {
       from, to,
@@ -235,7 +242,7 @@ export default function VoyageCalcPage() {
       totalDays: totalDays.toFixed(1),
       fuelTons: Math.round(fuelTonsTotal),
       fuelCost, portCosts, canalCost, warRiskPremium,
-      totalVoyageCost, revenue, profit, tce, breakEvenRate,
+      totalVoyageCost, opexTotal, opexPerDay: opex.totalFixedOpex, totalCostWithOpex, revenue, profit, tce, netTce, breakEvenRate,
       routing: rf,
     };
   }, [fromCode, toCode, dwt, speed, fuelPrice, fuelConsumption, freightRate, portDays]);
@@ -389,8 +396,20 @@ export default function VoyageCalcPage() {
                       <div style={{ fontSize: 20, fontWeight: 600, color: "#f87171" }}>${(result.portCosts / 1000).toFixed(0)}k</div>
                     </div>
                     <div>
+                      <div style={labelStyle}>OPEX ({result.totalDays}d)</div>
+                      <div style={{ fontSize: 20, fontWeight: 600, color: "#f87171" }}>${(result.opexTotal / 1000).toFixed(0)}k</div>
+                    </div>
+                    <div>
+                      <div style={labelStyle}>OPEX/day</div>
+                      <div style={{ fontSize: 14, color: "#94a3b8" }}>${result.opexPerDay.toLocaleString()}</div>
+                    </div>
+                    <div>
                       <div style={labelStyle}>Total Voyage Cost</div>
                       <div style={{ fontSize: 20, fontWeight: 600, color: "#f87171" }}>${(result.totalVoyageCost / 1000).toFixed(0)}k</div>
+                    </div>
+                    <div>
+                      <div style={labelStyle}>Total incl. OPEX</div>
+                      <div style={{ fontSize: 20, fontWeight: 600, color: "#ef4444" }}>${(result.totalCostWithOpex / 1000).toFixed(0)}k</div>
                     </div>
                   </div>
                 </div>
@@ -409,6 +428,10 @@ export default function VoyageCalcPage() {
                       <div style={{ fontSize: 28, fontWeight: 700, color: "#fbbf24" }}>
                         ${result.breakEvenRate.toFixed(2)}/t
                       </div>
+                    </div>
+                    <div>
+                      <div style={labelStyle}>Net Profit (after OPEX)</div>
+                      <div style={{ fontSize: 20, fontWeight: 600, color: result.profit > 0 ? "#4ade80" : "#f87171" }}>${(result.profit / 1000).toFixed(0)}k</div>
                     </div>
                     <div>
                       <div style={labelStyle}>Gross Revenue</div>

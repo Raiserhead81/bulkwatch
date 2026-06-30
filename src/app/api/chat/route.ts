@@ -418,25 +418,30 @@ export async function POST(request: NextRequest) {
 
   const systemPrompt = buildSystemPrompt();
 
-  /* ── First pass: non-streaming to check for SQL ── */
-  const firstContent = await aiCall(
-    systemPrompt + "\n\nIMPORTANT: If you need data from the database, output your SQL queries wrapped in <SQL>...</SQL> tags.",
-    messages.slice(-10)
-  );
-
-  const db = getDb();
-  const hasSql = /<SQL>/i.test(firstContent);
-
-  if (!hasSql) {
-    return aiStream(systemPrompt, messages.slice(-10));
+  /* ── Single pass: stream response, detect SQL, execute, continue ── */
+  const lastMsg = messages[messages.length - 1]?.content?.toLowerCase() || "";
+  const needsData = /how many|list|show|find|count|which|what.*ship|fleet|operator|arklow|oldendorff|cape|panamax|tanker|average|total|flag|builder/i.test(lastMsg);
+  
+  if (needsData) {
+    // Likely needs SQL — do quick non-streaming call, then stream results
+    const firstContent = await aiCall(
+      systemPrompt + "\n\nIMPORTANT: If you need data, output SQL wrapped in <SQL>...</SQL> tags. Be concise.",
+      messages.slice(-6)
+    );
+    
+    const db = getDb();
+    if (/<SQL>/i.test(firstContent)) {
+      const withResults = executeSqlTags(firstContent, db);
+      return aiStream(systemPrompt, [
+        ...messages.slice(-6),
+        { role: "assistant", content: "I queried the database." },
+        { role: "user", content: "Present these results clearly with markdown. NEVER show SQL.\n\n" + withResults }
+      ]);
+    }
+    // No SQL needed after all — just stream it
+    return aiStream(systemPrompt, messages.slice(-6));
   }
-
-  // SQL found — execute and ask AI to present results
-  const withResults = executeSqlTags(firstContent, db);
-
-  return aiStream(systemPrompt, [
-    ...messages.slice(-10),
-    { role: "assistant", content: "I queried the database." },
-    { role: "user", content: `Present these database results clearly with markdown tables, emojis, and a verdict. NEVER show SQL.\n\n${withResults}` }
-  ]);
+  
+  // General question — direct streaming, no SQL check needed
+  return aiStream(systemPrompt, messages.slice(-8));
 }
