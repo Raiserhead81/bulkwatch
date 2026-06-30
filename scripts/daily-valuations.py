@@ -10,7 +10,7 @@ DWT_FACTORS = {
     "Handysize": 847, "Handymax": 862, "Supramax": 546, "Ultramax": 561,
     "Panamax": 507, "Kamsarmax": 431, "Capesize": 319, "Newcastlemax": 265,
     "Post-Panamax": 592, "Valemax": 220, "VLOC": 250,
-    "Bulk Carrier": 500, "General Cargo": 2200, "Mini-Bulker": 1500,
+    "Bulk Carrier": 500, "General Cargo": 2200, "Mini-Bulker": 1100,
     "Gearless": 400, "Geared": 500,
     "VLCC": 604, "Suezmax": 500, "Aframax": 500,
     "Product Tanker": 1293, "Chemical Tanker": 2117, "Oil/Chemical Tanker": 1500,
@@ -65,13 +65,14 @@ def main():
 
     for imo, name, stype, dwt, year_built, builder, flag, status in ships:
         etype = stype
-        # Normalize bulk-type ships by DWT (many are misclassified)
-        if stype in ("General Cargo", "Bulk Carrier", "Handymax", "Handysize"):
+        # Normalize bulk-type ships by DWT range
+        if stype in ("General Cargo", "Bulk Carrier", "Handymax", "Handysize", "Mini-Bulker"):
             if dwt >= 150000: etype = "Capesize"
             elif dwt >= 80000: etype = "Kamsarmax"
             elif dwt >= 55000: etype = "Supramax"
             elif dwt >= 40000: etype = "Handymax"
-            else: etype = "Handysize"  # alles unter 40k
+            elif dwt >= 10000: etype = "Handysize"
+            else: etype = "Mini-Bulker"
         factor = DWT_FACTORS.get(etype, DWT_FACTORS.get(stype, 500))
         base = max(dwt * factor, 2_000_000)
 
