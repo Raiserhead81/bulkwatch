@@ -113,7 +113,7 @@ export function getLiveRates(): LiveOpexRates {
   if(_cache && Date.now()-_cacheTs < 3600_000) return _cache;
   try {
     if(typeof window==="undefined") {
-      const fs=require("fs"), path=require("path");
+      const fs=eval("require")("fs"), path=eval("require")("path");
       const f=path.join(process.cwd(),"db","opex_rates.json");
       if(fs.existsSync(f)){_cache=JSON.parse(fs.readFileSync(f,"utf8"));_cacheTs=Date.now();return _cache!;}
     }
