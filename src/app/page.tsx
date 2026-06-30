@@ -165,9 +165,6 @@ export default function Home() {
               style={{ background: "none", border: `1px solid ${border}`, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 16, color: text, marginLeft: 8 }}>
               {theme === "dark" ? "Light" : "Dark"}
             </button>
-            {currentUser && (
-              <span style={{ fontSize: 11, color: textMuted, marginLeft: 8 }}>{currentUser.company}</span>
-            )}
             <a href="/api/auth/logout" style={{ color: textDim, textDecoration: "none", fontSize: 12, marginLeft: 8 }}>Logout</a>
             {currentUser && currentUser.username !== "kay" && currentUser.username !== "admin" && (
               <img src={`/logos/${currentUser.username}.${currentUser.username === "arklow" ? "png" : "svg"}`} alt={currentUser.company} style={{ height: 30, marginLeft: 12 }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
