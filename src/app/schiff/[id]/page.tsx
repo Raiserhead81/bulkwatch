@@ -433,7 +433,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
               <RouteMap
                 fromLat={voyage.from.lat} fromLon={voyage.from.lon} fromName={voyage.from.name.split(",")[0]}
                 toLat={voyage.to.lat} toLon={voyage.to.lon} toName={voyage.to.name.split(",")[0]}
-                shipLat={ship.position?.lat} shipLon={ship.position?.lon} shipName={ship.name}
+                shipLat={undefined} shipLon={undefined} shipName={ship.name}
                 seaDays={voyage.seaDays || String(Math.round(voyage.distanceNm / (voyage.speedKnots * 24)))}
                 distanceNm={voyage.distanceNm} progressPercent={voyage.progressPercent}
               />

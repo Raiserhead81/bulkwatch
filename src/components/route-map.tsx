@@ -36,18 +36,18 @@ export default function RouteMap({
     }).addTo(map);
 
     // Port markers
-    const portIcon = (color: string, label: string) => L.divIcon({
-      html: `<div style="display:flex;flex-direction:column;align-items:center">
-        <div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.5)"></div>
-        <div style="margin-top:4px;padding:2px 6px;background:rgba(15,23,42,0.85);border-radius:4px;white-space:nowrap;font-size:11px;font-weight:600;color:#e2e8f0;font-family:system-ui">${label}</div>
+    const portIcon = (color: string, label: string, isFrom: boolean) => L.divIcon({
+      html: `<div style="position:relative">
+        <div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.4)"></div>
+        <div style="position:absolute;${isFrom ? "top:-22px" : "top:18px"};left:50%;transform:translateX(-50%);padding:1px 6px;background:rgba(15,23,42,0.9);border:1px solid rgba(255,255,255,0.1);border-radius:3px;white-space:nowrap;font-size:10px;font-weight:600;color:#cbd5e1;font-family:system-ui;letter-spacing:0.02em">${label}</div>
       </div>`,
       className: "",
-      iconSize: [0, 0],
-      iconAnchor: [7, 7],
+      iconSize: [12, 12],
+      iconAnchor: [6, 6],
     });
 
-    L.marker([fromLat, fromLon], { icon: portIcon("#3b82f6", fromName) }).addTo(map);
-    L.marker([toLat, toLon], { icon: portIcon("#ef4444", toName) }).addTo(map);
+    L.marker([fromLat, fromLon], { icon: portIcon("#3b82f6", fromName, true) }).addTo(map);
+    L.marker([toLat, toLon], { icon: portIcon("#ef4444", toName, false) }).addTo(map);
 
     // Route line (dashed = planned)
     const routeLine = L.polyline([[fromLat, fromLon], [toLat, toLon]], {
@@ -58,8 +58,9 @@ export default function RouteMap({
     }).addTo(map);
 
     // Ship position
-    const sLat = shipLat ?? fromLat + (toLat - fromLat) * (progressPercent / 100);
-    const sLon = shipLon ?? fromLon + (toLon - fromLon) * (progressPercent / 100);
+    const pct = Math.max(0, Math.min(100, progressPercent));
+    const sLat = shipLat ?? fromLat + (toLat - fromLat) * (pct / 100);
+    const sLon = shipLon ?? fromLon + (toLon - fromLon) * (pct / 100);
 
     // Sailed line (solid)
     L.polyline([[fromLat, fromLon], [sLat, sLon]], {
@@ -70,16 +71,13 @@ export default function RouteMap({
 
     // Ship marker
     const shipIcon = L.divIcon({
-      html: `<div style="display:flex;flex-direction:column;align-items:center">
-        <div style="width:18px;height:18px;border-radius:50%;background:#10b981;border:2.5px solid #fff;box-shadow:0 0 12px rgba(16,185,129,0.6)"></div>
-        <div style="margin-top:4px;padding:2px 8px;background:rgba(15,23,42,0.9);border-radius:4px;white-space:nowrap;font-size:10px;color:#94a3b8;font-family:system-ui">
-          <span style="color:#10b981;font-weight:700">${shipName || "Position"}</span>
-          <span style="margin-left:6px">${seaDays}d · ${distanceNm}nm</span>
-        </div>
+      html: `<div style="position:relative">
+        <div style="width:10px;height:10px;border-radius:50%;background:#10b981;border:2px solid #fff;box-shadow:0 0 8px rgba(16,185,129,0.5)"></div>
+        <div style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);padding:1px 5px;background:rgba(15,23,42,0.9);border:1px solid rgba(16,185,129,0.3);border-radius:3px;white-space:nowrap;font-size:9px;color:#94a3b8;font-family:system-ui">${seaDays}d / ${distanceNm}nm</div>
       </div>`,
       className: "",
-      iconSize: [0, 0],
-      iconAnchor: [9, 9],
+      iconSize: [10, 10],
+      iconAnchor: [5, 5],
     });
     L.marker([sLat, sLon], { icon: shipIcon }).addTo(map);
 
