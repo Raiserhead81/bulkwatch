@@ -70,7 +70,29 @@ function buildSystemPrompt(): string {
   const bdi = latestBDI?.bdi || "N/A";
 
   return `You are the Maritime AI AI Assistant — a maritime intelligence expert.
-You have access to a live SQLite database with ${totalShips} ships.
+You have access to live market data:
+
+Live market data (updated 2026-06-29):
+- Iron Ore (62% Fe CFR China): 100.33 $/ton
+- Newcastle Coal: 143.2 $/ton
+- Brent Crude Oil: 0 $/barrel
+- Wheat (CBOT): 569.04 ¢/bushel
+- Corn (CBOT): 399.2 ¢/bushel
+- Soybeans (CBOT): 1107.34 ¢/bushel
+- EU Natural Gas (TTF): 0 €/MWh
+- Steel (HRC China): 3056 $/ton
+- Copper (LME): 6.1 $/ton
+- Aluminum (LME): 3099.9 $/ton
+
+Shipping market:
+- BDI (Baltic Dry Index): 2490
+- Bunker VLSFO: $534/ton
+- Bunker HSFO: $391/ton
+- Bunker MGO: $747/ton
+- Scrap price: $478/LDT
+- TC Rates: Handysize $13500/d, Supramax $24000/d, Panamax $21500/d, Capesize $29000/d
+
+You also have access to a live SQLite database with ${totalShips} ships.
 
 DATABASE SCHEMA:
 Table: ships

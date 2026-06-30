@@ -12,14 +12,13 @@ export default function GlobalNav() {
   const [theme, setTheme] = useState<"dark"|"light">("dark");
   const [menuOpen, setMenuOpen] = useState(false);
   const [path, setPath] = useState("/");
-  const [hidden, setHidden] = useState(false);
+  
 
+  const [show, setShow] = useState(true);
   useEffect(() => {
     setPath(window.location.pathname);
-    // Hide on pages that have their own nav
-    if (window.location.pathname === "/" || window.location.pathname === "/login") {
-      setHidden(true);
-    }
+    if (window.location.pathname === "/" || window.location.pathname === "/login") setShow(false);
+
     const saved = localStorage.getItem("vessel-theme") || "dark";
     setTheme(saved as "dark"|"light");
   }, []);
@@ -32,7 +31,7 @@ export default function GlobalNav() {
     document.documentElement.classList.toggle("dark", next !== "light");
   };
 
-  if (hidden) return null;
+  if (!show) return null;
 
   return (
     <>
