@@ -56,7 +56,7 @@ def main():
     ships = con.execute("""
         SELECT imo, name, type, dwt, year_built, builder, flag, status
         FROM ships WHERE type IS NOT NULL AND type != '' AND dwt > 0
-        AND NOT (dwt IN (45000, 47000, 15000, 55000, 50000, 20000, 18000, 12000, 10000, 5000) AND (year_built IS NULL OR year_built = 0))
+        AND NOT (dwt IN (45000, 15000, 55000, 50000, 20000, 10000, 5000) AND (year_built IS NULL OR year_built = 0))
         AND status NOT IN ('scrapped', 'lost')
     """).fetchall()
 
@@ -65,7 +65,10 @@ def main():
 
     for imo, name, stype, dwt, year_built, builder, flag, status in ships:
         etype = stype
-        if stype == "General Cargo" and dwt >= 40000: etype = "Handymax"
+        if stype == "General Cargo" and dwt >= 150000: etype = "Capesize"
+        elif stype == "General Cargo" and dwt >= 80000: etype = "Kamsarmax"
+        elif stype == "General Cargo" and dwt >= 55000: etype = "Supramax"
+        elif stype == "General Cargo" and dwt >= 40000: etype = "Handymax"
         elif stype == "General Cargo" and dwt >= 25000: etype = "Handysize"
         factor = DWT_FACTORS.get(etype, DWT_FACTORS.get(stype, 500))
         base = max(dwt * factor, 2_000_000)
