@@ -1,7 +1,15 @@
 // Sea Routing — finds shortest ocean path between any two points
 
 const LAND: number[][] = [
-  [15,72,-170,-50],[7,20,-92,-77],[-56,12,-82,-34],[36,72,-12,45],
+  // North America — split into precise regions (not one giant box)
+  [48,72,-140,-55],   // Canada
+  [25,48,-125,-65],   // Continental US (leaves ocean on all coasts)
+  [25,35,-105,-82],   // US South / Texas (leaves Gulf of Mexico open)
+  [15,25,-105,-97],   // Mexico west coast
+  [15,32,-97,-82],    // Mexico east (leaves Yucatan Channel open)
+  [7,20,-92,-77],     // Central America (already existed)
+  [-56,12,-82,-34],   // South America (already existed)
+  [36,72,-12,45],     // Europe
   [55,72,4,32],[-35,37,-18,52],[12,42,25,65],[7,35,68,90],
   [0,28,92,110],[18,55,100,135],[33,43,125,130],[30,46,129,146],
   [-11,6,95,141],[5,20,117,127],[-40,-10,112,154],[-48,-34,166,178],
