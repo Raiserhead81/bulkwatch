@@ -53,7 +53,7 @@ const DISCOUNT_BUILDERS = ["huelva", "navantia", "astilleros", "constanta", "man
 const MARKET_FACTORS = {
   bdiCurrent: 2490,
   bdiTrend: "stable" as "rising" | "stable" | "falling",
-  bdiDate: "29 Jun 2026",
+  bdiDate: "30 Jun 2026",
 };
 
 function getSizeClass(dwt: number): string {
