@@ -56,23 +56,23 @@ export default function LoginPage() {
         background: "rgba(255,255,255,0.03)",
         border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: 20,
-        padding: "48px 40px",
-        maxWidth: 400,
+        padding: "56px 48px",
+        maxWidth: 480,
         width: "100%",
         backdropFilter: "blur(12px)",
         boxShadow: "0 30px 70px rgba(0,0,0,0.5)",
       }}>
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <img src="/icon-maritime-ai.png" alt="Maritime AI" style={{ width: 96, height: 96, margin: "0 auto 16px", display: "block", borderRadius: "50%", objectFit: "cover" }} />
+          <img src="/icon-maritime-ai.png" alt="Maritime AI" style={{ width: 140, height: 140, margin: "0 auto 16px", display: "block", borderRadius: "50%", objectFit: "cover" }} />
           <h1 style={{
-            fontSize: 28, fontWeight: 800, letterSpacing: -0.5, margin: 0,
+            fontSize: 36, fontWeight: 800, letterSpacing: -0.5, margin: 0,
             background: "linear-gradient(180deg, #fff, #94a3b8)",
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
           }}>
             Maritime AI
           </h1>
-          <p style={{ fontSize: 14, color: "#64748b", marginTop: 6 }}>
+          <p style={{ fontSize: 16, color: "#64748b", marginTop: 6 }}>
             Ship Intelligence Platform — Restricted Access
           </p>
         </div>
@@ -91,7 +91,7 @@ export default function LoginPage() {
         {/* Form */}
         <form onSubmit={handleSubmit}>
           <label style={{
-            display: "block", fontSize: 12, fontWeight: 650, color: "#94a3b8",
+            display: "block", fontSize: 13, fontWeight: 650, color: "#94a3b8",
             marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em",
           }}>
             Username
@@ -110,16 +110,16 @@ export default function LoginPage() {
               autoFocus
               autoComplete="off"
               style={{
-                width: "100%", padding: "14px 16px 14px 42px",
+                width: "100%", padding: "16px 18px 16px 46px",
                 border: "1px solid rgba(255,255,255,0.12)",
                 borderRadius: 12, background: "rgba(255,255,255,0.04)",
-                color: "#fff", fontSize: 15, outline: "none",
+                color: "#fff", fontSize: 16, outline: "none",
                 fontFamily: "inherit",
               }}
             />
           </div>
           <label style={{
-            display: "block", fontSize: 12, fontWeight: 650, color: "#94a3b8",
+            display: "block", fontSize: 13, fontWeight: 650, color: "#94a3b8",
             marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em",
           }}>
             Password
@@ -136,10 +136,10 @@ export default function LoginPage() {
               placeholder="Enter password"
               required
               style={{
-                width: "100%", padding: "14px 44px 14px 42px",
+                width: "100%", padding: "16px 48px 16px 46px",
                 border: "1px solid rgba(255,255,255,0.12)",
                 borderRadius: 12, background: "rgba(255,255,255,0.04)",
-                color: "#fff", fontSize: 15, outline: "none",
+                color: "#fff", fontSize: 16, outline: "none",
                 fontFamily: "inherit",
               }}
               onFocus={e => e.target.style.borderColor = "#38bdf8"}
@@ -163,7 +163,7 @@ export default function LoginPage() {
             style={{
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               width: "100%", border: 0, padding: "14px 20px",
-              borderRadius: 12, fontFamily: "inherit", fontWeight: 680, fontSize: 15,
+              borderRadius: 12, fontFamily: "inherit", fontWeight: 700, fontSize: 17,
               cursor: loading ? "wait" : "pointer", color: "#fff",
               background: "linear-gradient(135deg, #2563eb, #38bdf8)",
               boxShadow: "0 8px 26px rgba(37,99,235,0.4)",
