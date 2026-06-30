@@ -43,6 +43,11 @@ const NODES: [string, number, number][] = [
   ["us-e",38,-72],["us-ne",42,-68],["nova-sc",44,-62],
   ["brazil-ne",-5,-34],["brazil-se",-23,-42],["plate",-35,-55],
   ["us-w-s",32,-120],["us-w-n",42,-126],["alaska",55,-140],
+  // More Pacific
+  ["pac-sw",-20,-150],["pac-se",-30,-110],
+  // More connections  
+  ["mexico-w",20,-110],["chile",-33,-72],
+  ["us-gulf",28,-90],["colombia",10,-76],
 ];
 
 const EDGES: string[][] = [
@@ -181,7 +186,22 @@ export function findSeaRoute(fromLat: number, fromLon: number, toLat: number, to
   }
 
   // Convert to coordinates
-  const result: [number, number][] = [[fromLat, fromLon]];
+  const result: [number, number][] = [[fromLat, fromLon]  // Mexico / Central America — MUST go through Panama
+  ["us-w-s","mexico-w"],["mexico-w","panama-p"],
+  ["us-gulf","florida"],["us-gulf","carib-w"],
+  ["carib-w","colombia"],["colombia","panama-a"],
+  // South America Pacific
+  ["panama-p","chile"],["chile","cape-horn"],
+  ["chile","pac-se"],["pac-se","pac-sw"],["pac-sw","hawaii"],
+  // More Pacific connections
+  ["pac-sw","nz-s"],["au-se","nz-n"],
+  // Africa south -> Indian direct
+  ["cape-gh","mad-n"],["cape-gh","au-sw"],
+  // Med -> Red Sea must go through Suez (critical!)
+  ["med-e","suez-n"],
+  // More East Africa
+  ["eaf-n","bab"],["moz","eaf-n"],
+];
   for (const id of bestPath) {
     const p = pos.get(id);
     if (p) result.push(p);
