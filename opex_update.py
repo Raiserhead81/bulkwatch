@@ -29,21 +29,20 @@ def safe_float(val, default=None):
 
 # ═══ SOURCE 1: HandyBulk — Bunker Prices ═══
 def fetch_bunker():
+    """Derive bunker prices from Brent crude (strong correlation)"""
     try:
-        r = requests.get("https://www.handybulk.com/bunker-prices/",
-                         headers={"User-Agent": UA}, timeout=15)
-        if r.status_code != 200:
-            return None
-        text = r.text
-        vlsfo = re.search(r'VLSFO[^0-9]*(\d{3,4})', text, re.DOTALL)
-        hsfo = re.search(r'380[^0-9]*(\d{3,4})', text, re.DOTALL)
-        mgo = re.search(r'MGO[^0-9]*(\d{3,4})', text, re.DOTALL)
-        result = {}
-        if vlsfo: result["vlsfo"] = int(vlsfo.group(1))
-        if hsfo: result["hsfo"] = int(hsfo.group(1))
-        if mgo: result["mgo"] = int(mgo.group(1))
-        if result:
-            log(f"HandyBulk bunker: {result}")
+        r = requests.get("https://tradingeconomics.com/commodity/brent-crude-oil",
+                         headers={"User-Agent": UA, "Accept": "text/html"}, timeout=15)
+        m = re.search(r'id="p"[^>]*>([\d,.]+)', r.text)
+        if m:
+            brent = float(m.group(1).replace(",", ""))
+            # Industry ratios: VLSFO ~7.5x Brent, HSFO ~5.5x, MGO ~10.5x
+            result = {
+                "vlsfo": round(brent * 7.5),
+                "hsfo": round(brent * 5.5),
+                "mgo": round(brent * 10.5),
+            }
+            log(f"Bunker (from Brent ${brent}): {result}")
             return result
     except Exception as e:
         log(f"Bunker error: {e}")
@@ -58,14 +57,18 @@ def fetch_charter_rates():
         text = r.text
         rates = {}
         for key, pat in {
-            "handysize": r'[Hh]andy\w*[^0-9]*\$?([\d,]+)\s*/?\s*day',
-            "supramax": r'[Ss]upra\w*[^0-9]*\$?([\d,]+)\s*/?\s*day',
-            "panamax": r'[Pp]ana\w*[^0-9]*\$?([\d,]+)\s*/?\s*day',
-            "capesize": r'[Cc]ape\w*[^0-9]*\$?([\d,]+)\s*/?\s*day',
+            "supramax": r'[Ss]upra\w*[^$\d]*\$?([\d,]{4,6})',
+            "panamax": r'[Pp]ana\w*[^$\d]*\$?([\d,]{4,6})',
+            "capesize": r'Capesize 180K.*?<td>([\d,]{4,6})',
         }.items():
             m = re.search(pat, text)
             if m:
                 rates[key] = int(m.group(1).replace(",", ""))
+        # Handysize from table format
+        if not rates.get("handysize"):
+            m = re.search(r'Handysize.*?<td>([\d,]{4,6})', text, re.DOTALL)
+            if m:
+                rates["handysize"] = int(m.group(1).replace(",", ""))
         if rates:
             log(f"Charter rates: {rates}")
         return rates if rates else None
@@ -151,10 +154,10 @@ def fetch_scrapmonster():
     try:
         r = requests.get("https://www.scrapmonster.com/scrap-metal-prices/united-states",
                          headers={"User-Agent": UA}, timeout=15)
-        m = re.search(r'HMS\s*1\s*[&]\s*2.*?\$\s*([\d.]+)', r.text, re.DOTALL | re.IGNORECASE)
+        m = re.search(r'hms-scraps.*?([\d.]+)\s*\(', r.text, re.DOTALL | re.IGNORECASE)
         if m:
             price = float(m.group(1))
-            log(f"ScrapMonster HMS: ${price}")
+            log(f"ScrapMonster HMS: ${price}/ton")
             return price
     except Exception as e:
         log(f"ScrapMonster error: {e}")
@@ -203,7 +206,7 @@ def main():
     sources = []
 
     bunker = fetch_bunker()
-    if bunker: sources.append("HandyBulk (bunker prices)")
+    if bunker: sources.append("TradingEconomics/Brent (bunker derivation)")
 
     charter = fetch_charter_rates()
     if charter: sources.append("HandyBulk (charter rates)")
