@@ -69,7 +69,7 @@ function buildSystemPrompt(): string {
   const opList = topOperators.map((r: any) => `  ${r.operator}: ${r.c}`).join("\n");
   const bdi = latestBDI?.bdi || "N/A";
 
-  return `You are the Vessel Database AI Assistant — a maritime intelligence expert.
+  return `You are the Maritime AI AI Assistant — a maritime intelligence expert.
 You have access to a live SQLite database with ${totalShips} ships.
 
 DATABASE SCHEMA:

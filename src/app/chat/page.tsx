@@ -712,7 +712,7 @@ export default function ChatPage() {
         {!hasMessages ? (
           <div className="vdb-welcome">
             <div className="vdb-welcome-icon">⚓</div>
-            <div className="vdb-welcome-title">Vessel Database AI</div>
+            <div className="vdb-welcome-title">Maritime AI AI</div>
             <div className="vdb-welcome-sub">
               {lang === "de"
                 ? "Fragen Sie nach Schiffen, Märkten, Routen und Investments"

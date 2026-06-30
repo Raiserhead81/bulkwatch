@@ -123,7 +123,7 @@ const translations: Record<Language, Record<string, string>> = {
     "pagination.page": "Seite",
 
     // Footer
-    "footer.text": "Vessel Database · Daten aus öffentlichen Quellen · Preis-Schätzungen KI-basiert",
+    "footer.text": "Maritime AI · Daten aus öffentlichen Quellen · Preis-Schätzungen KI-basiert",
     "footer.mockAis": "Mock-AIS",
     "footer.liveAis": "Live-AIS",
     "footer.liveAisNote": "Live-AIS in Entwicklung",
@@ -226,7 +226,7 @@ const translations: Record<Language, Record<string, string>> = {
     "survey.searchPlaceholder": "Hafen, Land, Stichwort...",
     "survey.noResults": "Keine Häfen gefunden",
     "survey.noResultsDesc": "Versuche andere Suchbegriffe oder Filter",
-    "survey.footerNote": "Vessel Database · Survey-Port-Datenbank · Kosten sind Richtwerte (Stand 2024) · Bitte Surveyor direkt kontaktieren für verbindliches Angebot",
+    "survey.footerNote": "Maritime AI · Survey-Port-Datenbank · Kosten sind Richtwerte (Stand 2024) · Bitte Surveyor direkt kontaktieren für verbindliches Angebot",
 
     // Map
     "map.title": "🗺️ Schiffs-Karte",
@@ -337,7 +337,7 @@ const translations: Record<Language, Record<string, string>> = {
     "pagination.page": "Page",
 
     // Footer
-    "footer.text": "Vessel Database · Data from public sources · Price estimates AI-based",
+    "footer.text": "Maritime AI · Data from public sources · Price estimates AI-based",
     "footer.mockAis": "Mock-AIS",
     "footer.liveAis": "Live-AIS",
     "footer.liveAisNote": "Live-AIS in development",
@@ -379,7 +379,7 @@ const translations: Record<Language, Record<string, string>> = {
     "voyage.progress": "Progress",
     "voyage.departure": "Departure",
     "voyage.eta": "ETA",
-    "voyage.liveNote": "✓ Live-AIS active — Real ship positions in real-time via AISStream.io. Green markers = live, blue markers = Vessel Database.",
+    "voyage.liveNote": "✓ Live-AIS active — Real ship positions in real-time via AISStream.io. Green markers = live, blue markers = Maritime AI.",
 
     // Status
     "status.under_way_loaded": "Under Way (Loaded)",
@@ -440,7 +440,7 @@ const translations: Record<Language, Record<string, string>> = {
     "survey.searchPlaceholder": "Port, country, keyword...",
     "survey.noResults": "No ports found",
     "survey.noResultsDesc": "Try different search terms or filters",
-    "survey.footerNote": "Vessel Database · Survey Port Database · Costs are guidelines (as of 2024) · Please contact surveyor directly for binding quote",
+    "survey.footerNote": "Maritime AI · Survey Port Database · Costs are guidelines (as of 2024) · Please contact surveyor directly for binding quote",
 
     // Map
     "map.title": "🗺️ Ship Map",

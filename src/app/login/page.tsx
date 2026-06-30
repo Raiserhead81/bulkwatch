@@ -77,7 +77,7 @@ export default function LoginPage() {
             background: "linear-gradient(180deg, #fff, #94a3b8)",
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
           }}>
-            Vessel Database
+            Maritime AI
           </h1>
           <p style={{ fontSize: 14, color: "#64748b", marginTop: 6 }}>
             Ship Intelligence Platform — Restricted Access

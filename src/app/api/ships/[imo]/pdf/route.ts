@@ -171,7 +171,7 @@ export async function GET(
   <!-- Header -->
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:2px solid #334155;padding-bottom:16px;">
     <div>
-      <div style="font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Vessel Database - Ship Report</div>
+      <div style="font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Maritime AI - Ship Report</div>
       <h1 style="font-size:28px;font-weight:800;color:#38bdf8;margin:4px 0;">${ship.name}</h1>
       <div style="font-size:14px;color:#94a3b8;">IMO ${ship.imo} &middot; ${ship.type} &middot; ${ship.flag}</div>
     </div>
@@ -213,7 +213,7 @@ export async function GET(
 
   <!-- Footer -->
   <div style="text-align:center;padding:16px;font-size:11px;color:#475569;">
-    Vessel Database &middot; ships.gemivo.de &middot; Report generated ${now}<br/>
+    Maritime AI &middot; ships.gemivo.de &middot; Report generated ${now}<br/>
     Disclaimer: Price estimates are indicative only. Not financial advice.
   </div>
 
