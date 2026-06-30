@@ -2,10 +2,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
-const NAV_LINKS: [string,string][] = [
-  ["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],
-  ["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],
-  ["Voyage Calc","/voyage-calc"],["Valuation","/valuation"],["AI Chat","/chat"],
+const NAV_LINKS: [string,string,string][] = [
+  ["Ships","/","⚓"],["Map","/karte","🗺️"],["Live","/live","📡"],["Top Picks","/top-picks","🏆"],
+  ["Compare","/vergleich","⚖️"],["Watchlist","/watchlist","⭐"],["Newbuilds","/newbuilds","🚢"],
+  ["Voyage Calc","/voyage-calc","🧮"],["Valuation","/valuation","💰"],["AI Chat","/chat","🤖"],
 ];
 
 export default function GlobalNav() {
@@ -42,9 +42,10 @@ export default function GlobalNav() {
       <div className={`fixed top-0 right-0 h-full w-64 bg-slate-900 border-l border-slate-800 z-50 transform transition-transform ${menuOpen ? "translate-x-0" : "translate-x-full"}`}>
         <button onClick={() => setMenuOpen(false)} className="absolute top-4 right-4 text-slate-400 text-xl">✕</button>
         <div className="pt-14 px-4 space-y-1">
-          {NAV_LINKS.map(([label, href]) => (
+          {NAV_LINKS.map(([label, href, icon]) => (
             <a key={href} href={href}
-              className={`block px-3 py-2 rounded-lg text-sm ${path === href ? "bg-blue-500/10 text-blue-400 font-semibold" : "text-slate-400 hover:text-white"}`}>
+              className={`flex items-center gap-3 px-3 py-3 rounded-lg text-base ${path === href ? "bg-blue-500/10 text-blue-400 font-semibold" : "text-slate-300 hover:text-white hover:bg-slate-800"}`}>
+              <span className="text-lg w-7 text-center">{icon}</span>
               {label}
             </a>
           ))}
@@ -68,7 +69,7 @@ export default function GlobalNav() {
           <div className="hidden md:flex items-center gap-1">
             {NAV_LINKS.map(([label, href]) => (
               <a key={href} href={href}
-                className={`px-2.5 py-1 rounded text-xs ${path === href ? "text-blue-400 font-semibold" : "text-slate-500 hover:text-slate-200"}`}>
+                className={`px-2.5 py-1.5 rounded text-xs ${path === href ? "text-blue-400 font-semibold" : "text-slate-500 hover:text-slate-200"}`}>
                 {label}
               </a>
             ))}
