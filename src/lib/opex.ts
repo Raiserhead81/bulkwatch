@@ -162,6 +162,7 @@ export function calculateOpex(
   dwt: number, yearBuilt: number, shipType: string, estimatedValueUSD: number,
   flag?: string, fuelConsumptionTonsDay?: number,
   crewSizeOverride?: number, grossTonnage?: number,
+  managementType?: "own" | "third-party",
 ): OpexBreakdown {
   const rates = getLiveRates();
   const year = new Date().getFullYear();
@@ -186,10 +187,13 @@ export function calculateOpex(
   // 3. INSURANCE
   const insuredValue = estimatedValueUSD * 1.10;
   const hmAgeLoad = age > 20 ? 1.25 : age > 15 ? 1.15 : age > 10 ? 1.08 : 1.0;
-  const hmRate = rates.insuranceRateHull * hmAgeLoad;
-  const insuranceHMPerDay = Math.round((insuredValue * (hmRate/100)) / 365);
+  const hmRate = (rates.insuranceRateHull || 0.25) * hmAgeLoad;
+  // Minimum H&M insurance floor based on ship size
+  const hmMinPerDay = dwt < 5000 ? 30 : dwt < 10000 ? 50 : dwt < 60000 ? 100 : dwt < 100000 ? 200 : 350;
+  const insuranceHMPerDay = Math.max(Math.round((insuredValue * (hmRate/100)) / 365), hmMinPerDay);
   const gt = grossTonnage || Math.round(dwt * 0.6);
-  const insurancePnIPerDay = Math.round((gt * rates.insuranceRatePnI) / 365);
+  const pniMin = dwt < 5000 ? 40 : dwt < 10000 ? 60 : dwt < 60000 ? 100 : dwt < 100000 ? 150 : 250;
+  const insurancePnIPerDay = Math.max(Math.round((gt * rates.insuranceRatePnI) / 365), pniMin);
   const insuranceTotalPerDay = insuranceHMPerDay + insurancePnIPerDay;
 
   // 4. MAINTENANCE — more moderate age scaling
@@ -214,8 +218,10 @@ export function calculateOpex(
   const lubePerDay = approxMEkW * 0.0007 * 24; // total lube liters/day (cyl + system)
   const lubeOilPerDay = Math.round(lubePerDay * rates.lubeOilPrice);
 
-  // 7. MANAGEMENT
-  const managementPerDay = dwt < 5000 ? 350 : dwt < 10000 ? 450 : dwt < 60000 ? 650 : dwt < 100000 ? 850 : 1050;
+  // 7. MANAGEMENT (own-managed = ~30% cheaper than third-party)
+  const mgmtType = managementType || "third-party";
+  const baseMgmt = dwt < 5000 ? 350 : dwt < 10000 ? 450 : dwt < 60000 ? 650 : dwt < 100000 ? 850 : 1050;
+  const managementPerDay = mgmtType === "own" ? Math.round(baseMgmt * 0.70) : baseMgmt;
 
   // 8. DRYDOCK (amortized over 5yr)
   const dockCost: Record<string,number> = {
