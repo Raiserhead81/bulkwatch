@@ -103,7 +103,7 @@ const DWT_FACTORS: Partial<Record<string, number>> = {
   Handysize: 847, Handymax: 862, Supramax: 546, Ultramax: 561,
   Panamax: 507, Kamsarmax: 431, Capesize: 319, Newcastlemax: 265,
   "Post-Panamax": 592, Valemax: 220, VLOC: 250,
-  "Bulk Carrier": 500, "General Cargo": 809, "Mini-Bulker": 500,
+  "Bulk Carrier": 500, "General Cargo": 2200, "Mini-Bulker": 1500,
   Gearless: 400, Geared: 500,
   // Tanker
   VLCC: 604, Suezmax: 500, Aframax: 500,
