@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowLeft, MapPin, Ship as ShipIcon, Loader2, Search, X } from "lucide-react";
@@ -19,6 +19,17 @@ const WorldMap = dynamic(() => import("@/components/world-map"), {
 
 export default function KartePage() {
   const { t } = useI18n();
+  const [focusImo, setFocusImo] = useState<string>();
+  const [focusLat, setFocusLat] = useState<number>();
+  const [focusLon, setFocusLon] = useState<number>();
+  const [focusZoom, setFocusZoom] = useState<number>();
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("imo")) setFocusImo(p.get("imo")!);
+    if (p.get("lat")) setFocusLat(parseFloat(p.get("lat")!));
+    if (p.get("lon")) setFocusLon(parseFloat(p.get("lon")!));
+    if (p.get("zoom")) setFocusZoom(parseInt(p.get("zoom")!));
+  }, []);
   const [operatorFilter, setOperatorFilter] = useState("");
   const [ships, setShips] = useState<Ship[]>([]);
   const [totalWithPosition, setTotalWithPosition] = useState(0);
@@ -54,12 +65,22 @@ export default function KartePage() {
   }, []);
 
   useEffect(() => {
-    // Load total count without filter
-    fetch("/api/ships?has_position=true&limit=1")
-      .then(r => r.json())
-      .then(d => setTotalWithPosition(d.total || 0));
-    fetchShips("");
-  }, [fetchShips]);
+    if (focusImo) {
+      // Single ship mode: load only the focused ship
+      fetch(`/api/ships/${focusImo}`)
+        .then(r => r.json())
+        .then(ship => {
+          if (ship && ship.imo) { setShips([ship]); setTotalWithPosition(1); }
+          setIsLoading(false);
+        })
+        .catch(() => setIsLoading(false));
+    } else {
+      fetch("/api/ships?has_position=true&limit=1")
+        .then(r => r.json())
+        .then(d => setTotalWithPosition(d.total || 0));
+      fetchShips("");
+    }
+  }, [fetchShips, focusImo]);
 
   const handleOperatorChange = (val: string) => {
     setOperatorFilter(val);
@@ -117,7 +138,7 @@ export default function KartePage() {
             <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
           </div>
         ) : (
-          <WorldMap ships={ships} height="100%" />
+          <WorldMap ships={ships} height="100%" focusLat={focusLat} focusLon={focusLon} focusZoom={focusZoom} focusImo={focusImo} />
         )}
       </div>
     </div>

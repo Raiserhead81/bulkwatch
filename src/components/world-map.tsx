@@ -13,6 +13,10 @@ interface WorldMapProps {
   ships: Ship[];
   height?: string;
   typeFilter?: string;
+  focusLat?: number;
+  focusLon?: number;
+  focusZoom?: number;
+  focusImo?: string;
 }
 
 // ── Type colour palette ──────────────────────────────────────────────────────
@@ -194,8 +198,8 @@ export default function WorldMap({ ships, height = "100%", typeFilter = "" }: Wo
     if (!containerRef.current || mapRef.current) return;
 
     const map = L.map(containerRef.current, {
-      center: [25, 10],
-      zoom: 3,
+      center: [focusLat ?? 25, focusLon ?? 10],
+      zoom: focusZoom ?? 3,
       minZoom: 2,
       maxZoom: 16,
       worldCopyJump: true,
