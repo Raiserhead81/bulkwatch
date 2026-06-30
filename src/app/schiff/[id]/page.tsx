@@ -373,10 +373,16 @@ export default function ShipDetailPage({
                 </div>
 
                 {ship.position ? (
-                  <p className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 border border-emerald-500/20 rounded px-2 py-1">
-                    ✓ Live AIS Position · {ship.position.lat.toFixed(4)}°N {ship.position.lon.toFixed(4)}°E
-                    {ship.lastSeen ? ` · ${new Date(ship.lastSeen * 1000).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}` : ""}
-                  </p>
+                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 border border-emerald-500/20 rounded px-2 py-1 flex items-center justify-between gap-2">
+                    <span>
+                      ✓ Live AIS Position · {ship.position.lat.toFixed(4)}°N {ship.position.lon.toFixed(4)}°E
+                      {ship.lastSeen ? ` · ${new Date(ship.lastSeen * 1000).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}` : ""}
+                    </span>
+                    <Link href={`/karte?lat=${ship.position.lat}&lon=${ship.position.lon}&zoom=8&imo=${ship.imo}`}
+                      className="flex items-center gap-1 text-emerald-500 hover:text-emerald-300 font-semibold whitespace-nowrap">
+                      <MapPin className="h-3 w-3" /> Show on Map
+                    </Link>
+                  </div>
                 ) : (
                   <p className="text-[10px] text-slate-500 dark:text-white/30 bg-slate-500/5 border border-slate-500/20 rounded px-2 py-1">
                     ⚠ Illustrative voyage — no live AIS position available for IMO {ship.imo}
