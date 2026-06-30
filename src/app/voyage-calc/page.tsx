@@ -166,7 +166,7 @@ export default function VoyageCalcPage() {
   const [toCode, setToCode] = useState("");
   const [dwt, setDwt] = useState(80000);
   const [speed, setSpeed] = useState(13);
-  const [fuelPrice, setFuelPrice] = useState(590);
+  const [fuelPrice, setFuelPrice] = useState(598);
   const [fuelConsumption, setFuelConsumption] = useState(35);
 
   // Auto-calculate fuel consumption from DWT
@@ -201,6 +201,7 @@ export default function VoyageCalcPage() {
   }, [dwt, liveBdi]);
   const [portDays, setPortDays] = useState(4);
   const [weather, setWeather] = useState<any>(null);
+  const [realRouteNm, setRealRouteNm] = useState<number>(0);
   const [weatherLoading, setWeatherLoading] = useState(false);
 
   const result = useMemo(() => {
@@ -212,7 +213,7 @@ export default function VoyageCalcPage() {
     const rf = getRoutingFactors(from.lat, from.lon, to.lat, to.lon, from.country, to.country);
 
     // Apply routing multiplier (coastal deviation, canal routing)
-    const routeDist = gcDist * rf.routingMultiplier;
+    const routeDist = realRouteNm > 0 ? realRouteNm : gcDist * rf.routingMultiplier;
 
     // Effective speed after weather and current
     const weatherLoss = speed * (rf.weatherMargin / 100);
@@ -257,16 +258,20 @@ export default function VoyageCalcPage() {
   }, [fromCode, toCode, dwt, speed, fuelPrice, fuelConsumption, freightRate, portDays]);
 
   // Fetch live weather for selected route
-  // Auto-fetch weather when route changes
+  // Auto-fetch weather + real sea route distance
   useEffect(() => {
     const from = PORTS.find(p => p.code === fromCode);
     const to = PORTS.find(p => p.code === toCode);
-    if (!from || !to || from.code === to.code) { setWeather(null); return; }
+    if (!from || !to || from.code === to.code) { setWeather(null); setRealRouteNm(0); return; }
     setWeatherLoading(true);
     fetch(`/api/weather/route?fromLat=${from.lat}&fromLon=${from.lon}&toLat=${to.lat}&toLon=${to.lon}&history=1`)
       .then(r => r.json())
       .then(data => { setWeather(data); setWeatherLoading(false); })
       .catch(() => setWeatherLoading(false));
+    fetch(`/api/searoute?fromLat=${from.lat}&fromLon=${from.lon}&toLat=${to.lat}&toLon=${to.lon}`)
+      .then(r => r.json())
+      .then(data => { if (data?.distanceNm) setRealRouteNm(data.distanceNm); })
+      .catch(() => {});
   }, [fromCode, toCode]);
 
   const box: React.CSSProperties = { background: "#1e293b", borderRadius: 12, border: "1px solid #1e3a5f", padding: 20 };

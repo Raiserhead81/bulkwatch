@@ -32,6 +32,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
   const watchlist = useWatchlist();
   const [priceHistory, setPriceHistory] = useState<any>(null);
   const [weather, setWeather] = useState<any>(null);
+  const [realDistanceNm, setRealDistanceNm] = useState<number>(0);
 
   useEffect(() => {
     if (ship?.imo) {
@@ -46,8 +47,12 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     if (!ship) return;
     const v = generateMockVoyage(ship);
+    // Fetch weather
     fetch(`/api/weather/route?fromLat=${v.from.lat}&fromLon=${v.from.lon}&toLat=${v.to.lat}&toLon=${v.to.lon}`)
       .then(r => r.ok ? r.json() : null).then(d => setWeather(d)).catch(() => {});
+    // Fetch real sea route distance
+    fetch(`/api/searoute?fromLat=${v.from.lat}&fromLon=${v.from.lon}&toLat=${v.to.lat}&toLon=${v.to.lon}`)
+      .then(r => r.ok ? r.json() : null).then(d => { if (d?.distanceNm) setRealDistanceNm(d.distanceNm); }).catch(() => {});
   }, [ship?.imo]);
 
   const isWatched = ship ? watchlist.includes(ship.imo) : false;
@@ -425,7 +430,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                   </div>
                   <div className="flex flex-col items-center px-2">
                     <ArrowRight className="h-5 w-5 text-slate-400" />
-                    <span className="text-sm font-bold text-slate-300 mt-1">{voyage.durationDays || Math.max(1, Math.round(voyage.distanceNm / (12 * 24)))} days</span>
+                    <span className="text-sm font-bold text-slate-300 mt-1">{realDistanceNm ? Math.round(realDistanceNm / (12 * 24)) : (voyage.durationDays || Math.max(1, Math.round(voyage.distanceNm / (12 * 24))))} days</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-2xl flex-shrink-0">{voyage.to.countryFlag}</div>
@@ -433,7 +438,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                   </div>
                 </div>
                 <div className="grid grid-cols-4 gap-2 text-center">
-                  {[["Cargo", voyage.cargoDescription], ["Load", voyage.cargoLoadPercent + "%"], ["Speed", voyage.speedKnots + " kn"], ["Distance", voyage.distanceNm + " nm"]].map(([l, v]) => (
+                  {[["Cargo", voyage.cargoDescription], ["Load", voyage.cargoLoadPercent + "%"], ["Speed", voyage.speedKnots + " kn"], ["Distance", (realDistanceNm || voyage.distanceNm) + " nm"]].map(([l, v]) => (
                     <div key={l} className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50"><p className="text-[10px] text-slate-500 uppercase">{l}</p><p className="text-sm font-semibold tabular-nums">{v}</p></div>
                   ))}
                 </div>
@@ -452,8 +457,8 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                 fromLat={voyage.from.lat} fromLon={voyage.from.lon} fromName={voyage.from.name}
                 toLat={voyage.to.lat} toLon={voyage.to.lon} toName={voyage.to.name}
                 shipName={ship.name}
-                daysTotal={voyage.durationDays || Math.max(1, Math.round(voyage.distanceNm / (12 * 24)))}
-                daysRemaining={Math.round((voyage.durationDays || Math.max(1, Math.round(voyage.distanceNm / (12 * 24)))) * (100 - voyage.progressPercent) / 100)}
+                daysTotal={realDistanceNm ? Math.max(1, Math.round(realDistanceNm / (12 * 24))) : (voyage.durationDays || Math.max(1, Math.round(voyage.distanceNm / (12 * 24))))}
+                daysRemaining={Math.round((realDistanceNm ? Math.max(1, Math.round(realDistanceNm / (12 * 24))) : (voyage.durationDays || Math.max(1, Math.round(voyage.distanceNm / (12 * 24))))) * (100 - voyage.progressPercent) / 100)}
                 distanceNm={voyage.distanceNm} progressPercent={voyage.progressPercent}
               />
             </div>
