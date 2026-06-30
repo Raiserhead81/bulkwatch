@@ -15,7 +15,7 @@ DWT_FACTORS = {
     "VLCC": 604, "Suezmax": 500, "Aframax": 500,
     "Product Tanker": 1293, "Chemical Tanker": 2117, "Oil/Chemical Tanker": 1500,
     "Crude Oil Tanker": 450, "Tanker": 500,
-    "LNG Tanker": 1300, "LPG Tanker": 4881,
+    "LNG Tanker": 1300, "LPG Tanker": 950,
     "Container Ship": 700, "ULCV": 600, "Neo-Panamax": 600, "Feeder": 800,
     "Multipurpose": 700, "Reefer": 800, "Heavy Lift": 1000,
     "RoRo": 1000, "RoPax": 1200, "Car Carrier": 2500,
@@ -65,6 +65,8 @@ def main():
 
     for imo, name, stype, dwt, year_built, builder, flag, status in ships:
         etype = stype
+        # Small ships misclassified as Handymax/Handysize
+        if stype in ("Handymax", "Handysize") and dwt < 5000: etype = "General Cargo"
         if stype == "General Cargo" and dwt >= 150000: etype = "Capesize"
         elif stype == "General Cargo" and dwt >= 80000: etype = "Kamsarmax"
         elif stype == "General Cargo" and dwt >= 55000: etype = "Supramax"

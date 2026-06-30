@@ -109,7 +109,7 @@ const DWT_FACTORS: Partial<Record<string, number>> = {
   VLCC: 604, Suezmax: 500, Aframax: 500,
   "Product Tanker": 1293, "Chemical Tanker": 2117, "Oil/Chemical Tanker": 1500,
   "Crude Oil Tanker": 450, Tanker: 500,
-  "LNG Tanker": 1300, "LPG Tanker": 4881,
+  "LNG Tanker": 1300, "LPG Tanker": 950,
   // Container (TEU-based, DWT is rough proxy)
   "Container Ship": 700, ULCV: 600, "Neo-Panamax": 600, Feeder: 800,
   // Other
@@ -132,6 +132,7 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   // DWT × $/DWT factor — calibrated against 86 real S&P transactions (Q2 2026)
   // For "General Cargo" with high DWT, use bulk carrier factors (they're misclassified)
   let effectiveType = ship.type;
+  if ((ship.type === "Handymax" || ship.type === "Handysize") && ship.dwt < 5000) effectiveType = "General Cargo";
   if (ship.type === "General Cargo" && ship.dwt >= 150000) effectiveType = "Capesize";
   else if (ship.type === "General Cargo" && ship.dwt >= 80000) effectiveType = "Kamsarmax";
   else if (ship.type === "General Cargo" && ship.dwt >= 55000) effectiveType = "Supramax";
