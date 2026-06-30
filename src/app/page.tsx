@@ -147,13 +147,22 @@ export default function Home() {
 
       <div className="page-header" style={{ background: cardBg, borderBottom: `1px solid ${border}`, padding: "16px 24px" }}>
         <div style={{ maxWidth: "95%", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <img src="/icon-maritime-ai.png" alt="" style={{ width: 40, height: 40, borderRadius: "50%" }} />
-            <div>
-              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: accent }}>Maritime AI</h1>
-              <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted }}>
-                {stats.total.toLocaleString()} ships worldwide
-              </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {currentUser && currentUser.username !== "kay" && currentUser.username !== "admin" ? (
+              <>
+                <img src="/logos/arklow-crest.png" alt="" style={{ height: 40 }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
+                <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#fff" }}>{currentUser.company}</h1>
+                <div style={{ width: 1, height: 28, background: border, margin: "0 4px" }} />
+              </>
+            ) : null}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <img src="/icon-maritime-ai.png" alt="" style={{ width: 36, height: 36, borderRadius: "50%" }} />
+              <div>
+                <span style={{ fontSize: currentUser && currentUser.username !== "kay" && currentUser.username !== "admin" ? 14 : 22, fontWeight: 700, color: accent }}>Maritime AI</span>
+                {(!currentUser || currentUser.username === "kay" || currentUser.username === "admin") && (
+                  <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted }}>{stats.total.toLocaleString()} ships worldwide</p>
+                )}
+              </div>
             </div>
           </div>
           <button className="mobile-menu-btn" onClick={() => setMenuOpen(true)}>&#9776;</button>
@@ -165,13 +174,7 @@ export default function Home() {
               style={{ background: "none", border: `1px solid ${border}`, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 16, color: text, marginLeft: 8 }}>
               {theme === "dark" ? "Light" : "Dark"}
             </button>
-            {currentUser && currentUser.username !== "kay" && currentUser.username !== "admin" && (
-              <>
-                <div style={{ width: 1, height: 24, background: border, marginLeft: 8 }} />
-                <img src={`/logos/${currentUser.username}.${currentUser.username === "arklow" ? "png" : "svg"}`} alt="" style={{ height: 28, marginLeft: 8 }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
-                <span style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginLeft: 4, whiteSpace: "nowrap" }}>{currentUser.company}</span>
-              </>
-            )}
+
             <a href="/api/auth/logout" style={{ color: textDim, textDecoration: "none", fontSize: 12, marginLeft: 12 }}>Logout</a>
 
           </nav>
