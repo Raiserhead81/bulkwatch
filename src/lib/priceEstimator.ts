@@ -347,7 +347,7 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   // Endpreis berechnen
   // Scrap value as floor: ~$450/LDT, LDT ≈ 0.35 * DWT for bulk carriers
   const scrapValueUSD = Math.round(ship.dwt * 0.35 * 450);
-  const rawEstimate = Math.round((basePrice + dwtBonus) * priceMultiplier);
+  const rawEstimate = Math.round(basePrice * priceMultiplier);
   const estimatedValueUSD = Math.max(rawEstimate, ship.status === "active" ? scrapValueUSD : 0);
 
   // Konfidenz-Score anpassen
