@@ -36,7 +36,7 @@ const STATUS_OPTIONS = [
   { label: "Lost", value: "lost" },
 ];
 
-const NAV_LINKS: [string,string][] = [["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"],["Valuation","/valuation"],["AI Chat","/chat"]];
+const NAV_LINKS: [string,string,string][] = [["Ships","/","⚓"],["Map","/karte","🗺️"],["Live","/live","📡"],["Top Picks","/top-picks","🏆"],["Compare","/vergleich","⚖️"],["Watchlist","/watchlist","⭐"],["Newbuilds","/newbuilds","🚢"],["Voyage Calc","/voyage-calc","🧮"],["Valuation","/valuation","💰"],["AI Chat","/chat","🤖"]];
 
 interface Ship {
   id: string; imo: string; name: string; type: string;
@@ -136,13 +136,14 @@ export default function Home() {
       <div className={`mobile-nav-overlay${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
       <div className={`mobile-nav-panel${menuOpen ? " open" : ""}`}>
         <button className="mobile-nav-close" onClick={() => setMenuOpen(false)}>&#x2715;</button>
-        {NAV_LINKS.map(([l,h]) => (
-          <a key={h} href={h} className={h==="/" ? "active" : ""}>{l}</a>
+        {NAV_LINKS.map(([l,h,icon]) => (
+          <a key={h} href={h} className={h==="/" ? "active" : ""} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 16 }}><span style={{ width: 24, textAlign: "center" }}>{icon}</span>{l}</a>
         ))}
         <button onClick={() => { toggleTheme(); setMenuOpen(false); }}
           style={{ background: "none", border: `1px solid #334155`, borderRadius: 8, padding: "12px 16px", cursor: "pointer", fontSize: 15, color: "#e2e8f0", textAlign: "left", marginTop: 8 }}>
-          {theme === "dark" ? "Light Mode" : "Dark Mode"}
+          {theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode"}
         </button>
+        <a href="/api/auth/logout" style={{ display: "block", padding: "12px 16px", color: "#64748b", fontSize: 14, marginTop: 8 }}>Logout</a>
       </div>
 
       <div className="page-header" style={{ background: cardBg, borderBottom: `1px solid ${border}`, padding: "16px 24px" }}>
@@ -166,8 +167,8 @@ export default function Home() {
           </div>
           <button className="mobile-menu-btn" onClick={() => setMenuOpen(true)}>&#9776;</button>
           <nav className="nav-links">
-            {NAV_LINKS.map(([l,h]) => (
-              <a key={h} href={h} style={{ color: h==="/" ? accent : textMuted, textDecoration: "none" }}>{l}</a>
+            {NAV_LINKS.map(([l,h,icon]) => (
+              <a key={h} href={h} style={{ color: h==="/" ? accent : textMuted, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}><span style={{ fontSize: 14 }}>{icon}</span>{l}</a>
             ))}
             <button onClick={toggleTheme} title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
               style={{ background: "none", border: `1px solid ${border}`, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 16, color: text, marginLeft: 8 }}>
