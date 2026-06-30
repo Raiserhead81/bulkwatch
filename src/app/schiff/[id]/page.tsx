@@ -456,47 +456,47 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                 daysRemaining={Math.round(voyage.durationDays * (100 - voyage.progressPercent) / 100)}
                 distanceNm={voyage.distanceNm} progressPercent={voyage.progressPercent}
               />
-              {/* Route Weather */}
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-2">Weather & Sea Conditions</p>
-              {weather?.current && (
-                <div className="mt-4 space-y-3">
-                  <div className="grid grid-cols-4 gap-2 text-center">
-                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                      <p className="text-[10px] text-slate-500 uppercase">Condition</p>
-                      <p className={"text-sm font-bold " + (weather.current.condition === "excellent" || weather.current.condition === "good" ? "text-green-400" : weather.current.condition === "moderate" ? "text-amber-400" : "text-red-400")}>
-                        {weather.current.condition}
-                      </p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                      <p className="text-[10px] text-slate-500 uppercase">Waves</p>
-                      <p className="text-sm font-bold">{weather.current.avgWaveHeight}m avg</p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                      <p className="text-[10px] text-slate-500 uppercase">Wind</p>
-                      <p className="text-sm font-bold">Bft {weather.current.avgBeaufort.scale}</p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                      <p className="text-[10px] text-slate-500 uppercase">Speed Loss</p>
-                      <p className={"text-sm font-bold " + (weather.current.estimatedSpeedLoss > 10 ? "text-red-400" : "text-green-400")}>-{weather.current.estimatedSpeedLoss}%</p>
-                    </div>
-                  </div>
-                  {weather.forecast?.days?.length > 0 && (
-                    <div>
-                      <p className="text-[10px] text-slate-500 uppercase mb-2">7-Day Forecast</p>
-                      <div className="grid grid-cols-7 gap-1">
-                        {weather.forecast.days.map((d: any) => (
-                          <div key={d.date} className={"p-1.5 rounded text-center border-t-2 " + (d.condition === "good" ? "border-green-400 bg-slate-900/50" : d.condition === "moderate" ? "border-amber-400 bg-slate-900/50" : "border-red-400 bg-slate-900/50")}>
-                            <p className="text-[9px] text-slate-500">{new Date(d.date).toLocaleDateString("en-GB", {weekday: "short"})}</p>
-                            <p className="text-xs font-bold">{d.waveHeightMax.toFixed(1)}m</p>
-                            <p className="text-[9px] text-slate-500">Bft {d.beaufort}</p>
-                          </div>
-                        ))}
+            </div>
+          {/* Weather & Sea Conditions — full width */}
+          {weather?.current && (
+            <div className="mt-4 space-y-3">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Weather & Sea Conditions</p>
+              <div className="grid grid-cols-4 gap-2 text-center">
+                <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                  <p className="text-[10px] text-slate-500 uppercase">Condition</p>
+                  <p className={"text-sm font-bold " + (weather.current.condition === "excellent" || weather.current.condition === "good" ? "text-green-400" : weather.current.condition === "moderate" ? "text-amber-400" : "text-red-400")}>
+                    {weather.current.condition}
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                  <p className="text-[10px] text-slate-500 uppercase">Waves</p>
+                  <p className="text-sm font-bold">{weather.current.avgWaveHeight}m avg / {weather.current.maxWaveHeight}m max</p>
+                </div>
+                <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                  <p className="text-[10px] text-slate-500 uppercase">Wind</p>
+                  <p className="text-sm font-bold">Bft {weather.current.avgBeaufort.scale} — {weather.current.avgBeaufort.description}</p>
+                </div>
+                <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                  <p className="text-[10px] text-slate-500 uppercase">Speed Loss</p>
+                  <p className={"text-sm font-bold " + (weather.current.estimatedSpeedLoss > 10 ? "text-red-400" : "text-green-400")}>-{weather.current.estimatedSpeedLoss}%</p>
+                </div>
+              </div>
+              {weather.forecast?.days?.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-slate-500 uppercase mb-2">7-Day Forecast</p>
+                  <div className="grid grid-cols-7 gap-1">
+                    {weather.forecast.days.map((d: any) => (
+                      <div key={d.date} className={"p-1.5 rounded text-center border-t-2 " + (d.condition === "good" ? "border-green-400 bg-slate-900/50" : d.condition === "moderate" ? "border-amber-400 bg-slate-900/50" : "border-red-400 bg-slate-900/50")}>
+                        <p className="text-[9px] text-slate-500">{new Date(d.date).toLocaleDateString("en-GB", {weekday: "short"})}</p>
+                        <p className="text-xs font-bold">{d.waveHeightMax.toFixed(1)}m</p>
+                        <p className="text-[9px] text-slate-500">Bft {d.beaufort}</p>
                       </div>
-                    </div>
-                  )}
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
+          )}
           </CardContent>
         </Card>
 
