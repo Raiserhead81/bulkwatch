@@ -98,6 +98,50 @@ function getSeaRouteWaypoints(lat1: number, lon1: number, lat2: number, lon2: nu
     wp.push([-34.4, 18.5]); // Cape of Good Hope
   }
   
+  // Australia <-> East Asia: via east of Philippines or Lombok Strait
+  const australia = (lat: number, lon: number) => lat < -10 && lon > 110 && lon < 160;
+  const eastAsia = (lat: number, lon: number) => lat > 20 && lon > 100 && lon < 145;
+  const westAustralia = (lat: number, lon: number) => lat < -15 && lon > 110 && lon < 130;
+  
+  if (australia(lat1, lon1) && eastAsia(lat2, lon2)) {
+    // AU east coast -> Asia: east of Philippines
+    if (lon1 > 140) {
+      wp.push([-10.0, 155.0]); // east of PNG
+      wp.push([5.0, 135.0]); // east of Indonesia
+      wp.push([15.0, 125.0]); // east of Philippines
+    } else {
+      // AU west coast -> Asia: via Lombok Strait + South China Sea
+      wp.push([-8.5, 115.7]); // Lombok Strait
+      wp.push([1.2, 103.8]); // Singapore
+      if (lon2 > 115) wp.push([10.0, 115.0]); // South China Sea
+    }
+  } else if (australia(lat2, lon2) && eastAsia(lat1, lon1)) {
+    if (lon2 > 140) {
+      wp.push([15.0, 125.0]);
+      wp.push([5.0, 135.0]);
+      wp.push([-10.0, 155.0]);
+    } else {
+      if (lon1 > 115) wp.push([10.0, 115.0]);
+      wp.push([1.2, 103.8]);
+      wp.push([-8.5, 115.7]);
+    }
+  }
+  
+  // Australia <-> India/Middle East: via Lombok or north of AU
+  if (australia(lat1, lon1) && (mideast(lat2, lon2) || indian(lat2, lon2))) {
+    wp.push([-8.5, 115.7]); // Lombok Strait
+    wp.push([6.0, 80.0]); // Sri Lanka
+  } else if (australia(lat2, lon2) && (mideast(lat1, lon1) || indian(lat1, lon1))) {
+    wp.push([6.0, 80.0]);
+    wp.push([-8.5, 115.7]);
+  }
+  
+  // Africa East Coast: via Mozambique Channel
+  const eastAfrica = (lat: number, lon: number) => lat < 5 && lat > -35 && lon > 25 && lon < 55;
+  if ((eastAfrica(lat1, lon1) && asiaish(lat2, lon2)) || (eastAfrica(lat2, lon2) && asiaish(lat1, lon1))) {
+    wp.push([-12.0, 49.0]); // north of Madagascar
+  }
+
   // English Channel
   const northSea = (lat: number, lon: number) => lat > 50 && lat < 56 && lon > -2 && lon < 8;
   const atlantic = (lat: number, lon: number) => lon < -5 && lat > 35 && lat < 55;
