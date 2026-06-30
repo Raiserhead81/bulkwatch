@@ -425,7 +425,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                   </div>
                   <div className="flex flex-col items-center px-2">
                     <ArrowRight className="h-5 w-5 text-slate-400" />
-                    <span className="text-sm font-bold text-slate-300 mt-1">{voyage.durationDays} days</span>
+                    <span className="text-sm font-bold text-slate-300 mt-1">{voyage.durationDays || Math.max(1, Math.round(voyage.distanceNm / (12 * 24)))} days</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-2xl flex-shrink-0">{voyage.to.countryFlag}</div>
@@ -452,8 +452,8 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                 fromLat={voyage.from.lat} fromLon={voyage.from.lon} fromName={voyage.from.name}
                 toLat={voyage.to.lat} toLon={voyage.to.lon} toName={voyage.to.name}
                 shipName={ship.name}
-                daysTotal={voyage.durationDays}
-                daysRemaining={Math.round(voyage.durationDays * (100 - voyage.progressPercent) / 100)}
+                daysTotal={voyage.durationDays || Math.max(1, Math.round(voyage.distanceNm / (12 * 24)))}
+                daysRemaining={Math.round((voyage.durationDays || Math.max(1, Math.round(voyage.distanceNm / (12 * 24)))) * (100 - voyage.progressPercent) / 100)}
                 distanceNm={voyage.distanceNm} progressPercent={voyage.progressPercent}
               />
             </div>
