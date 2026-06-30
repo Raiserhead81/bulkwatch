@@ -1,23 +1,23 @@
 // Sea Routing — finds shortest ocean path between any two points
 
 const LAND: number[][] = [
-  // North America — split into precise regions (not one giant box)
-  [48,72,-140,-55],   // Canada
-  [25,48,-125,-65],   // Continental US (leaves ocean on all coasts)
-  [25,35,-105,-82],   // US South / Texas (leaves Gulf of Mexico open)
-  [15,25,-105,-97],   // Mexico west coast
-  [15,32,-97,-82],    // Mexico east (leaves Yucatan Channel open)
-  [7,20,-92,-77],     // Central America (already existed)
-  [-56,12,-82,-34],   // South America (already existed)
-  [36,72,-12,45],     // Europe
-  [55,72,4,32],[-35,37,-18,52],[12,42,25,65],[7,35,68,90],
-  [0,28,92,110],[18,55,100,135],[33,43,125,130],[30,46,129,146],
-  [-11,6,95,141],[5,20,117,127],[-40,-10,112,154],[-48,-34,166,178],
-  [-10,0,140,155],[59,84,-75,-10],[63,67,-25,-13],[-90,-60,-180,180],
-  [50,75,100,180],[55,75,30,100],[55,85,-140,-55],[55,72,-170,-130],
-  [-26,-12,43,50],[50,59,-11,2],[22,26,119,122],[6,10,79,82],
-  [-4,7,108,119],[-6,6,95,106],[1,8,99,105],[37,47,7,19],
-  [35,42,19,30],[36,42,26,44],
+  // Ultra-tight: only deep inland areas, all coastal waters open
+  [54,66,-125,-70],    // Canada interior
+  [35,45,-110,-80],    // US midwest
+  [23,27,-103,-90],    // Mexico interior
+  [-40,-5,-65,-48],    // SA interior (Amazon/interior)
+  [49,59,12,26],        // Europe deep interior
+  [-20,25,0,33],       // Africa interior (very conservative)
+  [24,33,38,48],       // Arabia desert
+  [18,26,77,82],       // India interior (small)
+  [10,16,98,102],      // Indochina narrow interior
+  [32,42,113,118],     // China interior (leaves coast)
+  [36,40,134,139],     // Japan Honshu interior (tiny)
+  [-30,-20,125,142],   // Australia interior
+  [64,78,-58,-25],     // Greenland interior
+  [-80,-66,-180,180],  // Antarctica
+  [58,68,50,90],       // Russia interior
+  [58,66,115,165],     // Siberia interior
 ];
 
 function isLand(lat: number, lon: number): boolean {
