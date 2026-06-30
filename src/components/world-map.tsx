@@ -230,7 +230,7 @@ export default function WorldMap({ ships, height = "100%", typeFilter = "", focu
     // ── Cluster groups ───────────────────────────────────────────────────────
     const liveCluster = (L as any).markerClusterGroup({
       maxClusterRadius: 50,
-      disableClusteringAtZoom: 9,
+      disableClusteringAtZoom: 12,
       chunkedLoading: true,        // process markers in chunks to avoid UI freeze
       chunkSize: 500,
       chunkDelay: 50,
@@ -243,10 +243,13 @@ export default function WorldMap({ ships, height = "100%", typeFilter = "", focu
 
     const dbCluster = (L as any).markerClusterGroup({
       maxClusterRadius: 60,
-      disableClusteringAtZoom: 8,
+      disableClusteringAtZoom: 12,
+      chunkedLoading: true,
+      chunkSize: 500,
+      chunkDelay: 50,
       iconCreateFunction: (cluster: any) =>
         makeClusterIcon(cluster.getChildCount(), "#2563eb"),
-      spiderfyOnMaxZoom: true,
+      spiderfyOnMaxZoom: false,
       showCoverageOnHover: false,
       zoomToBoundsOnClick: true,
     }) as L.MarkerClusterGroup;
@@ -292,29 +295,16 @@ export default function WorldMap({ ships, height = "100%", typeFilter = "", focu
     cluster.clearLayers();
     if (!showDB) return;
 
+    const dbMarkers: L.Marker[] = [];
     for (const ship of ships) {
       const pos = ship.position;
       if (!pos || (pos.lat === 0 && pos.lon === 0)) continue;
       if (activeType && !ship.type.toLowerCase().includes(activeType.toLowerCase())) continue;
 
       const color = getTypeColor(ship.type);
-      const icon = L.divIcon({
-        html: dbDotSVG(color),
-        className: "",
-        iconSize: [10, 10],
-        iconAnchor: [5, 5],
-        popupAnchor: [0, -7],
-      });
 
-      const marker = L.marker([pos.lat, pos.lon], { icon })
-        .bindPopup(buildPopup(ship, color), { maxWidth: 240, className: "vessel-popup" });
-      marker.addTo(cluster);
-
-      // If this is the focused ship, use a big pulsing marker and zoom in
+      // If this is the focused ship, use a big pulsing marker directly on map
       if (focusImo && ship.imo === focusImo) {
-        // Remove the small dot marker
-        cluster.removeLayer(marker);
-        // Create a big highlighted marker directly on map (not in cluster)
         const focusIcon = L.divIcon({
           html: `<div style="position:relative">
             <div style="width:40px;height:40px;background:${color};border:3px solid #fff;border-radius:50%;box-shadow:0 0 20px ${color},0 0 40px ${color}80;display:flex;align-items:center;justify-content:center">
@@ -335,8 +325,23 @@ export default function WorldMap({ ships, height = "100%", typeFilter = "", focu
           map.setView([pos.lat, pos.lon], 12);
           focusMarker.openPopup();
         }, 500);
+        continue;
       }
+
+      const icon = L.divIcon({
+        html: dbDotSVG(color),
+        className: "",
+        iconSize: [10, 10],
+        iconAnchor: [5, 5],
+        popupAnchor: [0, -7],
+      });
+
+      dbMarkers.push(
+        L.marker([pos.lat, pos.lon], { icon })
+          .bindPopup(buildPopup(ship, color), { maxWidth: 240, className: "vessel-popup" })
+      );
     }
+    (cluster as any).addLayers(dbMarkers);
   }, [ships, showDB, activeType, focusImo, focusZoom]);
 
   // ── Live AIS markers (batch addLayers to avoid per-marker overhead) ─────────
