@@ -25,7 +25,7 @@ interface NewbuildShip {
   deliveryDate?: string;
 }
 
-const NAV_LINKS: [string,string][] = [["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"],["AI Chat","/chat"]];
+const NAV_LINKS: [string,string][] = [["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"],["Valuation","/valuation"],["AI Chat","/chat"]];
 
 function fmtDwt(dwt: number): string {
   if (dwt >= 1000) return `${(dwt / 1000).toFixed(0)}k`;
