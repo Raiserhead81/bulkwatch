@@ -39,6 +39,76 @@ function greatCirclePoints(lat1: number, lon1: number, lat2: number, lon2: numbe
   return points;
 }
 
+// Key maritime waypoints to route around land masses
+function getSeaRouteWaypoints(lat1: number, lon1: number, lat2: number, lon2: number): [number, number][] {
+  const wp: [number, number][] = [[lat1, lon1]];
+  
+  const minLon = Math.min(lon1, lon2), maxLon = Math.max(lon1, lon2);
+  const minLat = Math.min(lat1, lat2), maxLat = Math.max(lat1, lat2);
+  
+  // Europe <-> Asia/Middle East: via Gibraltar + Suez
+  const europeish = (lat: number, lon: number) => lat > 35 && lon > -10 && lon < 35;
+  const asiaish = (lat: number, lon: number) => (lon > 45 && lat < 35) || lon > 90;
+  const mideast = (lat: number, lon: number) => lon > 35 && lon < 75 && lat > 10 && lat < 35;
+  
+  if ((europeish(lat1, lon1) && (asiaish(lat2, lon2) || mideast(lat2, lon2))) ||
+      (europeish(lat2, lon2) && (asiaish(lat1, lon1) || mideast(lat1, lon1)))) {
+    // Via Gibraltar + Med + Suez
+    const goingEast = lon1 < lon2;
+    if (goingEast) {
+      if (lon1 < 0) wp.push([36.0, -5.5]); // Gibraltar
+      wp.push([35.5, 10.0]); // Central Med
+      wp.push([31.3, 32.3]); // Suez north
+      wp.push([29.9, 32.6]); // Suez south
+      if (lon2 > 45) wp.push([12.5, 43.5]); // Bab el-Mandeb
+      if (lon2 > 75) wp.push([6.0, 80.0]); // Sri Lanka
+      if (lon2 > 95) wp.push([1.2, 103.8]); // Singapore
+    } else {
+      if (lon2 > 95) wp.push([1.2, 103.8]);
+      if (lon2 > 75) wp.push([6.0, 80.0]);
+      if (lon2 > 45) wp.push([12.5, 43.5]);
+      wp.push([29.9, 32.6]);
+      wp.push([31.3, 32.3]);
+      wp.push([35.5, 10.0]);
+      if (lon2 < 0) wp.push([36.0, -5.5]);
+    }
+  }
+  
+  // Americas <-> Europe: across Atlantic (usually fine with GC)
+  // But North Sea / Baltic need to go around Denmark
+  const baltic = (lat: number, lon: number) => lat > 54 && lon > 8 && lon < 30;
+  if (baltic(lat1, lon1) !== baltic(lat2, lon2) && (baltic(lat1, lon1) || baltic(lat2, lon2))) {
+    wp.push([57.7, 10.6]); // Skagen (tip of Denmark)
+  }
+  
+  // Americas East <-> Asia: via Panama or around Cape Horn
+  const eastAmericas = (lat: number, lon: number) => lon > -90 && lon < -30;
+  if (eastAmericas(lat1, lon1) && asiaish(lat2, lon2)) {
+    wp.push([9.0, -79.5]); // Panama
+    wp.push([0.0, -120.0]); // Pacific
+  } else if (eastAmericas(lat2, lon2) && asiaish(lat1, lon1)) {
+    wp.push([0.0, -120.0]);
+    wp.push([9.0, -79.5]);
+  }
+  
+  // South America <-> Indian Ocean: via Cape of Good Hope
+  const southAm = (lat: number, lon: number) => lat < 0 && lon > -70 && lon < -30;
+  const indian = (lat: number, lon: number) => lon > 40 && lon < 100 && lat < 20;
+  if ((southAm(lat1, lon1) && indian(lat2, lon2)) || (southAm(lat2, lon2) && indian(lat1, lon1))) {
+    wp.push([-34.4, 18.5]); // Cape of Good Hope
+  }
+  
+  // English Channel
+  const northSea = (lat: number, lon: number) => lat > 50 && lat < 56 && lon > -2 && lon < 8;
+  const atlantic = (lat: number, lon: number) => lon < -5 && lat > 35 && lat < 55;
+  if ((northSea(lat1, lon1) && atlantic(lat2, lon2)) || (northSea(lat2, lon2) && atlantic(lat1, lon1))) {
+    wp.push([50.0, -1.5]); // English Channel
+  }
+  
+  wp.push([lat2, lon2]);
+  return wp;
+}
+
 export default function RouteMap({
   fromLat, fromLon, fromName,
   toLat, toLon, toName,
@@ -63,8 +133,14 @@ export default function RouteMap({
       maxZoom: 12,
     }).addTo(map);
 
-    // Great circle route with 50 points
-    const gcPoints = greatCirclePoints(fromLat, fromLon, toLat, toLon, 50);
+    // Build sea route with waypoints to avoid land
+    const waypoints = getSeaRouteWaypoints(fromLat, fromLon, toLat, toLon);
+    let gcPoints: [number, number][] = [];
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      const seg = greatCirclePoints(waypoints[i][0], waypoints[i][1], waypoints[i+1][0], waypoints[i+1][1], 20);
+      if (i > 0) seg.shift(); // avoid duplicate points
+      gcPoints = gcPoints.concat(seg);
+    }
 
     // Port markers
     const portIcon = (color: string, label: string, isFrom: boolean) => L.divIcon({
