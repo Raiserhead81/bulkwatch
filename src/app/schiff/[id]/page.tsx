@@ -18,6 +18,8 @@ import { generateMockVoyage, getStatusColor, getStatusLabel } from "@/lib/mockVo
 import { getNearbySurveyPorts, formatSurveyCost } from "@/lib/surveyPorts";
 import { useWatchlist, toggleWatch } from "@/lib/useWatchlist";
 import { calculateOpex, formatUSD } from "@/lib/opex";
+import dynamic from "next/dynamic";
+const RouteMap = dynamic(() => import("@/components/route-map"), { ssr: false, loading: () => <div className="bg-slate-900 rounded-lg animate-pulse" style={{ height: 280 }} /> });
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -427,48 +429,14 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
                 {!ship.position && <p className="text-[10px] text-slate-500 bg-slate-500/5 border border-slate-700 rounded px-2 py-1">Illustrative voyage — no live AIS data</p>}
               </div>
-              {/* Right: Route map (SVG) */}
-              <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-900" style={{ minHeight: 250 }}>
-                {(() => {
-                  const f = voyage.from, t = voyage.to;
-                  const cur = ship.position || voyage.currentPosition;
-                  // Simple Mercator projection
-                  const allLats = [f.lat, t.lat, cur.lat];
-                  const allLons = [f.lon, t.lon, cur.lon];
-                  const minLat = Math.min(...allLats) - 8, maxLat = Math.max(...allLats) + 8;
-                  const minLon = Math.min(...allLons) - 12, maxLon = Math.max(...allLons) + 12;
-                  const proj = (lat: number, lon: number) => {
-                    const x = 40 + ((lon - minLon) / (maxLon - minLon)) * 520;
-                    const y = 20 + ((maxLat - lat) / (maxLat - minLat)) * 260;
-                    return [x, y];
-                  };
-                  const [fx, fy] = proj(f.lat, f.lon);
-                  const [tx, ty] = proj(t.lat, t.lon);
-                  const [cx, cy] = proj(cur.lat, cur.lon);
-                  // Curved route line (great circle approximation)
-                  const midX = (fx + tx) / 2, midY = (fy + ty) / 2 - 20;
-                  return (
-                    <svg viewBox="0 0 600 300" className="w-full h-full">
-                      {/* Grid lines */}
-                      {[0.25,0.5,0.75].map(p => <line key={p} x1="0" y1={p*300} x2="600" y2={p*300} stroke="#1e293b" strokeWidth="0.5"/>)}
-                      {[0.25,0.5,0.75].map(p => <line key={p} x1={p*600} y1="0" x2={p*600} y2="300" stroke="#1e293b" strokeWidth="0.5"/>)}
-                      {/* Route line (curved) */}
-                      <path d={`M${fx},${fy} Q${midX},${midY} ${tx},${ty}`} fill="none" stroke="#3b82f6" strokeWidth="2" strokeDasharray="8,4" opacity="0.6"/>
-                      {/* Sailed portion */}
-                      <path d={`M${fx},${fy} Q${(fx+cx)/2},${(fy+cy)/2-10} ${cx},${cy}`} fill="none" stroke="#3b82f6" strokeWidth="2.5"/>
-                      {/* From port */}
-                      <circle cx={fx} cy={fy} r="6" fill="#1e293b" stroke="#3b82f6" strokeWidth="2"/>
-                      <text x={fx} y={fy-12} textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="system-ui">{f.name.split(",")[0]}</text>
-                      {/* To port */}
-                      <circle cx={tx} cy={ty} r="6" fill="#1e293b" stroke="#ef4444" strokeWidth="2"/>
-                      <text x={tx} y={ty+18} textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="system-ui">{t.name.split(",")[0]}</text>
-                      {/* Current position */}
-                      <circle cx={cx} cy={cy} r="5" fill="#10b981" stroke="#fff" strokeWidth="2"/>
-                      <circle cx={cx} cy={cy} r="10" fill="none" stroke="#10b981" strokeWidth="1" opacity="0.4"/>
-                    </svg>
-                  );
-                })()}
-              </div>
+              {/* Right: Route map */}
+              <RouteMap
+                fromLat={voyage.from.lat} fromLon={voyage.from.lon} fromName={voyage.from.name.split(",")[0]}
+                toLat={voyage.to.lat} toLon={voyage.to.lon} toName={voyage.to.name.split(",")[0]}
+                shipLat={ship.position?.lat} shipLon={ship.position?.lon} shipName={ship.name}
+                seaDays={voyage.seaDays || String(Math.round(voyage.distanceNm / (voyage.speedKnots * 24)))}
+                distanceNm={voyage.distanceNm} progressPercent={voyage.progressPercent}
+              />
             </div>
           </CardContent>
         </Card>
