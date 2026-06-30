@@ -4,10 +4,12 @@ Cron: 30 5 * * *"""
 import sqlite3, re, time
 
 DB = "/opt/bulkwatch/db/ships.db"
-MAX_PER_RUN = 100
+MAX_PER_RUN = 200
 DELAY = 6.0
-ACCOUNTS = [("kayconrad@posteo.de", "!nfinitY!981"), ("kayconrad81@googlemail.com", "!nfinitY!981")]
-PASSWORD = "!nfinitY!981"
+ACCOUNTS = [
+    ("kayconrad81@googlemail.com", "!nfinitY!981"),
+    ("kayconrad@posteo.de", "!nfinitY!981"),
+]
 
 
 def main():
@@ -38,19 +40,31 @@ def main():
     browser = p.chromium.launch(headless=True)
     page = browser.new_page(viewport={"width": 1280, "height": 800})
 
-    # Login
-    try:
-        page.goto("https://www.equasis.org/EquasisWeb/public/HomePage", wait_until="networkidle", timeout=90000)
-        page.wait_for_timeout(2000)
-        for inp in page.query_selector_all("input[name=j_email]"):
-            if inp.is_visible(): inp.fill(EMAIL); break
-        for pw in page.query_selector_all("input[name=j_password]"):
-            if pw.is_visible(): pw.fill(PASSWORD); break
-        for s in page.query_selector_all("input[type=submit]"):
-            if s.is_visible(): s.click(); break
-        page.wait_for_timeout(5000)
-    except Exception as e:
-        print(f"Login failed: {e}", flush=True)
+    # Login - try each account
+    logged_in = False
+    for email, password in ACCOUNTS:
+        try:
+            page.goto("https://www.equasis.org/EquasisWeb/public/HomePage", wait_until="networkidle", timeout=90000)
+            page.wait_for_timeout(2000)
+            for inp in page.query_selector_all("input[name=j_email]"):
+                if inp.is_visible(): inp.fill(email); break
+            for pw in page.query_selector_all("input[name=j_password]"):
+                if pw.is_visible(): pw.fill(password); break
+            for s in page.query_selector_all("input[type=submit]"):
+                if s.is_visible(): s.click(); break
+            page.wait_for_timeout(5000)
+            body = page.inner_text("body")
+            if "locked" in body.lower():
+                print(f"  {email} locked, trying next...", flush=True)
+                continue
+            logged_in = True
+            print(f"  Logged in as {email}", flush=True)
+            break
+        except Exception as e:
+            print(f"  {email} failed: {e}", flush=True)
+            continue
+    if not logged_in:
+        print("All accounts failed!", flush=True)
         browser.close(); p.stop(); return
 
     print("Equasis login OK", flush=True)
@@ -65,20 +79,28 @@ def main():
             if consecutive_fails >= 5:
                 print("  5 consecutive fails, re-logging in...", flush=True)
                 time.sleep(60)
-                try:
-                    page.goto("https://www.equasis.org/EquasisWeb/public/HomePage", wait_until="networkidle", timeout=90000)
-                    page.wait_for_timeout(2000)
-                    for inp in page.query_selector_all("input[name=j_email]"):
-                        if inp.is_visible(): inp.fill(EMAIL); break
-                    for pw in page.query_selector_all("input[name=j_password]"):
-                        if pw.is_visible(): pw.fill(PASSWORD); break
-                    for s in page.query_selector_all("input[type=submit]"):
-                        if s.is_visible(): s.click(); break
-                    page.wait_for_timeout(5000)
-                    consecutive_fails = 0
-                    print("  Re-login OK", flush=True)
-                except:
-                    print("  Re-login failed, stopping.", flush=True)
+                relogged = False
+                for email, password in ACCOUNTS:
+                    try:
+                        page.goto("https://www.equasis.org/EquasisWeb/public/HomePage", wait_until="networkidle", timeout=90000)
+                        page.wait_for_timeout(2000)
+                        for inp in page.query_selector_all("input[name=j_email]"):
+                            if inp.is_visible(): inp.fill(email); break
+                        for pw in page.query_selector_all("input[name=j_password]"):
+                            if pw.is_visible(): pw.fill(password); break
+                        for s in page.query_selector_all("input[type=submit]"):
+                            if s.is_visible(): s.click(); break
+                        page.wait_for_timeout(5000)
+                        body = page.inner_text("body")
+                        if "locked" not in body.lower():
+                            consecutive_fails = 0
+                            relogged = True
+                            print(f"  Re-login OK ({email})", flush=True)
+                            break
+                    except:
+                        continue
+                if not relogged:
+                    print("  All accounts failed, stopping.", flush=True)
                     break
 
             try:
