@@ -457,6 +457,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                 distanceNm={voyage.distanceNm} progressPercent={voyage.progressPercent}
               />
               {/* Route Weather */}
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-2">Weather & Sea Conditions</p>
               {weather?.current && (
                 <div className="mt-4 space-y-3">
                   <div className="grid grid-cols-4 gap-2 text-center">
