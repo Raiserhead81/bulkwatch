@@ -224,7 +224,7 @@ export default function RouteMap({
     const shipIcon = L.divIcon({
       html: `<div style="position:relative">
         <div style="width:10px;height:10px;border-radius:50%;background:#10b981;border:2px solid #fff;box-shadow:0 0 8px rgba(16,185,129,0.5)"></div>
-        <div style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);padding:2px 6px;background:rgba(15,23,42,0.9);border:1px solid rgba(16,185,129,0.3);border-radius:3px;white-space:nowrap;font-size:10px;color:#e2e8f0;font-family:system-ui"><span style="color:#10b981;font-weight:600">${shipName || "Ship"}</span> <span style="color:#94a3b8;margin-left:4px">${daysRemaining}d remaining</span></div>
+        <div style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);padding:2px 6px;background:rgba(15,23,42,0.9);border:1px solid rgba(16,185,129,0.3);border-radius:3px;white-space:nowrap;font-size:10px;color:#e2e8f0;font-family:system-ui"><span style="color:#10b981;font-weight:600">${daysRemaining}d</span> <span style="color:#94a3b8">remaining</span></div>
       </div>`,
       className: "",
       iconSize: [10, 10],
