@@ -64,7 +64,7 @@ export default function LoginPage() {
       }}>
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <img src="/icon-maritime-ai.png" alt="Maritime AI" style={{ width: 96, height: 96, margin: "0 auto 16px", display: "block" }} />
+          <img src="/icon-maritime-ai.png" alt="Maritime AI" style={{ width: 96, height: 96, margin: "0 auto 16px", display: "block", borderRadius: "50%", objectFit: "cover" }} />
           <h1 style={{
             fontSize: 28, fontWeight: 800, letterSpacing: -0.5, margin: 0,
             background: "linear-gradient(180deg, #fff, #94a3b8)",
