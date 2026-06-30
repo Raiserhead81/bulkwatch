@@ -65,13 +65,16 @@ def main():
 
     for imo, name, stype, dwt, year_built, builder, flag, status in ships:
         etype = stype
-        # Small ships misclassified as Handymax/Handysize
-        if stype in ("Handymax", "Handysize") and dwt < 5000: etype = "General Cargo"
-        if stype == "General Cargo" and dwt >= 150000: etype = "Capesize"
-        elif stype == "General Cargo" and dwt >= 80000: etype = "Kamsarmax"
-        elif stype == "General Cargo" and dwt >= 55000: etype = "Supramax"
-        elif stype == "General Cargo" and dwt >= 40000: etype = "Handymax"
-        elif stype == "General Cargo" and dwt >= 25000: etype = "Handysize"
+        # Normalize types by DWT (many ships are misclassified)
+        if dwt < 5000:
+            etype = "General Cargo"  # tiny ships
+        elif stype in ("General Cargo", "Bulk Carrier", "Handymax", "Handysize"):
+            if dwt >= 150000: etype = "Capesize"
+            elif dwt >= 80000: etype = "Kamsarmax"
+            elif dwt >= 55000: etype = "Supramax"
+            elif dwt >= 40000: etype = "Handymax"
+            elif dwt >= 25000: etype = "Handysize"
+            else: etype = "Handysize"  # 5000-25000 DWT
         factor = DWT_FACTORS.get(etype, DWT_FACTORS.get(stype, 500))
         base = max(dwt * factor, 2_000_000)
 

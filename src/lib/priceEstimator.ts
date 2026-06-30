@@ -132,12 +132,17 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   // DWT × $/DWT factor — calibrated against 86 real S&P transactions (Q2 2026)
   // For "General Cargo" with high DWT, use bulk carrier factors (they're misclassified)
   let effectiveType = ship.type;
-  if ((ship.type === "Handymax" || ship.type === "Handysize") && ship.dwt < 5000) effectiveType = "General Cargo";
-  if (ship.type === "General Cargo" && ship.dwt >= 150000) effectiveType = "Capesize";
-  else if (ship.type === "General Cargo" && ship.dwt >= 80000) effectiveType = "Kamsarmax";
-  else if (ship.type === "General Cargo" && ship.dwt >= 55000) effectiveType = "Supramax";
-  else if (ship.type === "General Cargo" && ship.dwt >= 40000) effectiveType = "Handymax";
-  else if (ship.type === "General Cargo" && ship.dwt >= 25000) effectiveType = "Handysize";
+  // Normalize by DWT — many ships are misclassified
+  const bulkTypes = ["General Cargo", "Bulk Carrier", "Handymax", "Handysize"];
+  if (ship.dwt < 5000) {
+    effectiveType = "General Cargo";
+  } else if (bulkTypes.includes(ship.type)) {
+    if (ship.dwt >= 150000) effectiveType = "Capesize";
+    else if (ship.dwt >= 80000) effectiveType = "Kamsarmax";
+    else if (ship.dwt >= 55000) effectiveType = "Supramax";
+    else if (ship.dwt >= 40000) effectiveType = "Handymax";
+    else effectiveType = "Handysize"; // 5000-25000 DWT
+  }
   const dwtFactor = DWT_FACTORS[effectiveType] ?? DWT_FACTORS[ship.type] ?? DWT_FACTORS["Other"] ?? 500;
   const typeFallback = BASE_PRICES[ship.type] ?? BASE_PRICES["Other"] ?? 8_000_000;
   let basePrice = ship.dwt > 0 ? Math.max(ship.dwt * dwtFactor, typeFallback * 0.3) : typeFallback;
