@@ -70,17 +70,27 @@ export default function Home() {
   const [theme, setTheme] = useState<"dark"|"light">("dark");
 
   useEffect(() => {
-    const saved = localStorage.getItem("vessel-theme") || "dark";
-    setTheme(saved as "dark"|"light");
-    document.documentElement.classList.toggle("light", saved === "light"); document.documentElement.classList.toggle("dark", saved !== "light");
-  }, []);
+    const readTheme = () => {
+      const saved = localStorage.getItem("vessel-theme") || "dark";
+      setTheme(saved as "dark"|"light");
+    };
+    readTheme();
 
-  const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    localStorage.setItem("vessel-theme", next);
-    document.documentElement.classList.toggle("light", next === "light"); document.documentElement.classList.toggle("dark", next !== "light");
-  };
+    // Sync when GlobalNav (or another tab) changes theme
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "vessel-theme") readTheme();
+    };
+    window.addEventListener("storage", onStorage);
+
+    // Observe class changes on <html> (same-tab toggle from GlobalNav)
+    const obs = new MutationObserver(() => readTheme());
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      obs.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     fetch("/api/auth/me").then(r=>r.json()).then(d=>{if(d.user) setCurrentUser(d.user)}).catch(()=>{});

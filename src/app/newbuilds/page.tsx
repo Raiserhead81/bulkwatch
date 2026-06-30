@@ -48,6 +48,20 @@ function typeColor(type: string): string {
 
 export default function NewbuildsPage() {
   const [ships, setShips] = useState<NewbuildShip[]>([]);
+
+  const [theme, setTheme] = useState<"dark"|"light">("dark");
+
+  useEffect(() => {
+    const readTheme = () => {
+      const saved = localStorage.getItem("vessel-theme") || "dark";
+      setTheme(saved as "dark"|"light");
+    };
+    readTheme();
+    const obs = new MutationObserver(() => readTheme());
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
+
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -70,8 +84,10 @@ export default function NewbuildsPage() {
   }
   const sortedKeys = Object.keys(groups).sort();
 
+  const isLight = theme === "light";
+
   return (
-    <div style={{ minHeight: "100vh", background: "#0f172a", color: "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: isLight ? "#f8fafc" : "#0f172a", color: isLight ? "#1e293b" : "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
       {/* Mobile menu */}
       <div className={`mobile-nav-overlay${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
       <div className={`mobile-nav-panel${menuOpen ? " open" : ""}`}>
@@ -81,7 +97,7 @@ export default function NewbuildsPage() {
         ))}
       </div>
 
-      <div className="page-header" style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "16px 24px" }}>
+      <div className="page-header" style={{ background: isLight ? "#ffffff" : "#1e293b", borderBottom: `1px solid ${isLight ? "#e2e8f0" : "#1e3a5f"}`, padding: "16px 24px" }}>
         <div style={{ maxWidth: "95%", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#38bdf8", display: "flex", alignItems: "center", gap: 10 }}>
@@ -100,7 +116,7 @@ export default function NewbuildsPage() {
         </div>
       </div>
 
-      <div style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "12px 24px" }}>
+      <div style={{ background: isLight ? "#ffffff" : "#1e293b", borderBottom: `1px solid ${isLight ? "#e2e8f0" : "#1e3a5f"}`, padding: "12px 24px" }}>
         <div className="stats-bar" style={{ maxWidth: "95%", margin: "0 auto", display: "flex", gap: 32, fontSize: 13 }}>
           {[
             ["Total Orders", ships.length.toString()],
@@ -123,7 +139,7 @@ export default function NewbuildsPage() {
             onClick={() => setTypeFilter("")}
             style={{
               padding: "6px 14px", borderRadius: 20, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
-              background: !typeFilter ? "#2563eb" : "#1e293b", color: !typeFilter ? "#fff" : "#94a3b8",
+              background: !typeFilter ? "#2563eb" : isLight ? "#e2e8f0" : "#1e293b", color: !typeFilter ? "#fff" : isLight ? "#475569" : "#94a3b8",
             }}
           >All ({ships.length})</button>
           {types.map(t => {
@@ -132,7 +148,7 @@ export default function NewbuildsPage() {
               <button key={t} onClick={() => setTypeFilter(typeFilter === t ? "" : t)}
                 style={{
                   padding: "6px 14px", borderRadius: 20, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
-                  background: typeFilter === t ? typeColor(t) : "#1e293b", color: typeFilter === t ? "#fff" : "#94a3b8",
+                  background: typeFilter === t ? typeColor(t) : isLight ? "#e2e8f0" : "#1e293b", color: typeFilter === t ? "#fff" : isLight ? "#475569" : "#94a3b8",
                   borderLeft: `3px solid ${typeColor(t)}`,
                 }}
               >{t} ({count})</button>
@@ -154,7 +170,7 @@ export default function NewbuildsPage() {
                 {groups[key].map(ship => (
                   <a key={ship.imo} href={`/schiff/${ship.imo}`}
                     style={{
-                      display: "block", background: "#1e293b", borderRadius: 12, overflow: "hidden",
+                      display: "block", background: isLight ? "#ffffff" : "#1e293b", borderRadius: 12, overflow: "hidden",
                       border: "1px solid #1e3a5f", textDecoration: "none", color: "inherit",
                     }}
                   >

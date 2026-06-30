@@ -158,10 +158,23 @@ function haversine(lat1: number, lon1: number, lat2: number, lon2: number): numb
 }
 
 const NAV: [string,string][] = [["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"],["AI Chat","/chat"]];
-const inpStyle: React.CSSProperties = { padding: "10px 14px", background: "#1e293b", border: "1px solid #334155", borderRadius: 8, color: "#e2e8f0", fontSize: 14, width: "100%" };
+const inpStyleDark: React.CSSProperties = { padding: "10px 14px", background: "#1e293b", border: "1px solid #334155", borderRadius: 8, color: "#e2e8f0", fontSize: 14, width: "100%" };
+const inpStyleLight: React.CSSProperties = { padding: "10px 14px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: 8, color: "#1e293b", fontSize: 14, width: "100%" };
 
 export default function VoyageCalcPage() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [theme, setTheme] = useState<"dark"|"light">("dark");
+
+  useEffect(() => {
+    const readTheme = () => {
+      const saved = localStorage.getItem("vessel-theme") || "dark";
+      setTheme(saved as "dark"|"light");
+    };
+    readTheme();
+    const obs = new MutationObserver(() => readTheme());
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
   const [fromCode, setFromCode] = useState("");
   const [toCode, setToCode] = useState("");
   const [dwt, setDwt] = useState(80000);
@@ -274,12 +287,14 @@ export default function VoyageCalcPage() {
       .catch(() => {});
   }, [fromCode, toCode]);
 
-  const box: React.CSSProperties = { background: "#1e293b", borderRadius: 12, border: "1px solid #1e3a5f", padding: 20 };
-  const labelStyle: React.CSSProperties = { fontSize: 12, color: "#64748b", marginBottom: 4, display: "block" };
+  const isLight = theme === "light";
+  const inpStyle = isLight ? inpStyleLight : inpStyleDark;
+  const box: React.CSSProperties = { background: isLight ? "#ffffff" : "#1e293b", borderRadius: 12, border: `1px solid ${isLight ? "#e2e8f0" : "#1e3a5f"}`, padding: 20 };
+  const labelStyle: React.CSSProperties = { fontSize: 12, color: isLight ? "#475569" : "#64748b", marginBottom: 4, display: "block" };
   const bigNum: React.CSSProperties = { fontSize: 28, fontWeight: 700, color: "#38bdf8" };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0f172a", color: "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: isLight ? "#f8fafc" : "#0f172a", color: isLight ? "#1e293b" : "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
       {/* Mobile menu */}
       <div className={`mobile-nav-overlay${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
       <div className={`mobile-nav-panel${menuOpen ? " open" : ""}`}>
@@ -289,7 +304,7 @@ export default function VoyageCalcPage() {
         ))}
       </div>
 
-      <div className="page-header" style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "16px 24px" }}>
+      <div className="page-header" style={{ background: isLight ? "#ffffff" : "#1e293b", borderBottom: `1px solid ${isLight ? "#e2e8f0" : "#1e3a5f"}`, padding: "16px 24px" }}>
         <div style={{ maxWidth: "95%", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#38bdf8" }}>Voyage Calculator</h1>
@@ -397,7 +412,7 @@ export default function VoyageCalcPage() {
 
                 <div style={box}>
                   {/* Route Map */}
-                  <div style={{ marginBottom: 20, borderRadius: 8, overflow: "hidden", border: "1px solid #1e293b" }}>
+                  <div style={{ marginBottom: 20, borderRadius: 8, overflow: "hidden", border: `1px solid ${isLight ? "#e2e8f0" : "#1e293b"}` }}>
                     <RouteMap
                       fromLat={result.from.lat} fromLon={result.from.lon} fromName={result.from.name}
                       toLat={result.to.lat} toLon={result.to.lon} toName={result.to.name}
@@ -417,21 +432,21 @@ export default function VoyageCalcPage() {
                     ) : weather?.current ? (
                       <div>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
-                          <div style={{ background: "#0f172a", borderRadius: 8, padding: 12, textAlign: "center" }}>
+                          <div style={{ background: isLight ? "#f1f5f9" : "#0f172a", borderRadius: 8, padding: 12, textAlign: "center" }}>
                             <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>Condition</div>
                             <div style={{ fontSize: 16, fontWeight: 700, color: weather.current.condition === "excellent" ? "#4ade80" : weather.current.condition === "good" ? "#38bdf8" : weather.current.condition === "moderate" ? "#fbbf24" : "#f87171" }}>
                               {weather.current.condition.charAt(0).toUpperCase() + weather.current.condition.slice(1)}
                             </div>
                           </div>
-                          <div style={{ background: "#0f172a", borderRadius: 8, padding: 12, textAlign: "center" }}>
+                          <div style={{ background: isLight ? "#f1f5f9" : "#0f172a", borderRadius: 8, padding: 12, textAlign: "center" }}>
                             <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>Waves (avg/max)</div>
                             <div style={{ fontSize: 16, fontWeight: 700, color: "#e2e8f0" }}>{weather.current.avgWaveHeight}m / {weather.current.maxWaveHeight}m</div>
                           </div>
-                          <div style={{ background: "#0f172a", borderRadius: 8, padding: 12, textAlign: "center" }}>
+                          <div style={{ background: isLight ? "#f1f5f9" : "#0f172a", borderRadius: 8, padding: 12, textAlign: "center" }}>
                             <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>Wind (Beaufort)</div>
                             <div style={{ fontSize: 16, fontWeight: 700, color: "#e2e8f0" }}>Bft {weather.current.avgBeaufort.scale} — {weather.current.avgBeaufort.description}</div>
                           </div>
-                          <div style={{ background: "#0f172a", borderRadius: 8, padding: 12, textAlign: "center" }}>
+                          <div style={{ background: isLight ? "#f1f5f9" : "#0f172a", borderRadius: 8, padding: 12, textAlign: "center" }}>
                             <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>Speed Loss</div>
                             <div style={{ fontSize: 16, fontWeight: 700, color: weather.current.estimatedSpeedLoss > 10 ? "#f87171" : "#4ade80" }}>-{weather.current.estimatedSpeedLoss}%</div>
                           </div>
@@ -442,7 +457,7 @@ export default function VoyageCalcPage() {
                             <div style={{ fontSize: 13, fontWeight: 600, color: "#94a3b8", marginBottom: 8 }}>7-Day Forecast</div>
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
                               {weather.forecast.days.map((d: any) => (
-                                <div key={d.date} style={{ background: "#0f172a", borderRadius: 6, padding: "8px 4px", textAlign: "center", borderTop: d.condition === "good" ? "2px solid #4ade80" : d.condition === "moderate" ? "2px solid #fbbf24" : "2px solid #f87171" }}>
+                                <div key={d.date} style={{ background: isLight ? "#f1f5f9" : "#0f172a", borderRadius: 6, padding: "8px 4px", textAlign: "center", borderTop: d.condition === "good" ? "2px solid #4ade80" : d.condition === "moderate" ? "2px solid #fbbf24" : "2px solid #f87171" }}>
                                   <div style={{ fontSize: 10, color: "#64748b" }}>{new Date(d.date).toLocaleDateString("en-GB", { weekday: "short" })}</div>
                                   <div style={{ fontSize: 13, fontWeight: 700, color: "#e2e8f0", margin: "2px 0" }}>{d.waveHeightMax.toFixed(1)}m</div>
                                   <div style={{ fontSize: 10, color: "#64748b" }}>Bft {d.beaufort}</div>

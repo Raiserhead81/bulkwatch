@@ -30,6 +30,20 @@ export default function FleetPage() {
   const params = useParams();
   const operatorSlug = decodeURIComponent(params.operator as string);
   const [ships, setShips] = useState<FleetShip[]>([]);
+
+  const [theme, setTheme] = useState<"dark"|"light">("dark");
+
+  useEffect(() => {
+    const readTheme = () => {
+      const saved = localStorage.getItem("vessel-theme") || "dark";
+      setTheme(saved as "dark"|"light");
+    };
+    readTheme();
+    const obs = new MutationObserver(() => readTheme());
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
+
   const [op, setOp] = useState<OperatorInfo | null>(null);
   const [stats, setStats] = useState<FleetStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,9 +77,11 @@ export default function FleetPage() {
     return sum + s.dwt * basePricePerDwt * ageFactor;
   }, 0);
 
+  const isLight = theme === "light";
+
   return (
-    <div style={{ minHeight: "100vh", background: "#0f172a", color: "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
-      <div style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "16px 24px" }}>
+    <div style={{ minHeight: "100vh", background: isLight ? "#f8fafc" : "#0f172a", color: isLight ? "#1e293b" : "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
+      <div style={{ background: isLight ? "#ffffff" : "#1e293b", borderBottom: `1px solid ${isLight ? "#e2e8f0" : "#1e3a5f"}`, padding: "16px 24px" }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#38bdf8" }}>
@@ -84,7 +100,7 @@ export default function FleetPage() {
       </div>
 
       {op && (
-        <div style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "16px 24px" }}>
+        <div style={{ background: isLight ? "#ffffff" : "#1e293b", borderBottom: `1px solid ${isLight ? "#e2e8f0" : "#1e3a5f"}`, padding: "16px 24px" }}>
           <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", gap: 48, flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 280 }}>
               <div style={{ fontSize: 13, color: "#64748b", marginBottom: 8 }}>Contact</div>
@@ -115,7 +131,7 @@ export default function FleetPage() {
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16, alignItems: "center" }}>
           <button onClick={() => setTypeFilter("")}
             style={{ padding: "6px 14px", borderRadius: 20, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
-              background: !typeFilter ? "#2563eb" : "#1e293b", color: !typeFilter ? "#fff" : "#94a3b8" }}>
+              background: !typeFilter ? "#2563eb" : isLight ? "#e2e8f0" : "#1e293b", color: !typeFilter ? "#fff" : isLight ? "#475569" : "#94a3b8" }}>
             All ({ships.length})
           </button>
           {types.map(t => {
@@ -123,7 +139,7 @@ export default function FleetPage() {
             return (
               <button key={t} onClick={() => setTypeFilter(typeFilter === t ? "" : t)}
                 style={{ padding: "6px 14px", borderRadius: 20, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
-                  background: typeFilter === t ? typeColor(t) : "#1e293b", color: typeFilter === t ? "#fff" : "#94a3b8",
+                  background: typeFilter === t ? typeColor(t) : isLight ? "#e2e8f0" : "#1e293b", color: typeFilter === t ? "#fff" : isLight ? "#475569" : "#94a3b8",
                   borderLeft: `3px solid ${typeColor(t)}` }}>
                 {t} ({count})
               </button>
@@ -131,7 +147,7 @@ export default function FleetPage() {
           })}
           <div style={{ marginLeft: "auto" }}>
             <select value={sortBy} onChange={e => setSortBy(e.target.value)}
-              style={{ padding: "6px 12px", background: "#1e293b", border: "1px solid #334155", borderRadius: 8, color: "#e2e8f0", fontSize: 13 }}>
+              style={{ padding: "6px 12px", background: isLight ? "#ffffff" : "#1e293b", border: `1px solid ${isLight ? "#cbd5e1" : "#334155"}`, borderRadius: 8, color: isLight ? "#1e293b" : "#e2e8f0", fontSize: 13 }}>
               <option value="dwt">Sort by DWT</option>
               <option value="name">Sort by Name</option>
               <option value="year">Sort by Year</option>
@@ -147,7 +163,7 @@ export default function FleetPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 12 }}>
             {filtered.map(ship => (
               <a key={ship.imo} href={`/schiff/${ship.imo}`}
-                style={{ display: "block", background: "#1e293b", borderRadius: 12, overflow: "hidden",
+                style={{ display: "block", background: isLight ? "#ffffff" : "#1e293b", borderRadius: 12, overflow: "hidden",
                   border: "1px solid #1e3a5f", textDecoration: "none", color: "inherit" }}>
                 {ship.imageUrl ? (
                   <img src={ship.imageUrl} alt={ship.name} style={{ width: "100%", height: 140, objectFit: "cover" }}

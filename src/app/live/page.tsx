@@ -7,7 +7,7 @@ import AISLivePanel from "@/components/ais-live-panel";
 
 export default function LivePage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white">
       <div className="max-w-[95%] mx-auto px-4 py-6 sm:py-10 space-y-6">
         <div className="flex items-center gap-3">
           <Link

@@ -160,6 +160,18 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [lang, setLang] = useState<"en" | "de">("en");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [theme, setTheme] = useState<"dark"|"light">("dark");
+
+  useEffect(() => {
+    const readTheme = () => {
+      const saved = localStorage.getItem("vessel-theme") || "dark";
+      setTheme(saved as "dark"|"light");
+    };
+    readTheme();
+    const obs = new MutationObserver(() => readTheme());
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -660,7 +672,7 @@ export default function ChatPage() {
         }
       `}} />
 
-      <div className="vdb-root">
+      <div className={`vdb-root ${theme === "light" ? "vdb-light" : ""}`}>
         {/* ── Header ── */}
         <header className="vdb-header">
           <a href="/" className="vdb-logo">

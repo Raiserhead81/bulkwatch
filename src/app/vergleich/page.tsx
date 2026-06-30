@@ -22,6 +22,20 @@ function estimateValue(ship: Ship): number {
 
 export default function ComparePage() {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const [theme, setTheme] = useState<"dark"|"light">("dark");
+
+  useEffect(() => {
+    const readTheme = () => {
+      const saved = localStorage.getItem("vessel-theme") || "dark";
+      setTheme(saved as "dark"|"light");
+    };
+    readTheme();
+    const obs = new MutationObserver(() => readTheme());
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
+
   const [selectedShips, setSelectedShips] = useState<Ship[]>([]);
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<Ship[]>([]);
@@ -78,8 +92,9 @@ export default function ComparePage() {
     setSelectedShips(prev => prev.filter(s => s.imo !== imo));
   };
 
-  const inp: React.CSSProperties = { padding: "10px 14px", background: "#1e293b", border: "1px solid #334155", borderRadius: 8, color: "#e2e8f0", fontSize: 14, width: "100%", outline: "none" };
-  const box: React.CSSProperties = { background: "#1e293b", borderRadius: 12, border: "1px solid #1e3a5f", padding: 16 };
+  const isLight = theme === "light";
+  const inp: React.CSSProperties = { padding: "10px 14px", background: isLight ? "#ffffff" : "#1e293b", border: `1px solid ${isLight ? "#cbd5e1" : "#334155"}`, borderRadius: 8, color: isLight ? "#1e293b" : "#e2e8f0", fontSize: 14, width: "100%", outline: "none" };
+  const box: React.CSSProperties = { background: isLight ? "#ffffff" : "#1e293b", borderRadius: 12, border: `1px solid ${isLight ? "#e2e8f0" : "#1e3a5f"}`, padding: 16 };
 
   // Best values for highlighting
   const prices = selectedShips.map(s => estimateValue(s));
@@ -108,8 +123,9 @@ export default function ComparePage() {
     { label: "$/DWT", getValue: s => s.dwt > 0 ? `$${(estimateValue(s) / s.dwt).toFixed(0)}` : "\u2014" },
   ];
 
+
   return (
-    <div style={{ minHeight: "100vh", background: "#0f172a", color: "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: isLight ? "#f8fafc" : "#0f172a", color: isLight ? "#1e293b" : "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
       <div className={`mobile-nav-overlay${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
       <div className={`mobile-nav-panel${menuOpen ? " open" : ""}`}>
         <button className="mobile-nav-close" onClick={() => setMenuOpen(false)}>&#x2715;</button>
@@ -118,7 +134,7 @@ export default function ComparePage() {
         ))}
       </div>
 
-      <div className="page-header" style={{ background: "#1e293b", borderBottom: "1px solid #1e3a5f", padding: "16px 24px" }}>
+      <div className="page-header" style={{ background: isLight ? "#ffffff" : "#1e293b", borderBottom: `1px solid ${isLight ? "#e2e8f0" : "#1e3a5f"}`, padding: "16px 24px" }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#38bdf8" }}>Compare Vessels</h1>
@@ -154,7 +170,7 @@ export default function ComparePage() {
               {searchResults.map(ship => (
                 <button key={ship.imo} onClick={() => addShip(ship)}
                   style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px",
-                    background: "#0f172a", border: "1px solid #1e3a5f", borderRadius: 8, color: "#e2e8f0",
+                    background: isLight ? "#f1f5f9" : "#0f172a", border: `1px solid ${isLight ? "#e2e8f0" : "#1e3a5f"}`, borderRadius: 8, color: isLight ? "#1e293b" : "#e2e8f0",
                     cursor: "pointer", textAlign: "left", width: "100%" }}>
                   <div>
                     <span style={{ fontWeight: 600, fontSize: 14 }}>{ship.name}</span>

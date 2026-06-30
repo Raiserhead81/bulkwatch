@@ -205,9 +205,9 @@ export default function ValuationPage() {
   const result = calculate(dwt, yearBuilt, shipType, builder, fuelType, surveyStatus, bdiOverride);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white">
       {/* Header */}
-      <header className="border-b border-blue-500/10 bg-slate-950/90 backdrop-blur-md sticky top-0 z-10">
+      <header className="border-b border-blue-500/10 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md sticky top-0 z-10">
         <div className="max-w-[95%] mx-auto px-6 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-sm text-slate-400 hover:text-blue-400">
             <ArrowLeft className="h-4 w-4" /> Back
@@ -225,7 +225,7 @@ export default function ValuationPage() {
 
           {/* Input Panel */}
           <div className="space-y-6">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
               <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
                 <Ship className="h-5 w-5 text-blue-400" /> Vessel Specifications
               </h2>
@@ -281,7 +281,7 @@ export default function ValuationPage() {
             </div>
 
             {/* Eco & Market Adjustments */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
               <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
                 <Fuel className="h-5 w-5 text-emerald-400" /> Eco & Market
               </h2>
@@ -323,7 +323,7 @@ export default function ValuationPage() {
             </div>
 
             {/* Model Info */}
-            <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-5 text-xs text-slate-500">
+            <div className="bg-white/50 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-5 text-xs text-slate-500">
               <p className="font-semibold text-slate-400 mb-2">Model: Power-Law × Exponential Depreciation</p>
               <p>Calibrated against 86 real S&P transactions (Q2 2026). Sources: NautiSNP, Xclusiv Shipbrokers, Clarksons, Hellenic Shipping News.</p>
               <p className="mt-2">Size class: <span className="text-blue-400 font-mono">{result.sizeClass}</span> — RMSE: {result.sizeClass === "large" ? "13.5%" : result.sizeClass === "vlarge" ? "20.7%" : result.sizeClass === "medium" ? "24.3%" : "26.9%"}</p>
@@ -343,7 +343,7 @@ export default function ValuationPage() {
             </div>
 
             {/* Factor Breakdown */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
               <h3 className="text-sm font-bold mb-4 flex items-center gap-2">
                 <TrendingDown className="h-4 w-4 text-slate-400" /> Valuation Breakdown
               </h3>
@@ -394,7 +394,7 @@ export default function ValuationPage() {
             </div>
 
             {/* Depreciation Curve */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
               <h3 className="text-sm font-bold mb-4">Depreciation Curve (this vessel)</h3>
               <div className="h-56">
                 <svg viewBox="0 0 500 140" className="w-full h-full">
