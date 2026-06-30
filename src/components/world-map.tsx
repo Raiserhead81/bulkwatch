@@ -173,6 +173,8 @@ export default function WorldMap({ ships, height = "100%", typeFilter = "", focu
   const seaMarkRef = useRef<L.TileLayer | null>(null);
 
   const [showLive, setShowLive] = useState(true);
+  // Disable live layer when focusing on a single ship
+  const effectiveShowLive = focusImo ? false : showLive;
   const [showDB, setShowDB] = useState(true);
   const [showSeamarks, setShowSeamarks] = useState(false);
   const [selectedType, setSelectedType] = useState("");
@@ -308,14 +310,31 @@ export default function WorldMap({ ships, height = "100%", typeFilter = "", focu
         .bindPopup(buildPopup(ship, color), { maxWidth: 240, className: "vessel-popup" });
       marker.addTo(cluster);
 
-      // If this is the focused ship, zoom in and open popup
+      // If this is the focused ship, use a big pulsing marker and zoom in
       if (focusImo && ship.imo === focusImo) {
+        // Remove the small dot marker
+        cluster.removeLayer(marker);
+        // Create a big highlighted marker directly on map (not in cluster)
+        const focusIcon = L.divIcon({
+          html: `<div style="position:relative">
+            <div style="width:40px;height:40px;background:${color};border:3px solid #fff;border-radius:50%;box-shadow:0 0 20px ${color},0 0 40px ${color}80;display:flex;align-items:center;justify-content:center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0020 0h-3"/><circle cx="12" cy="5" r="3"/></svg>
+            </div>
+            <div style="position:absolute;inset:-8px;border:2px solid ${color};border-radius:50%;animation:pulse-ring 1.5s ease-out infinite;opacity:0"></div>
+          </div>
+          <style>@keyframes pulse-ring{0%{transform:scale(.8);opacity:.8}100%{transform:scale(1.8);opacity:0}}</style>`,
+          className: "",
+          iconSize: [40, 40],
+          iconAnchor: [20, 20],
+          popupAnchor: [0, -24],
+        });
+        const focusMarker = L.marker([pos.lat, pos.lon], { icon: focusIcon, zIndexOffset: 10000 })
+          .bindPopup(buildPopup(ship, color), { maxWidth: 240, className: "vessel-popup" })
+          .addTo(map);
         setTimeout(() => {
-          map.setView([pos.lat, pos.lon], focusZoom || 10);
-          cluster.zoomToShowLayer(marker, () => {
-            marker.openPopup();
-          });
-        }, 800);
+          map.setView([pos.lat, pos.lon], 12);
+          focusMarker.openPopup();
+        }, 500);
       }
     }
   }, [ships, showDB, activeType, focusImo, focusZoom]);
@@ -325,7 +344,7 @@ export default function WorldMap({ ships, height = "100%", typeFilter = "", focu
     const cluster = liveClusterRef.current;
     if (!cluster) return;
     cluster.clearLayers();
-    if (!showLive) return;
+    if (!effectiveShowLive) return;
 
     // When a filter is active (ships prop is a subset), only show live markers
     // for ships that are in the filtered set
@@ -365,16 +384,16 @@ export default function WorldMap({ ships, height = "100%", typeFilter = "", focu
       );
     }
     (cluster as any).addLayers(markers); // batch add — much faster than individual addTo()
-  }, [liveShips, showLive, dbByImo, dbNameSet, activeType, ships]);
+  }, [liveShips, effectiveShowLive, dbByImo, dbNameSet, activeType, ships]);
 
   // ── Layer visibility ─────────────────────────────────────────────────────
   useEffect(() => {
     const map = mapRef.current;
     const cl = liveClusterRef.current;
     if (!map || !cl) return;
-    if (showLive) map.addLayer(cl);
+    if (effectiveShowLive) map.addLayer(cl);
     else map.removeLayer(cl);
-  }, [showLive]);
+  }, [effectiveShowLive]);
 
   useEffect(() => {
     const map = mapRef.current;
