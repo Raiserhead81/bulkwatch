@@ -208,7 +208,7 @@ export default function ValuationPage() {
     <div className="min-h-screen bg-slate-950 text-white">
       {/* Header */}
       <header className="border-b border-blue-500/10 bg-slate-950/90 backdrop-blur-md sticky top-0 z-10">
-        <div className="max-w-screen-2xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div className="max-w-[95%] mx-auto px-6 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-sm text-slate-400 hover:text-blue-400">
             <ArrowLeft className="h-4 w-4" /> Back
           </Link>
@@ -220,7 +220,7 @@ export default function ValuationPage() {
         </div>
       </header>
 
-      <div className="max-w-screen-2xl mx-auto px-6 py-10">
+      <div className="max-w-[95%] mx-auto px-6 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
           {/* Input Panel */}

@@ -77,7 +77,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white">
       {/* Header */}
       <header className="sticky top-0 z-20 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-        <div className="max-w-[min(95%,1600px)] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+        <div className="max-w-[95%] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2 text-sm hover:text-blue-600 dark:hover:text-cyan-400">
             <ArrowLeft className="h-4 w-4" /> Back
           </Link>
@@ -92,7 +92,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       </header>
 
-      <main className="max-w-[min(95%,1600px)] mx-auto px-4 sm:px-6 py-5 space-y-5">
+      <main className="max-w-[95%] mx-auto px-4 sm:px-6 py-5 space-y-5">
 
         {/* ═══ HERO: Ship Name + Image ═══ */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
