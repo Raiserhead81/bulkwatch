@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Static + API: always pass through
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
@@ -13,13 +12,16 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check session cookie
   const session = req.cookies.get("vessel_session")?.value;
-  if (session === "authenticated") {
-    return NextResponse.next();
+  // Accept both old "authenticated" and new JSON session
+  if (session) {
+    if (session === "authenticated") return NextResponse.next();
+    try {
+      const data = JSON.parse(session);
+      if (data.username) return NextResponse.next();
+    } catch {}
   }
 
-  // No session -> login page
   return NextResponse.redirect(new URL("/login", req.url));
 }
 

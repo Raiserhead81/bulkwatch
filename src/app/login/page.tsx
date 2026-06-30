@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Anchor, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,14 +19,14 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
 
       if (data.ok) {
         window.location.href = "/";
       } else {
-        setError("Wrong password");
+        setError("Invalid username or password");
         setLoading(false);
       }
     } catch {
@@ -100,7 +101,35 @@ export default function LoginPage() {
             display: "block", fontSize: 12, fontWeight: 650, color: "#94a3b8",
             marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em",
           }}>
-            Access Code
+            Username
+          </label>
+          <div style={{ position: "relative", marginBottom: 16 }}>
+            <Anchor style={{
+              position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)",
+              width: 16, height: 16, color: "#64748b",
+            }} />
+            <input
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="Enter username"
+              required
+              autoFocus
+              autoComplete="off"
+              style={{
+                width: "100%", padding: "14px 16px 14px 42px",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 12, background: "rgba(255,255,255,0.04)",
+                color: "#fff", fontSize: 15, outline: "none",
+                fontFamily: "inherit",
+              }}
+            />
+          </div>
+          <label style={{
+            display: "block", fontSize: 12, fontWeight: 650, color: "#94a3b8",
+            marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em",
+          }}>
+            Password
           </label>
           <div style={{ position: "relative", marginBottom: 20 }}>
             <Lock style={{
@@ -111,9 +140,8 @@ export default function LoginPage() {
               type={showPw ? "text" : "password"}
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="Enter access code"
+              placeholder="Enter password"
               required
-              autoFocus
               style={{
                 width: "100%", padding: "14px 44px 14px 42px",
                 border: "1px solid rgba(255,255,255,0.12)",
