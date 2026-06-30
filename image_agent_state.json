@@ -5,76 +5,80 @@
     "done": false
   },
   "commons_cats": {
-    "last_run": 1782703806,
+    "last_run": 1782790205,
     "done_cats": [
-      "Maersk ships",
-      "Ships of Panama",
-      "MSC (container ships)",
-      "Ships of Greece",
-      "Ships of Germany",
-      "General cargo ships",
-      "Oil tankers",
-      "Bulk carriers (ships)",
-      "Ships of Netherlands",
+      "Oldendorff Carriers",
       "Container ships",
-      "CMA CGM ships",
+      "Hapag-Lloyd ships",
+      "Bulk carriers at port",
+      "Ships of Panama",
       "Ships of Liberia",
+      "Bulk carriers (ships)",
+      "MSC (container ships)",
+      "Ships of Germany",
+      "Ships of Netherlands",
+      "Ships of Marshall Islands",
+      "Ships of Norway",
+      "Ships of Greece",
+      "Evergreen Marine ships",
+      "Container ships at port",
+      "Maersk ships",
+      "General cargo ships",
       "Chemical tankers",
       "LNG carriers",
-      "Ships of Marshall Islands",
-      "Hapag-Lloyd ships",
-      "Evergreen Marine ships",
-      "Ships of Norway",
+      "Oil tankers",
       "Ro-ro ships",
-      "Container ships at port",
       "Ships of Bahamas",
-      "Bulk carriers at port",
-      "Oldendorff Carriers"
+      "CMA CGM ships"
     ]
   },
   "commons_search": {
-    "last_run": 1782703861,
+    "last_run": 1782790272,
     "done_queries": [
-      "cargo vessel IMO",
-      "vessel IMO 9",
       "ore carrier IMO 9",
-      "ship IMO 9",
-      "tanker IMO 9",
-      "ms IMO ship",
-      "cargo ship IMO 9",
-      "containership IMO 9",
-      "container ship IMO 9",
-      "bulkcarrier IMO",
       "bulk carrier IMO 9",
-      "mv IMO ship"
+      "ship IMO 9",
+      "chemical tanker IMO",
+      "LNG tanker IMO",
+      "tanker IMO 9",
+      "cargo ship IMO 9",
+      "bulkcarrier IMO",
+      "car carrier IMO",
+      "cargo vessel IMO",
+      "mv IMO ship",
+      "vessel IMO 9",
+      "ms IMO ship",
+      "reefer ship IMO",
+      "container ship IMO 9",
+      "containership IMO 9"
     ]
   },
   "wikipedia": {
-    "last_run": 1782703919,
+    "last_run": 1782790333,
     "done_langs": []
   },
   "flickr": {
-    "last_run": 1782703929,
+    "last_run": 1782790340,
     "done_tags": [
-      "ship,IMO,Hamburg",
-      "vessel,IMO,port",
-      "containership,IMO",
+      "tanker,IMO,vessel",
       "shipspotting,IMO",
-      "schip,IMO,haven",
-      "cargo,IMO,ship",
       "ship,IMO,bulker",
-      "bulkcarrier,IMO",
       "cargo ship,port,IMO",
       "vessel,IMO,harbor",
       "ship,IMO,IJmuiden",
-      "tanker,IMO,vessel",
       "ship,IMO,Antwerp",
-      "ship,IMO,Rotterdam"
+      "ship,IMO,Hamburg",
+      "containership,IMO",
+      "cargo,IMO,ship",
+      "ship,IMO,Rotterdam",
+      "vessel,IMO,port",
+      "schip,IMO,haven",
+      "bulkcarrier,IMO"
     ]
   },
   "stats": {
-    "total_added": 73,
-    "runs": 2,
-    "last_run": 1782703929
+    "total_added": 232,
+    "runs": 3,
+    "last_run": 1782790340
   }
 }

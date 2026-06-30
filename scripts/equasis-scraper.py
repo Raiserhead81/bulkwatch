@@ -186,6 +186,7 @@ def main():
 
     print(f"Enriching {len(ships)} ships from Equasis (HTTP mode)...", flush=True)
 
+    global account_idx
     opener = login()
     if not opener:
         return

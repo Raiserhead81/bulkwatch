@@ -6,7 +6,7 @@ import sqlite3, re, time
 DB = "/opt/bulkwatch/db/ships.db"
 MAX_PER_RUN = 100
 DELAY = 6.0
-EMAIL = "kayconrad@posteo.de"
+ACCOUNTS = [("kayconrad@posteo.de", "!nfinitY!981"), ("kayconrad81@googlemail.com", "!nfinitY!981")]
 PASSWORD = "!nfinitY!981"
 
 
