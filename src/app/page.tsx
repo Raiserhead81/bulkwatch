@@ -147,19 +147,12 @@ export default function Home() {
 
       <div className="page-header" style={{ background: cardBg, borderBottom: `1px solid ${border}`, padding: "16px 24px" }}>
         <div style={{ maxWidth: "95%", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <img src="/icon-maritime-ai.png" alt="" style={{ width: 42, height: 42, borderRadius: "50%" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <img src="/icon-maritime-ai.png" alt="" style={{ width: 40, height: 40, borderRadius: "50%" }} />
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: accent }}>Maritime AI</h1>
-                {currentUser && currentUser.username !== "kay" && currentUser.username !== "admin" ? (
-                  <div style={{ borderLeft: `1px solid ${border}`, paddingLeft: 12, display: "flex", alignItems: "center" }}>
-                    <img src={`/logos/${currentUser.username}.${currentUser.username === "arklow" ? "png" : "svg"}`} alt={currentUser.company} style={{ height: 24, filter: theme === "dark" ? "brightness(0) invert(1)" : "none" }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
-                  </div>
-                ) : null}
-              </div>
-              <p style={{ margin: "2px 0 0", fontSize: 13, color: textMuted }}>
-                Ship Intelligence for <strong style={{ color: text }}>{stats.total.toLocaleString()}</strong> ships worldwide
+              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: accent }}>Maritime AI</h1>
+              <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted }}>
+                {stats.total.toLocaleString()} ships worldwide
               </p>
             </div>
           </div>
@@ -176,6 +169,9 @@ export default function Home() {
               <span style={{ fontSize: 11, color: textMuted, marginLeft: 8 }}>{currentUser.company}</span>
             )}
             <a href="/api/auth/logout" style={{ color: textDim, textDecoration: "none", fontSize: 12, marginLeft: 8 }}>Logout</a>
+            {currentUser && currentUser.username !== "kay" && currentUser.username !== "admin" && (
+              <img src={`/logos/${currentUser.username}.${currentUser.username === "arklow" ? "png" : "svg"}`} alt={currentUser.company} style={{ height: 30, marginLeft: 12 }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
+            )}
           </nav>
         </div>
       </div>
