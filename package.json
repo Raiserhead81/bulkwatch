@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
-    "build": "next build && cp -r .next/static .next/standalone/bulkwatch/.next/static && mkdir -p .next/standalone/bulkwatch/public && cp -r public/* .next/standalone/bulkwatch/public/",
+    "build": "next build && cp -r .next/static .next/standalone/bulkwatch/.next/static && cp -r .next/server .next/standalone/bulkwatch/.next/server && mkdir -p .next/standalone/bulkwatch/public && cp -r public/* .next/standalone/bulkwatch/public/",
     "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
     "lint": "eslint .",
     "db:push": "prisma db push",

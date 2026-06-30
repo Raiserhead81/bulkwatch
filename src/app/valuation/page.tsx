@@ -13,197 +13,55 @@ const SHIP_TYPES = [
   "Reefer", "Multipurpose", "Heavy Lift", "Offshore", "OSV", "Tug",
 ];
 
-const BUILDERS = [
-  "",
-  "3. Maj",
-  "ABG Shipyard",
-  "Aarhus Flydedok",
-  "Aas Mek. Verksted AS",
-  "Aker Finnyards",
-  "American Ship Building Company",
-  "Arminius-Werke",
-  "Astilleros Armón Vigo",
-  "Barkmeijer Shipyards",
-  "Bay Shipbuilding Company",
-  "Bijlsma Wartena",
-  "Bodewes Shipyards",
-  "Bohai Shipbuilding",
-  "Bremer Vulkan",
-  "Brodosplit",
-  "Bulyard",
-  "Burmeister & Wain",
-  "CSBC Corporation, Taiwan",
-  "CSC Jinling",
-  "CSSC Offshore & Marine Engineering Company",
-  "Cassens Werft GmbH",
-  "Chantiers de l'Atlantique",
-  "Chengxi Shipyard",
-  "China Merchants Jinling Shipyard (Weihai)",
-  "China Shipbuilding",
-  "Chowgule Group",
-  "Collingwood Shipbuilding",
-  "Czechoslovak shipping company Labská",
-  "Daehan Shipbuilding",
-  "Daewoo Shipbuilding",
-  "Dalian Shipbuilding Industry Company",
-  "Damen Group",
-  "Damen Shipyards Bergum",
-  "Damen Shipyards Galați",
-  "Damen Shipyards Gorinchem",
-  "Damen Yichang Shipyard",
-  "Deutsche Werft",
-  "ENVC Shipyard",
-  "Elbewerft Boizenburg",
-  "Eriksbergs Mekaniska Verkstad",
-  "Ferus Smit",
-  "Fincantieri",
-  "Fitjar Mekaniske Verksted",
-  "Flender Werke",
-  "Flensburger Schiffbau-Gesellschaft",
-  "Fosen Yard",
-  "Frederikshavn Shipyard",
-  "Freire Shipyard",
-  "Fujian Mawei Shipbuilding",
-  "Gdańsk Shipyard",
-  "Great Lakes Engineering Works",
-  "Groningen Shipyards B.V.",
-  "Guangzhou Wenchong Shipyard",
-  "Götaverken",
-  "HD Hyundai Heavy Industries",
-  "HD Hyundai Mipo",
-  "HD Hyundai Samho",
-  "HD Hyundai Vietnam Shipbuilding",
-  "HHIC Phil",
-  "HJ Shipbuilding & Construction",
-  "Hakata Shipbuilding",
-  "Hakodate Dock",
-  "Hanwha Ocean",
-  "Harland and Wolff",
-  "Havyard Ship Technology",
-  "Hermann Sürken",
-  "Higaki Shipbuilding",
-  "Hijos de J. Barreras",
-  "Hitzler Werft",
-  "Honda Heavy Industries",
-  "Howaldtswerke-Deutsche Werft",
-  "Huangpu Wenchong Shipbuilding",
-  "Hudong-Zhonghua Shipbuilding",
-  "Husumer Schiffswerft",
-  "Hyundai Heavy Industries",
-  "I-S Shipyard",
-  "IHDA Shipbuilding",
-  "IHI Corporation",
-  "IHI Marine United",
-  "Imabari Shipbuilding",
-  "Imabari Shipbuilding Hiroshima Shipyard",
-  "Imabari Shipbuilding Marugame Headquarters",
-  "Iwagi Zosen",
-  "Jansen-Werft",
-  "Japan Marine United Corporation",
-  "Jiangnan Shipyard",
-  "Jiangsu Hantong Ship Heavy Industry Co., Ltd.",
-  "Jiangsu New Yangzi Shipbuilding",
-  "Jiangsu Rongsheng Heavy Industries",
-  "Jiangsu Yangzi Xinfu Shipbuilding",
-  "Jiangsu Yangzijiang Shipbuilding",
-  "Kawasaki Heavy Industries",
-  "Kitanihon Shipbuilding",
-  "Kleven Verft",
-  "Kockums",
-  "Kraljevica Shipyard",
-  "Krasnoye Sormovo Factory No. 112",
-  "Kurinoura Dockyard",
-  "Kötter-Werft",
-  "Langsten Slip & Båtbyggeri",
-  "Larsnes Mekaniske Verkstad",
-  "Lürssen-Kröger-Werft",
-  "Mangalia Shipyard",
-  "Meyer Werft",
-  "Meyer Wismar",
-  "Minaminippon Shipbuilding",
-  "Mitsubishi Heavy Industries",
-  "Mitsubishi Heavy Industries Kobe Shipyard & Machinery Works",
-  "Mitsubishi Heavy Industries Nagasaki Shipyard & Machinery",
-  "Mitsui Chiba Shipyard",
-  "Mitsui Engineering & Shipbuilding",
-  "Mitsui Tamano Shipyard",
-  "Moss Verft",
-  "Murakami Hide Shipbuilding",
-  "Myklebust Verft",
-  "NKK",
-  "Namura Shipbuilding",
-  "New Times Shipbuilding",
-  "Nordseewerke",
-  "Nordsøværftet",
-  "North American Shipbuilding",
-  "Odense Steel Shipyard",
-  "Oltenita Shipyard",
-  "Onomichi Dockyard",
-  "Orskov Yard",
-  "Oshima Shipbuilding",
-  "P+S Werften",
-  "Peene-Werft",
-  "Pella Sietas",
-  "Peters Werft",
-  "Remontowa",
-  "Rolandwerft",
-  "Royal Bodewes",
-  "Royal IHC",
-  "Royal Niestern Sander",
-  "Ruse Shipyard",
-  "SLKB Komarno – Slovak Shipyard Komárno",
-  "SPP Shipbuilding Co., Ltd.",
-  "STX Offshore & Shipbuilding",
-  "Sakaide Works",
-  "Samsung Heavy Industries",
-  "Sasebo Heavy Industries",
-  "Scheepswerf Pattje",
-  "Scheepswerf Peters, Kampen",
-  "Schichau Seebeckwerft",
-  "Severnaya Verf",
-  "Shandong Baibuting Shipbuilding",
-  "Shanghai Waigaoqiao",
-  "Shanghai Waigaoqiao Shipbuilding",
-  "Shikoku Dockyard",
-  "Shimanami Shipyard",
-  "Shin Kasado Dockyard",
-  "Shin Kurushima",
-  "Shin Kurushima Dockyard",
-  "Shinkurushima Toyohashi Shipbuilding",
-  "Simek",
-  "Stocznia Gdynia",
-  "Sumitomo Heavy Industries",
-  "Sungdong Shipbuilding & Marine Engineering",
-  "Svendborg Skibsværft",
-  "Swan Hunter",
-  "Szczecin Shipyard",
-  "Søviknes Verft",
-  "Taizhou Kouan Shipbuilding Co Ltd",
-  "Taizhou Maple Leaf Shipbuilding",
-  "Tille Scheepsbouw",
-  "Torgem Shipyard",
-  "Trosvik Verksted",
-  "Tsuneishi Kure Dock",
-  "Tsuneishi Miho Shipbuilding",
-  "Tsuneishi Shipbuilding",
-  "Uddevalla shipyard",
-  "Uljanik",
-  "Ulstein Verft",
-  "Universal Shipbuilding",
-  "Vaagland Båtbyggeri",
-  "Vard Brattvaag",
-  "Vard Brăila",
-  "Vard Tulcea",
-  "Veka Shipyard Lemmer",
-  "Volharding Shipyards",
-  "Volkswerft",
-  "Wuhu Shipyard",
-  "Xiamen Shipbuilding Industry",
-  "Yamanishi Zosen",
-  "Yangfan Group Co.",
-  "Yangzhou Binjiang Shipbuilding",
-  "Zalyv Shipbuilding yard",
-];
+const BUILDER_GROUPS: Record<string, string[]> = {
+  "Japan": [
+    "Hakodate Dock","Hakata Shipbuilding","Higaki Shipbuilding","Honda Heavy Industries",
+    "IHI Corporation","IHI Marine United","Imabari Shipbuilding",
+    "Japan Marine United Corporation","Kawasaki Heavy Industries","Kitanihon Shipbuilding",
+    "Mitsubishi Heavy Industries","Mitsui Engineering & Shipbuilding",
+    "Namura Shipbuilding","NKK","Onomichi Dockyard","Oshima Shipbuilding",
+    "Sasebo Heavy Industries","Shin Kurushima Dockyard",
+    "Sumitomo Heavy Industries","Tsuneishi Shipbuilding","Universal Shipbuilding","Yamanishi Zosen",
+  ],
+  "South Korea": [
+    "Daehan Shipbuilding","Daewoo Shipbuilding","Hanwha Ocean","HD Hyundai Heavy Industries",
+    "HD Hyundai Mipo","HD Hyundai Samho","HJ Shipbuilding & Construction",
+    "Hyundai Heavy Industries","Samsung Heavy Industries",
+    "SPP Shipbuilding Co., Ltd.","STX Offshore & Shipbuilding",
+    "Sungdong Shipbuilding & Marine Engineering",
+  ],
+  "China": [
+    "Bohai Shipbuilding","Chengxi Shipyard","China Shipbuilding","CSC Jinling",
+    "Dalian Shipbuilding Industry Company","Guangzhou Wenchong Shipyard",
+    "Hudong-Zhonghua Shipbuilding","Jiangnan Shipyard",
+    "Jiangsu Yangzijiang Shipbuilding","New Times Shipbuilding",
+    "Shanghai Waigaoqiao Shipbuilding","Wuhu Shipyard","Xiamen Shipbuilding Industry",
+    "Yangfan Group Co.","Yangzhou Binjiang Shipbuilding",
+  ],
+  "Europe — Germany": [
+    "Bremer Vulkan","Cassens Werft GmbH","Flensburger Schiffbau-Gesellschaft",
+    "Flender Werke","Howaldtswerke-Deutsche Werft","Meyer Werft","Meyer Wismar",
+    "Nordseewerke","P+S Werften","Peene-Werft","Peters Werft","Rolandwerft",
+    "Schichau Seebeckwerft","Volkswerft",
+  ],
+  "Europe — Netherlands": [
+    "Barkmeijer Shipyards","Bodewes Shipyards","Damen Group",
+    "Ferus Smit","Royal Bodewes","Royal IHC","Royal Niestern Sander",
+  ],
+  "Europe — Scandinavia": [
+    "Eriksbergs Mekaniska Verkstad","Havyard Ship Technology","Kleven Verft",
+    "Kockums","Odense Steel Shipyard","Ulstein Verft","Vard Brattvaag",
+  ],
+  "Europe — Other": [
+    "3. Maj","Brodosplit","Bulyard","Chantiers de l\'Atlantique",
+    "Fincantieri","Harland and Wolff","Mangalia Shipyard","Remontowa",
+    "Stocznia Gdynia","Szczecin Shipyard","Uljanik",
+  ],
+  "Other": [
+    "ABG Shipyard","CSBC Corporation, Taiwan","Hijos de J. Barreras",
+  ],
+};
+const BUILDERS = Object.values(BUILDER_GROUPS).flat();
 
 // ═══ BROKER MODEL (same as daily-valuations.py) ═══
 const SIZE_PARAMS: Record<string, [number, number, number, number]> = {
@@ -241,7 +99,7 @@ interface Factor {
   impact: "positive" | "neutral" | "negative";
 }
 
-function calculate(dwt: number, yearBuilt: number, shipType: string, builder: string) {
+function calculate(dwt: number, yearBuilt: number, shipType: string, builder: string, fuelType: string = "conventional", surveyStatus: string = "mid_cycle", bdiOverride: number = 2490) {
   const year = 2026;
   const age = year - yearBuilt;
   const factors: Factor[] = [];
@@ -288,11 +146,32 @@ function calculate(dwt: number, yearBuilt: number, shipType: string, builder: st
     factors.push({ name: "Builder", value: bf, label: bf > 1 ? "+5% Premium" : "−8% Discount", impact: bf > 1 ? "positive" : "negative" });
   }
 
-  // 6. Scrap floor
+  // 6. Eco premium
+  let eco = 1.0;
+  if (fuelType === "scrubber") { eco = 1.03; factors.push({ name: "Scrubber Fitted", value: eco, label: "+3%", impact: "positive" }); }
+  else if (fuelType === "lng_ready") { eco = 1.08; factors.push({ name: "LNG/Dual Fuel", value: eco, label: "+8%", impact: "positive" }); }
+  else if (fuelType === "methanol") { eco = 1.06; factors.push({ name: "Methanol Ready", value: eco, label: "+6%", impact: "positive" }); }
+  else if (fuelType === "tier3") { eco = 1.02; factors.push({ name: "IMO Tier III", value: eco, label: "+2%", impact: "positive" }); }
+
+  // 7. Survey status
+  let sv = 1.0;
+  if (surveyStatus === "freshly_surveyed") { sv = 1.05; factors.push({ name: "Survey Status", value: sv, label: "Fresh SS (+5%)", impact: "positive" }); }
+  else if (surveyStatus === "due_soon") { sv = 0.95; factors.push({ name: "Survey Due", value: sv, label: "Due <12mo (-5%)", impact: "negative" }); }
+  else if (surveyStatus === "overdue") { sv = 0.88; factors.push({ name: "Survey Overdue", value: sv, label: "Overdue (-12%)", impact: "negative" }); }
+
+  // 8. BDI Market Cycle
+  let bdiMult = 1.0;
+  if (bdiOverride > 3000) { bdiMult = 1.12; }
+  else if (bdiOverride > 1500) { bdiMult = 1.0 + (bdiOverride - 1500) * 0.00008; }
+  else if (bdiOverride > 800) { bdiMult = 1.0; }
+  else { bdiMult = 0.85 + (bdiOverride - 500) * 0.0005; }
+  factors.push({ name: "BDI Market", value: bdiMult, label: "BDI " + bdiOverride + " (\u00d7" + bdiMult.toFixed(2) + ")", impact: bdiMult > 1.05 ? "positive" : bdiMult < 0.95 ? "negative" : "neutral" });
+
+  // 9. Scrap floor
   const scrap = dwt * 0.20 * 480;
 
   // Final
-  const raw = newbuild * tm * ad * bf;
+  const raw = newbuild * tm * ad * bf * eco * sv * bdiMult;
   const final = Math.max(raw, scrap);
 
   return {
@@ -319,8 +198,11 @@ export default function ValuationPage() {
   const [yearBuilt, setYearBuilt] = useState(2016);
   const [shipType, setShipType] = useState("Bulk Carrier");
   const [builder, setBuilder] = useState("");
+  const [fuelType, setFuelType] = useState("conventional");
+  const [surveyStatus, setSurveyStatus] = useState("mid_cycle");
+  const [bdiOverride, setBdiOverride] = useState(2490);
 
-  const result = calculate(dwt, yearBuilt, shipType, builder);
+  const result = calculate(dwt, yearBuilt, shipType, builder, fuelType, surveyStatus, bdiOverride);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -388,8 +270,54 @@ export default function ValuationPage() {
                   <select value={builder} onChange={e => setBuilder(e.target.value)}
                     className="w-full mt-2 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
                     <option value="">Unknown / Other</option>
-                    {BUILDERS.filter(b => b).map(b => <option key={b} value={b}>{b}</option>)}
+                    {Object.entries(BUILDER_GROUPS).map(([country, builders]) => (
+                      <optgroup key={country} label={country}>
+                        {builders.map(b => <option key={b} value={b}>{b}</option>)}
+                      </optgroup>
+                    ))}
                   </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Eco & Market Adjustments */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
+                <Fuel className="h-5 w-5 text-emerald-400" /> Eco & Market
+              </h2>
+              <div className="space-y-5">
+                <div>
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Fuel Type / Eco Premium</label>
+                  <select value={fuelType} onChange={e => setFuelType(e.target.value)}
+                    className="w-full mt-2 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+                    <option value="conventional">Conventional (VLSFO/HSFO)</option>
+                    <option value="scrubber">Scrubber Fitted (+3%)</option>
+                    <option value="lng_ready">LNG Ready / Dual Fuel (+8%)</option>
+                    <option value="methanol">Methanol Ready (+6%)</option>
+                    <option value="tier3">IMO Tier III NOx (+2%)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Survey Status</label>
+                  <select value={surveyStatus} onChange={e => setSurveyStatus(e.target.value)}
+                    className="w-full mt-2 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+                    <option value="freshly_surveyed">Freshly Surveyed (SS passed, +5%)</option>
+                    <option value="mid_cycle">Mid-Cycle (normal)</option>
+                    <option value="due_soon">{"Survey Due <12mo (-5%)"}</option>
+                    <option value="overdue">Overdue / Conditional (-12%)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">BDI Market Cycle</label>
+                  <input type="range" min={500} max={5000} step={50} value={bdiOverride}
+                    onChange={e => setBdiOverride(Number(e.target.value))}
+                    className="w-full mt-2 accent-blue-500" />
+                  <div className="flex justify-between mt-1">
+                    <span className="text-xs text-slate-500">BDI: {bdiOverride}</span>
+                    <span className={"text-xs font-bold " + (bdiOverride > 3000 ? "text-emerald-400" : bdiOverride > 1500 ? "text-blue-400" : bdiOverride > 800 ? "text-amber-400" : "text-red-400")}>
+                      {bdiOverride > 3000 ? "Strong Market" : bdiOverride > 1500 ? "Firm" : bdiOverride > 800 ? "Normal" : "Weak Market"}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

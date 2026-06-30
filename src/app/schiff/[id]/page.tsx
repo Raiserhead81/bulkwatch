@@ -43,6 +43,7 @@ import {
   calculateFreightRates,
   getRateForDwt,
 } from "@/lib/freightRates";
+import { calculateOpex, formatUSD } from "@/lib/opex";
 import {
   generateMockVoyage,
   getStatusColor,
@@ -447,53 +448,80 @@ export default function ShipDetailPage({
             )}
 
 
-                {/* Earnings Calculator */}
+                {/* OPEX & Earnings — Broker Level */}
                 {ship.dwt > 0 && (() => {
-                  const BDI = 2524;
-                  const rates = calculateFreightRates(BDI, "2026-06-28");
-                  const rate = getRateForDwt(rates, ship.dwt, ship.type);
-                  if (!rate) return null;
-                  const daily = rate.tce;
-                  const monthly = daily * 30;
-                  const annual = daily * 365;
-                  const age = ship.yearBuilt > 0 ? new Date().getFullYear() - ship.yearBuilt : 10;
-                  const baseCost = ship.dwt > 100000 ? 9500 : ship.dwt > 50000 ? 7500 : 5500;
-                  const ageFactor = 1 + Math.max(0, age - 5) * 0.03;
-                  const breakEven = Math.round(baseCost * ageFactor);
-                  const margin = daily - breakEven;
+                  const opex = calculateOpex(
+                    ship.dwt, ship.yearBuilt, ship.type, price.estimatedValueUSD,
+                    ship.flag, ship.fuelConsumption, ship.crewSize, ship.grossTonnage
+                  );
                   return (
+                    <>
+                    {/* Net Earnings Card */}
                     <Card className="border-emerald-500/20 overflow-hidden">
-                      <div className="bg-gradient-to-br from-emerald-600 to-teal-500 text-white p-4">
-                        <p className="text-xs uppercase tracking-wider text-white/70 mb-1">Earnings Estimate (BDI {BDI})</p>
-                        <p className="text-3xl font-bold tabular-nums">${daily.toLocaleString()}/day</p>
-                        <p className="text-xs text-white/60 mt-1">TCE based on current Baltic Dry Index</p>
+                      <div className={"bg-gradient-to-br text-white p-4 " + (opex.netEarningsPerDay > 0 ? "from-emerald-600 to-teal-500" : "from-red-600 to-rose-500")}>
+                        <p className="text-xs uppercase tracking-wider text-white/70 mb-1">Net Earnings (TC)</p>
+                        <p className="text-3xl font-bold tabular-nums">{opex.netEarningsPerDay > 0 ? "+" : ""}${opex.netEarningsPerDay.toLocaleString()}/day</p>
+                        <p className="text-xs text-white/60 mt-1">Charter ${opex.charterRatePerDay.toLocaleString()}/d minus OPEX ${opex.totalFixedOpex.toLocaleString()}/d</p>
                       </div>
                       <CardContent className="p-4 space-y-3">
                         <div className="grid grid-cols-2 gap-3">
                           <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Monthly</p>
-                            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">${(monthly/1000).toFixed(0)}k</p>
+                            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Annual Net</p>
+                            <p className={"text-sm font-bold " + (opex.annualNetEarnings > 0 ? "text-emerald-500" : "text-red-500")}>{formatUSD(opex.annualNetEarnings)}</p>
                           </div>
                           <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Annual</p>
-                            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">${(annual/1e6).toFixed(1)}M</p>
+                            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">ROI</p>
+                            <p className={"text-sm font-bold " + ((opex.roiPercent||0) > 0 ? "text-emerald-500" : "text-red-500")}>{opex.roiPercent}%/yr</p>
+                          </div>
+                          <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Payback</p>
+                            <p className="text-sm font-bold text-amber-600 dark:text-amber-400">{opex.paybackYears ? opex.paybackYears + " yrs" : "n/a"}</p>
                           </div>
                           <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
                             <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Break-Even</p>
-                            <p className="text-sm font-bold text-amber-600 dark:text-amber-400">${breakEven.toLocaleString()}/d</p>
-                          </div>
-                          <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Margin</p>
-                            <p className={"text-sm font-bold " + (margin > 0 ? "text-emerald-500" : "text-red-500")}>{margin > 0 ? "+" : ""}${margin.toLocaleString()}/d</p>
+                            <p className="text-sm font-bold text-amber-600 dark:text-amber-400">${opex.breakEvenCharterRate.toLocaleString()}/d</p>
                           </div>
                         </div>
-                        {rate.spotRate > 0 && (
-                          <div className="text-xs text-slate-600 dark:text-white/50 pt-2 border-t border-slate-200 dark:border-white/10">
-                            Spot Rate: ${rate.spotRate.toFixed(2)}/ton · Break-even incl. OPEX, crew, insurance, maintenance
-                          </div>
-                        )}
                       </CardContent>
                     </Card>
+
+                    {/* OPEX Breakdown */}
+                    <Card className="border-blue-500/20">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Cog className="h-4 w-4 text-blue-600 dark:text-cyan-400" />
+                          Daily OPEX Breakdown
+                          <span className="text-[10px] text-slate-400 ml-auto">{opex.ratesDate}</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1.5">
+                        {[
+                          ["Crew (" + opex.crewCount + " pax)", opex.crewCostPerDay, opex.flagMultiplier !== 1.0 ? " (" + ship.flag + " ×" + opex.flagMultiplier.toFixed(2) + ")" : ""],
+                          ["Provisions", opex.provisionsPerDay, ""],
+                          ["Insurance H&M", opex.insuranceHMPerDay, ""],
+                          ["Insurance P&I", opex.insurancePnIPerDay, ""],
+                          ["Maintenance", opex.maintenancePerDay, ""],
+                          ["Stores & Spares", opex.storesSpares, ""],
+                          ["Lube Oil", opex.lubeOilPerDay, ""],
+                          ["Management", opex.managementPerDay, ""],
+                          ["Drydock (amort.)", opex.drydockPerDay, ""],
+                          ["EU ETS (~25%)", opex.euEtsPerDay, ""],
+                        ].map(([label, val, note], i) => (
+                          <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-slate-100 dark:border-white/5 last:border-0">
+                            <span className="text-slate-600 dark:text-white/60">{label as string}{note as string}</span>
+                            <span className="font-mono font-semibold tabular-nums">${(val as number).toLocaleString()}</span>
+                          </div>
+                        ))}
+                        <div className="flex items-center justify-between text-sm font-bold pt-2 border-t-2 border-blue-500/30">
+                          <span>Total OPEX/day</span>
+                          <span className="text-blue-600 dark:text-cyan-400">${opex.totalFixedOpex.toLocaleString()}</span>
+                        </div>
+                        <div className="text-[10px] text-slate-400 pt-1">
+                          {opex.sources.length} live data sources · Updated {opex.ratesDate}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    </>
                   );
                 })()}
             {/* Actions */}
