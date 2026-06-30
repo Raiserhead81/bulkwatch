@@ -70,7 +70,7 @@ export default function LoginPage() {
             display: "flex", alignItems: "center", justifyContent: "center",
             boxShadow: "0 8px 32px rgba(37,99,235,0.4)",
           }}>
-            <Anchor style={{ width: 32, height: 32, color: "#fff" }} />
+            <img src="/icon.svg" alt="Maritime AI" style={{ width: 36, height: 36 }} />
           </div>
           <h1 style={{
             fontSize: 28, fontWeight: 800, letterSpacing: -0.5, margin: 0,

@@ -151,7 +151,10 @@ export default function Home() {
             {currentUser ? (
               <img src={`/logos/${currentUser.username}.svg`} alt={currentUser.company} style={{ height: 32, filter: theme === "dark" ? "brightness(0) invert(1)" : "none" }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
             ) : null}
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: accent }}>Maritime AI</h1>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <img src="/icon.svg" alt="" style={{ width: 28, height: 28 }} />
+              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: accent }}>Maritime AI</h1>
+            </div>
             <p style={{ margin: "4px 0 0", fontSize: 13, color: textMuted }}>
               Ship Intelligence for <strong style={{ color: text }}>{stats.total.toLocaleString()}</strong> ships worldwide
             </p>
