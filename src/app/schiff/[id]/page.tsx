@@ -124,7 +124,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{ship.name}</h1>
               <p className="text-sm text-slate-600 dark:text-white/50 mt-1">
-                {ship.operator || "Unknown Operator"} \u00b7 {ship.flag} {age ? `\u00b7 ${age} years old` : ""}
+                {ship.operator || "Unknown Operator"} · {ship.flag} {age ? `· ${age} years old` : ""}
               </p>
             </div>
 
@@ -154,7 +154,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                     </div>
                     <div>
                       <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Built</p>
-                      <p className="text-lg font-bold">{ship.yearBuilt > 0 ? ship.yearBuilt : "\u2014"}</p>
+                      <p className="text-lg font-bold">{ship.yearBuilt > 0 ? ship.yearBuilt : "—"}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -178,8 +178,8 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
         {ship.position && (
           <div className="text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2 flex items-center justify-between gap-2">
             <span>
-              \u2713 Live AIS \u00b7 {ship.position.lat.toFixed(4)}\u00b0N {ship.position.lon.toFixed(4)}\u00b0E
-              {ship.lastSeen ? ` \u00b7 ${new Date(ship.lastSeen * 1000).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}` : ""}
+              ✓ Live AIS · {ship.position.lat.toFixed(4)}°N {ship.position.lon.toFixed(4)}°E
+              {ship.lastSeen ? ` · ${new Date(ship.lastSeen * 1000).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}` : ""}
             </span>
             <Link href={`/karte?lat=${ship.position.lat}&lon=${ship.position.lon}&zoom=8&imo=${ship.imo}`} className="flex items-center gap-1 text-emerald-500 hover:text-emerald-300 font-semibold whitespace-nowrap">
               <MapPin className="h-3 w-3" /> Show on Map
@@ -205,7 +205,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
               <div className={`p-5 text-white ${opex.netEarningsPerDay > 0 ? "bg-slate-800" : "bg-slate-800"}`}>
                 <p className="text-xs uppercase tracking-wider text-white/70 mb-1">Net Earnings (TC)</p>
                 <p className="text-xl font-bold tabular-nums text-white">{opex.netEarningsPerDay > 0 ? "+" : ""}${opex.netEarningsPerDay.toLocaleString()}/d</p>
-                <p className="text-xs text-white/60 mt-1">Charter ${opex.charterRatePerDay.toLocaleString()}/d \u2212 OPEX ${opex.totalFixedOpex.toLocaleString()}/d</p>
+                <p className="text-xs text-white/60 mt-1">Charter ${opex.charterRatePerDay.toLocaleString()}/d − OPEX ${opex.totalFixedOpex.toLocaleString()}/d</p>
               </div>
               <CardContent className="p-4">
                 <div className="grid grid-cols-2 gap-3 text-center">
@@ -232,7 +232,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                     <span className="font-mono">${(val as number).toLocaleString()}</span>
                   </div>
                 ))}
-                <div className="text-[10px] text-slate-400 mt-2">{opex.sources.length} sources \u00b7 {opex.ratesDate}</div>
+                <div className="text-[10px] text-slate-400 mt-2">{opex.sources.length} sources · {opex.ratesDate}</div>
               </CardContent>
             </Card>
           </div>
@@ -247,14 +247,14 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
             <CardContent>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                 {[
-                  ["Deadweight", ship.dwt > 0 ? `${ship.dwt.toLocaleString()} DWT` : "\u2014"],
-                  ["Length", ship.length > 0 ? `${ship.length} m` : "\u2014"],
-                  ["Beam", ship.beam > 0 ? `${ship.beam} m` : "\u2014"],
-                  ["Draft", ship.draft > 0 ? `${ship.draft} m` : "\u2014"],
-                  ["Year Built", ship.yearBuilt > 0 ? `${ship.yearBuilt}` : "\u2014"],
+                  ["Deadweight", ship.dwt > 0 ? `${ship.dwt.toLocaleString()} DWT` : "—"],
+                  ["Length", ship.length > 0 ? `${ship.length} m` : "—"],
+                  ["Beam", ship.beam > 0 ? `${ship.beam} m` : "—"],
+                  ["Draft", ship.draft > 0 ? `${ship.draft} m` : "—"],
+                  ["Year Built", ship.yearBuilt > 0 ? `${ship.yearBuilt}` : "—"],
                   ["Flag", ship.flag],
-                  ["Builder", ship.builder || "\u2014"],
-                  ["Operator", ship.operator || "\u2014"],
+                  ["Builder", ship.builder || "—"],
+                  ["Operator", ship.operator || "—"],
                   ...(ship.grossTonnage > 0 ? [["Gross Tonnage", `${ship.grossTonnage.toLocaleString()} GT`]] : []),
                   ...(ship.engineType ? [["Engine", ship.engineType]] : []),
                   ...(ship.enginePowerKw > 0 ? [["Power", `${(ship.enginePowerKw/1000).toFixed(0)} MW`]] : []),
@@ -346,14 +346,14 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                     </div>
                     <div className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50">
                       <p className="text-[9px] text-slate-500 dark:text-white/40 uppercase">Range</p>
-                      <p className="text-[10px] font-semibold">${(priceHistory.min/1e6).toFixed(1)}M\u2014${(priceHistory.max/1e6).toFixed(1)}M</p>
+                      <p className="text-[10px] font-semibold">${(priceHistory.min/1e6).toFixed(1)}M—${(priceHistory.max/1e6).toFixed(1)}M</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-2xl font-bold text-blue-400">${(priceHistory.history[priceHistory.history.length-1]?.value/1e6).toFixed(1)}M</span>
                     <div className="flex gap-3 text-xs">
-                      <span className="text-red-400">\u25BC ${(priceHistory.min/1e6).toFixed(1)}M</span>
-                      <span className="text-emerald-400">\u25B2 ${(priceHistory.max/1e6).toFixed(1)}M</span>
+                      <span className="text-red-400">▼ ${(priceHistory.min/1e6).toFixed(1)}M</span>
+                      <span className="text-emerald-400">▲ ${(priceHistory.max/1e6).toFixed(1)}M</span>
                     </div>
                   </div>
                   <div style={{ height: 140 }}>
@@ -398,27 +398,78 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
-        {/* ═══ VOYAGE (if available) ═══ */}
-        <Card className={ship.position ? "border-slate-200 dark:border-slate-800" : "border-slate-200 dark:border-slate-800"}>
+        {/* \u2550\u2550\u2550 VOYAGE \u2550\u2550\u2550 */}
+        <Card className="border-slate-200 dark:border-slate-800">
           <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Navigation className="h-5 w-5 text-slate-700 dark:text-slate-300" /> {ship.position ? "Current Voyage" : "Estimated Voyage"} <Badge className={`${getStatusColor(voyage.currentStatus)} border ml-auto`}>{getStatusLabel(voyage.currentStatus)}</Badge></CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-              <div className="text-2xl">{voyage.from.countryFlag}</div>
-              <div className="flex-1 min-w-0"><p className="text-[10px] text-slate-500 uppercase">From</p><p className="font-semibold text-sm truncate">{voyage.from.name}</p></div>
-              <ArrowRight className="h-5 w-5 text-blue-500 flex-shrink-0" />
-              <div className="text-2xl">{voyage.to.countryFlag}</div>
-              <div className="flex-1 min-w-0"><p className="text-[10px] text-slate-500 uppercase">To</p><p className="font-semibold text-sm truncate">{voyage.to.name}</p></div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {/* Left: Route info */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                  <div className="text-2xl">{voyage.from.countryFlag}</div>
+                  <div className="flex-1 min-w-0"><p className="text-[10px] text-slate-500 uppercase">From</p><p className="font-semibold text-sm truncate">{voyage.from.name}</p><p className="text-[10px] text-slate-400">{voyage.from.country}</p></div>
+                  <ArrowRight className="h-5 w-5 text-slate-400 flex-shrink-0" />
+                  <div className="text-2xl">{voyage.to.countryFlag}</div>
+                  <div className="flex-1 min-w-0"><p className="text-[10px] text-slate-500 uppercase">To</p><p className="font-semibold text-sm truncate">{voyage.to.name}</p><p className="text-[10px] text-slate-400">{voyage.to.country}</p></div>
+                </div>
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  {[["Cargo", voyage.cargoDescription], ["Load", voyage.cargoLoadPercent + "%"], ["Speed", voyage.speedKnots + " kn"], ["Distance", voyage.distanceNm + " nm"]].map(([l, v]) => (
+                    <div key={l} className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50"><p className="text-[10px] text-slate-500 uppercase">{l}</p><p className="text-sm font-semibold tabular-nums">{v}</p></div>
+                  ))}
+                </div>
+                <div>
+                  <div className="flex justify-between text-xs mb-1"><span className="text-slate-500">Progress</span><span className="font-semibold tabular-nums">{voyage.progressPercent}%</span></div>
+                  <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${voyage.progressPercent}%` }} /></div>
+                </div>
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>Dep: {voyage.departureDate.toLocaleDateString("en-GB")}</span>
+                  <span className="font-semibold">ETA: {voyage.eta.toLocaleDateString("en-GB")} {voyage.eta.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</span>
+                </div>
+                {!ship.position && <p className="text-[10px] text-slate-500 bg-slate-500/5 border border-slate-700 rounded px-2 py-1">Illustrative voyage — no live AIS data</p>}
+              </div>
+              {/* Right: Route map (SVG) */}
+              <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-900" style={{ minHeight: 250 }}>
+                {(() => {
+                  const f = voyage.from, t = voyage.to;
+                  const cur = ship.position || voyage.currentPosition;
+                  // Simple Mercator projection
+                  const allLats = [f.lat, t.lat, cur.lat];
+                  const allLons = [f.lon, t.lon, cur.lon];
+                  const minLat = Math.min(...allLats) - 8, maxLat = Math.max(...allLats) + 8;
+                  const minLon = Math.min(...allLons) - 12, maxLon = Math.max(...allLons) + 12;
+                  const proj = (lat: number, lon: number) => {
+                    const x = 40 + ((lon - minLon) / (maxLon - minLon)) * 520;
+                    const y = 20 + ((maxLat - lat) / (maxLat - minLat)) * 260;
+                    return [x, y];
+                  };
+                  const [fx, fy] = proj(f.lat, f.lon);
+                  const [tx, ty] = proj(t.lat, t.lon);
+                  const [cx, cy] = proj(cur.lat, cur.lon);
+                  // Curved route line (great circle approximation)
+                  const midX = (fx + tx) / 2, midY = (fy + ty) / 2 - 20;
+                  return (
+                    <svg viewBox="0 0 600 300" className="w-full h-full">
+                      {/* Grid lines */}
+                      {[0.25,0.5,0.75].map(p => <line key={p} x1="0" y1={p*300} x2="600" y2={p*300} stroke="#1e293b" strokeWidth="0.5"/>)}
+                      {[0.25,0.5,0.75].map(p => <line key={p} x1={p*600} y1="0" x2={p*600} y2="300" stroke="#1e293b" strokeWidth="0.5"/>)}
+                      {/* Route line (curved) */}
+                      <path d={`M${fx},${fy} Q${midX},${midY} ${tx},${ty}`} fill="none" stroke="#3b82f6" strokeWidth="2" strokeDasharray="8,4" opacity="0.6"/>
+                      {/* Sailed portion */}
+                      <path d={`M${fx},${fy} Q${(fx+cx)/2},${(fy+cy)/2-10} ${cx},${cy}`} fill="none" stroke="#3b82f6" strokeWidth="2.5"/>
+                      {/* From port */}
+                      <circle cx={fx} cy={fy} r="6" fill="#1e293b" stroke="#3b82f6" strokeWidth="2"/>
+                      <text x={fx} y={fy-12} textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="system-ui">{f.name.split(",")[0]}</text>
+                      {/* To port */}
+                      <circle cx={tx} cy={ty} r="6" fill="#1e293b" stroke="#ef4444" strokeWidth="2"/>
+                      <text x={tx} y={ty+18} textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="system-ui">{t.name.split(",")[0]}</text>
+                      {/* Current position */}
+                      <circle cx={cx} cy={cy} r="5" fill="#10b981" stroke="#fff" strokeWidth="2"/>
+                      <circle cx={cx} cy={cy} r="10" fill="none" stroke="#10b981" strokeWidth="1" opacity="0.4"/>
+                    </svg>
+                  );
+                })()}
+              </div>
             </div>
-            <div className="grid grid-cols-4 gap-3 text-center">
-              {[["Cargo", voyage.cargoDescription], ["Load", voyage.cargoLoadPercent + "%"], ["Speed", voyage.speedKnots + " kn"], ["Distance", voyage.distanceNm + " nm"]].map(([l, v]) => (
-                <div key={l} className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50"><p className="text-[10px] text-slate-500 uppercase">{l}</p><p className="text-sm font-semibold tabular-nums">{v}</p></div>
-              ))}
-            </div>
-            <div>
-              <div className="flex justify-between text-xs mb-1"><span className="text-slate-500">Progress</span><span className="font-semibold tabular-nums">{voyage.progressPercent}%</span></div>
-              <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${voyage.progressPercent}%` }} /></div>
-            </div>
-            {!ship.position && <p className="text-[10px] text-slate-500 dark:text-white/30 bg-slate-500/5 border border-slate-500/20 rounded px-2 py-1">\u26A0 Illustrative voyage \u2014 no live AIS data</p>}
           </CardContent>
         </Card>
 
