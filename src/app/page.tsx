@@ -171,7 +171,7 @@ export default function Home() {
             ))}
             <button onClick={toggleTheme} title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
               style={{ background: "none", border: `1px solid ${border}`, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 16, color: text, marginLeft: 8 }}>
-              {theme === "dark" ? "Light" : "Dark"}
+              {theme === "dark" ? "☀️" : "🌙"}
             </button>
 
             {currentUser && currentUser.username !== "kay" && currentUser.username !== "admin" && (
