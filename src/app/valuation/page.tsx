@@ -53,7 +53,7 @@ const BUILDER_GROUPS: Record<string, string[]> = {
     "Kockums","Odense Steel Shipyard","Ulstein Verft","Vard Brattvaag",
   ],
   "Europe — Other": [
-    "3. Maj","Brodosplit","Bulyard","Chantiers de l\'Atlantique",
+    "3. Maj","Brodosplit","Bulyard","Chantiers de lAtlantique",
     "Fincantieri","Harland and Wolff","Mangalia Shipyard","Remontowa",
     "Stocznia Gdynia","Szczecin Shipyard","Uljanik",
   ],
