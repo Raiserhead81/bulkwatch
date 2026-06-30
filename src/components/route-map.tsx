@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
 import L from "leaflet";
-import { findSeaRoute } from "@/lib/seaRouting";
 import "leaflet/dist/leaflet.css";
 
 interface RouteMapProps {
@@ -308,7 +307,7 @@ export default function RouteMap({
     }).addTo(map);
 
     // Build sea route with waypoints to avoid land
-    const waypoints = findSeaRoute(fromLat, fromLon, toLat, toLon);
+    const waypoints = getSeaRouteWaypoints(fromLat, fromLon, toLat, toLon);
     let gcPoints: [number, number][] = [];
     for (let i = 0; i < waypoints.length - 1; i++) {
       const seg = greatCirclePoints(waypoints[i][0], waypoints[i][1], waypoints[i+1][0], waypoints[i+1][1], 20);
