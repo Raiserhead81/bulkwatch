@@ -407,12 +407,19 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* Left: Route info */}
               <div className="space-y-4">
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                  <div className="text-2xl">{voyage.from.countryFlag}</div>
-                  <div className="flex-1 min-w-0"><p className="text-[10px] text-slate-500 uppercase">From</p><p className="font-semibold text-sm truncate">{voyage.from.name}</p><p className="text-[10px] text-slate-400">{voyage.from.country}</p></div>
-                  <ArrowRight className="h-5 w-5 text-slate-400 flex-shrink-0" />
-                  <div className="text-2xl">{voyage.to.countryFlag}</div>
-                  <div className="flex-1 min-w-0"><p className="text-[10px] text-slate-500 uppercase">To</p><p className="font-semibold text-sm truncate">{voyage.to.name}</p><p className="text-[10px] text-slate-400">{voyage.to.country}</p></div>
+                <div className="grid grid-cols-[1fr,auto,1fr] items-center gap-4 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl flex-shrink-0">{voyage.from.countryFlag}</div>
+                    <div className="min-w-0"><p className="text-[10px] text-slate-500 uppercase">From</p><p className="font-semibold text-sm truncate">{voyage.from.name}</p><p className="text-[10px] text-slate-400">{voyage.from.country}</p></div>
+                  </div>
+                  <div className="flex flex-col items-center px-2">
+                    <ArrowRight className="h-5 w-5 text-slate-400" />
+                    <span className="text-[9px] text-slate-500 mt-1">{voyage.durationDays}d</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl flex-shrink-0">{voyage.to.countryFlag}</div>
+                    <div className="min-w-0"><p className="text-[10px] text-slate-500 uppercase">To</p><p className="font-semibold text-sm truncate">{voyage.to.name}</p><p className="text-[10px] text-slate-400">{voyage.to.country}</p></div>
+                  </div>
                 </div>
                 <div className="grid grid-cols-4 gap-2 text-center">
                   {[["Cargo", voyage.cargoDescription], ["Load", voyage.cargoLoadPercent + "%"], ["Speed", voyage.speedKnots + " kn"], ["Distance", voyage.distanceNm + " nm"]].map(([l, v]) => (
@@ -431,10 +438,11 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
               </div>
               {/* Right: Route map */}
               <RouteMap
-                fromLat={voyage.from.lat} fromLon={voyage.from.lon} fromName={voyage.from.name.split(",")[0]}
-                toLat={voyage.to.lat} toLon={voyage.to.lon} toName={voyage.to.name.split(",")[0]}
-                shipLat={undefined} shipLon={undefined} shipName={ship.name}
-                seaDays={voyage.seaDays || String(Math.round(voyage.distanceNm / (voyage.speedKnots * 24)))}
+                fromLat={voyage.from.lat} fromLon={voyage.from.lon} fromName={voyage.from.name}
+                toLat={voyage.to.lat} toLon={voyage.to.lon} toName={voyage.to.name}
+                shipName={ship.name}
+                daysTotal={voyage.durationDays}
+                daysRemaining={Math.round(voyage.durationDays * (100 - voyage.progressPercent) / 100)}
                 distanceNm={voyage.distanceNm} progressPercent={voyage.progressPercent}
               />
             </div>

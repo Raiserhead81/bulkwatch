@@ -6,16 +6,17 @@ import "leaflet/dist/leaflet.css";
 interface RouteMapProps {
   fromLat: number; fromLon: number; fromName: string;
   toLat: number; toLon: number; toName: string;
-  shipLat?: number; shipLon?: number; shipName?: string;
-  seaDays: string; distanceNm: number; progressPercent: number;
+  shipName?: string;
+  daysTotal: number; daysRemaining: number;
+  distanceNm: number; progressPercent: number;
   height?: number;
 }
 
 export default function RouteMap({
   fromLat, fromLon, fromName,
   toLat, toLon, toName,
-  shipLat, shipLon, shipName,
-  seaDays, distanceNm, progressPercent,
+  shipName,
+  daysTotal, daysRemaining, distanceNm, progressPercent,
   height = 280,
 }: RouteMapProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -58,9 +59,9 @@ export default function RouteMap({
     }).addTo(map);
 
     // Ship position
-    const pct = Math.max(0, Math.min(100, progressPercent));
-    const sLat = shipLat ?? fromLat + (toLat - fromLat) * (pct / 100);
-    const sLon = shipLon ?? fromLon + (toLon - fromLon) * (pct / 100);
+    const pct = Math.max(0, Math.min(98, progressPercent));
+    const sLat = fromLat + (toLat - fromLat) * (pct / 100);
+    const sLon = fromLon + (toLon - fromLon) * (pct / 100);
 
     // Sailed line (solid)
     L.polyline([[fromLat, fromLon], [sLat, sLon]], {
@@ -73,7 +74,7 @@ export default function RouteMap({
     const shipIcon = L.divIcon({
       html: `<div style="position:relative">
         <div style="width:10px;height:10px;border-radius:50%;background:#10b981;border:2px solid #fff;box-shadow:0 0 8px rgba(16,185,129,0.5)"></div>
-        <div style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);padding:1px 5px;background:rgba(15,23,42,0.9);border:1px solid rgba(16,185,129,0.3);border-radius:3px;white-space:nowrap;font-size:9px;color:#94a3b8;font-family:system-ui">${seaDays}d / ${distanceNm}nm</div>
+        <div style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);padding:2px 6px;background:rgba(15,23,42,0.9);border:1px solid rgba(16,185,129,0.3);border-radius:3px;white-space:nowrap;font-size:10px;color:#e2e8f0;font-family:system-ui"><span style="color:#10b981;font-weight:600">${shipName || "Ship"}</span> <span style="color:#94a3b8;margin-left:4px">${daysRemaining}d remaining</span></div>
       </div>`,
       className: "",
       iconSize: [10, 10],
@@ -88,7 +89,7 @@ export default function RouteMap({
     mapRef.current = map;
 
     return () => { map.remove(); mapRef.current = null; };
-  }, [fromLat, fromLon, toLat, toLon, shipLat, shipLon, seaDays, distanceNm, progressPercent, fromName, toName, shipName]);
+  }, [fromLat, fromLon, toLat, toLon, daysTotal, daysRemaining, distanceNm, progressPercent, fromName, toName, shipName]);
 
   return <div ref={ref} style={{ height, width: "100%", borderRadius: 8 }} />;
 }
