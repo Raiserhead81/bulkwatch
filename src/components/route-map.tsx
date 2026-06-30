@@ -39,114 +39,176 @@ function greatCirclePoints(lat1: number, lon1: number, lat2: number, lon2: numbe
   return points;
 }
 
-// Key maritime waypoints to route around land masses
+// Major maritime chokepoints and waypoints for sea routing
+const CHOKEPOINTS: Record<string, [number, number]> = {
+  gibraltar:    [36.0, -5.5],
+  suezN:        [31.3, 32.3],
+  suezS:        [29.9, 32.6],
+  babElMandeb:  [12.5, 43.5],
+  hormuz:       [26.5, 56.5],
+  sriLanka:     [6.0, 80.0],
+  malacca:      [1.8, 101.5],
+  singapore:    [1.2, 103.8],
+  lombok:       [-8.5, 115.7],
+  southChinaSea:[10.0, 115.0],
+  taiwan:       [22.0, 121.0],
+  eastPhilippines: [15.0, 128.0],
+  eastPNG:      [-5.0, 155.0],
+  skagen:       [57.7, 10.6],
+  englishCh:    [50.0, -1.5],
+  capeGoodHope: [-34.4, 18.5],
+  capeHorn:     [-56.0, -67.0],
+  panama:       [9.0, -79.5],
+  panamaPacific:[8.0, -82.0],
+  northMadagascar: [-12.0, 49.0],
+  mozambique:   [-15.0, 40.5],
+  goodHopeWest: [-34.0, 15.0],
+  canaryIs:     [28.0, -15.5],
+  azores:       [38.5, -28.0],
+  dakar:        [14.7, -17.5],
+  recife:       [-8.0, -34.8],
+  buenosAires:  [-34.6, -58.4],
+  pacificMid:   [0.0, -140.0],
+  hawaii:       [21.0, -158.0],
+  japanSouth:   [30.0, 132.0],
+  koreaStrait:  [34.0, 129.0],
+};
+
 function getSeaRouteWaypoints(lat1: number, lon1: number, lat2: number, lon2: number): [number, number][] {
   const wp: [number, number][] = [[lat1, lon1]];
+  const C = CHOKEPOINTS;
   
-  const minLon = Math.min(lon1, lon2), maxLon = Math.max(lon1, lon2);
-  const minLat = Math.min(lat1, lat2), maxLat = Math.max(lat1, lat2);
+  // Region detection helpers
+  const inRegion = (lat: number, lon: number, r: string): boolean => {
+    switch(r) {
+      case "europe":     return lat > 35 && lat < 72 && lon > -12 && lon < 35;
+      case "nwEurope":   return lat > 48 && lon > -10 && lon < 10;
+      case "baltic":     return lat > 54 && lon > 8 && lon < 30;
+      case "med":        return lat > 30 && lat < 45 && lon > -6 && lon < 36;
+      case "mideast":    return lon > 35 && lon < 75 && lat > 10 && lat < 35;
+      case "persian":    return lon > 45 && lon < 60 && lat > 22 && lat < 32;
+      case "india":      return lat > 5 && lat < 25 && lon > 68 && lon < 90;
+      case "seAsia":     return lat > -10 && lat < 15 && lon > 95 && lon < 125;
+      case "eastAsia":   return lat > 20 && lon > 100 && lon < 145;
+      case "japan":      return lat > 30 && lat < 45 && lon > 128 && lon < 146;
+      case "china":      return lat > 18 && lat < 42 && lon > 105 && lon < 125;
+      case "auEast":     return lat < -15 && lon > 140 && lon < 160;
+      case "auWest":     return lat < -15 && lon > 110 && lon < 130;
+      case "australia":  return lat < -10 && lon > 110 && lon < 160;
+      case "eAfrica":    return lat < 12 && lat > -35 && lon > 25 && lon < 55;
+      case "wAfrica":    return lat < 15 && lat > -35 && lon > -20 && lon < 15;
+      case "usEast":     return lat > 25 && lat < 50 && lon > -82 && lon < -60;
+      case "usGulf":     return lat > 25 && lat < 32 && lon > -98 && lon < -80;
+      case "usWest":     return lat > 25 && lat < 50 && lon > -130 && lon < -115;
+      case "caribbean":  return lat > 8 && lat < 25 && lon > -90 && lon < -60;
+      case "brazil":     return lat < 5 && lat > -35 && lon > -55 && lon < -30;
+      case "argentina":  return lat < -25 && lon > -70 && lon < -50;
+      default: return false;
+    }
+  };
   
-  // Europe <-> Asia/Middle East: via Gibraltar + Suez
-  const europeish = (lat: number, lon: number) => lat > 35 && lon > -10 && lon < 35;
-  const asiaish = (lat: number, lon: number) => (lon > 45 && lat < 35) || lon > 90;
-  const mideast = (lat: number, lon: number) => lon > 35 && lon < 75 && lat > 10 && lat < 35;
+  const r1 = (r: string) => inRegion(lat1, lon1, r);
+  const r2 = (r: string) => inRegion(lat2, lon2, r);
+  const route = (from: string, to: string) => (r1(from) && r2(to)) || (r1(to) && r2(from));
+  const toward = (from: string, to: string) => r1(from) && r2(to);
   
-  if ((europeish(lat1, lon1) && (asiaish(lat2, lon2) || mideast(lat2, lon2))) ||
-      (europeish(lat2, lon2) && (asiaish(lat1, lon1) || mideast(lat1, lon1)))) {
-    // Via Gibraltar + Med + Suez
-    const goingEast = lon1 < lon2;
-    if (goingEast) {
-      if (lon1 < 0) wp.push([36.0, -5.5]); // Gibraltar
-      wp.push([35.5, 10.0]); // Central Med
-      wp.push([31.3, 32.3]); // Suez north
-      wp.push([29.9, 32.6]); // Suez south
-      if (lon2 > 45) wp.push([12.5, 43.5]); // Bab el-Mandeb
-      if (lon2 > 75) wp.push([6.0, 80.0]); // Sri Lanka
-      if (lon2 > 95) wp.push([1.2, 103.8]); // Singapore
+  // ═══ EUROPE ↔ ASIA (Suez) ═══
+  if (route("europe", "eastAsia") || route("europe", "seAsia") || route("europe", "japan") ||
+      route("europe", "china") || route("europe", "australia") || route("europe", "india")) {
+    const goEast = lon1 < lon2;
+    const pts: [number, number][] = [];
+    if (r1("baltic") || r2("baltic")) pts.push(C.skagen);
+    if (r1("nwEurope") || r2("nwEurope")) pts.push(C.englishCh);
+    pts.push(C.gibraltar, C.suezN, C.suezS, C.babElMandeb);
+    if (r1("india") || r2("india")) { /* direct after Bab */ }
+    else if (r1("australia") || r2("australia")) {
+      pts.push(C.sriLanka, C.lombok);
     } else {
-      if (lon2 > 95) wp.push([1.2, 103.8]);
-      if (lon2 > 75) wp.push([6.0, 80.0]);
-      if (lon2 > 45) wp.push([12.5, 43.5]);
-      wp.push([29.9, 32.6]);
-      wp.push([31.3, 32.3]);
-      wp.push([35.5, 10.0]);
-      if (lon2 < 0) wp.push([36.0, -5.5]);
+      pts.push(C.sriLanka, C.malacca, C.singapore);
+      if (r1("china") || r2("china") || r1("japan") || r2("japan")) pts.push(C.southChinaSea);
+    }
+    if (!goEast) pts.reverse();
+    wp.push(...pts);
+  }
+  
+  // ═══ EUROPE ↔ MIDDLE EAST / PERSIAN GULF ═══
+  else if (route("europe", "mideast") || route("europe", "persian")) {
+    const goEast = lon1 < lon2;
+    const pts: [number, number][] = [C.gibraltar, C.suezN, C.suezS, C.babElMandeb];
+    if (r1("persian") || r2("persian")) pts.push(C.hormuz);
+    if (!goEast) pts.reverse();
+    wp.push(...pts);
+  }
+  
+  // ═══ AUSTRALIA ↔ EAST ASIA ═══
+  else if (route("australia", "eastAsia") || route("australia", "japan") || route("australia", "china")) {
+    if (r1("auEast") || r2("auEast")) {
+      // East AU: go east of Philippines/PNG
+      const pts: [number, number][] = [C.eastPNG, C.eastPhilippines];
+      if (r1("japan") || r2("japan")) pts.push(C.koreaStrait);
+      if (lon1 > lon2) pts.reverse();
+      wp.push(...pts);
+    } else {
+      // West AU: via Lombok + Singapore + SCS
+      const pts: [number, number][] = [C.lombok, C.singapore, C.southChinaSea];
+      if (lon1 > lon2) pts.reverse();
+      wp.push(...pts);
     }
   }
   
-  // Americas <-> Europe: across Atlantic (usually fine with GC)
-  // But North Sea / Baltic need to go around Denmark
-  const baltic = (lat: number, lon: number) => lat > 54 && lon > 8 && lon < 30;
-  if (baltic(lat1, lon1) !== baltic(lat2, lon2) && (baltic(lat1, lon1) || baltic(lat2, lon2))) {
-    wp.push([57.7, 10.6]); // Skagen (tip of Denmark)
+  // ═══ AUSTRALIA ↔ INDIA / MIDDLE EAST ═══
+  else if (route("australia", "india") || route("australia", "mideast") || route("australia", "persian")) {
+    const pts: [number, number][] = [C.lombok, C.sriLanka];
+    if (r1("persian") || r2("persian")) pts.push(C.hormuz);
+    if (lon1 > lon2) pts.reverse();
+    wp.push(...pts);
   }
   
-  // Americas East <-> Asia: via Panama or around Cape Horn
-  const eastAmericas = (lat: number, lon: number) => lon > -90 && lon < -30;
-  if (eastAmericas(lat1, lon1) && asiaish(lat2, lon2)) {
-    wp.push([9.0, -79.5]); // Panama
-    wp.push([0.0, -120.0]); // Pacific
-  } else if (eastAmericas(lat2, lon2) && asiaish(lat1, lon1)) {
-    wp.push([0.0, -120.0]);
-    wp.push([9.0, -79.5]);
+  // ═══ US EAST / GULF ↔ ASIA ═══
+  else if (route("usEast", "eastAsia") || route("usEast", "japan") || route("usGulf", "eastAsia") || route("usGulf", "japan")) {
+    wp.push(C.panama, C.panamaPacific);
+    wp.push(C.hawaii);
   }
   
-  // South America <-> Indian Ocean: via Cape of Good Hope
-  const southAm = (lat: number, lon: number) => lat < 0 && lon > -70 && lon < -30;
-  const indian = (lat: number, lon: number) => lon > 40 && lon < 100 && lat < 20;
-  if ((southAm(lat1, lon1) && indian(lat2, lon2)) || (southAm(lat2, lon2) && indian(lat1, lon1))) {
-    wp.push([-34.4, 18.5]); // Cape of Good Hope
+  // ═══ US EAST ↔ EUROPE ═══
+  else if (route("usEast", "europe") || route("usGulf", "europe")) {
+    wp.push(C.azores);
   }
   
-  // Australia <-> East Asia: via east of Philippines or Lombok Strait
-  const australia = (lat: number, lon: number) => lat < -10 && lon > 110 && lon < 160;
-  const eastAsia = (lat: number, lon: number) => lat > 20 && lon > 100 && lon < 145;
-  const westAustralia = (lat: number, lon: number) => lat < -15 && lon > 110 && lon < 130;
-  
-  if (australia(lat1, lon1) && eastAsia(lat2, lon2)) {
-    // AU east coast -> Asia: east of Philippines
-    if (lon1 > 140) {
-      wp.push([-10.0, 155.0]); // east of PNG
-      wp.push([5.0, 135.0]); // east of Indonesia
-      wp.push([15.0, 125.0]); // east of Philippines
-    } else {
-      // AU west coast -> Asia: via Lombok Strait + South China Sea
-      wp.push([-8.5, 115.7]); // Lombok Strait
-      wp.push([1.2, 103.8]); // Singapore
-      if (lon2 > 115) wp.push([10.0, 115.0]); // South China Sea
-    }
-  } else if (australia(lat2, lon2) && eastAsia(lat1, lon1)) {
-    if (lon2 > 140) {
-      wp.push([15.0, 125.0]);
-      wp.push([5.0, 135.0]);
-      wp.push([-10.0, 155.0]);
-    } else {
-      if (lon1 > 115) wp.push([10.0, 115.0]);
-      wp.push([1.2, 103.8]);
-      wp.push([-8.5, 115.7]);
-    }
+  // ═══ BRAZIL ↔ ASIA ═══
+  else if (route("brazil", "eastAsia") || route("brazil", "china") || route("brazil", "japan")) {
+    wp.push(C.capeGoodHope, C.sriLanka, C.malacca, C.singapore);
   }
   
-  // Australia <-> India/Middle East: via Lombok or north of AU
-  if (australia(lat1, lon1) && (mideast(lat2, lon2) || indian(lat2, lon2))) {
-    wp.push([-8.5, 115.7]); // Lombok Strait
-    wp.push([6.0, 80.0]); // Sri Lanka
-  } else if (australia(lat2, lon2) && (mideast(lat1, lon1) || indian(lat1, lon1))) {
-    wp.push([6.0, 80.0]);
-    wp.push([-8.5, 115.7]);
+  // ═══ BRAZIL ↔ EUROPE ═══
+  else if (route("brazil", "europe")) {
+    wp.push(C.canaryIs);
   }
   
-  // Africa East Coast: via Mozambique Channel
-  const eastAfrica = (lat: number, lon: number) => lat < 5 && lat > -35 && lon > 25 && lon < 55;
-  if ((eastAfrica(lat1, lon1) && asiaish(lat2, lon2)) || (eastAfrica(lat2, lon2) && asiaish(lat1, lon1))) {
-    wp.push([-12.0, 49.0]); // north of Madagascar
+  // ═══ EAST AFRICA ↔ ASIA ═══
+  else if (route("eAfrica", "eastAsia") || route("eAfrica", "india") || route("eAfrica", "seAsia")) {
+    wp.push(C.northMadagascar, C.sriLanka);
+    if (r1("seAsia") || r2("seAsia") || r1("eastAsia") || r2("eastAsia")) wp.push(C.malacca);
   }
-
-  // English Channel
-  const northSea = (lat: number, lon: number) => lat > 50 && lat < 56 && lon > -2 && lon < 8;
-  const atlantic = (lat: number, lon: number) => lon < -5 && lat > 35 && lat < 55;
-  if ((northSea(lat1, lon1) && atlantic(lat2, lon2)) || (northSea(lat2, lon2) && atlantic(lat1, lon1))) {
-    wp.push([50.0, -1.5]); // English Channel
+  
+  // ═══ ARGENTINA ↔ EUROPE ═══  
+  else if (route("argentina", "europe")) {
+    wp.push(C.recife, C.canaryIs);
+  }
+  
+  // ═══ US WEST ↔ ASIA ═══
+  else if (route("usWest", "eastAsia") || route("usWest", "japan") || route("usWest", "china")) {
+    wp.push(C.hawaii);
+  }
+  
+  // ═══ BALTIC special ═══
+  else if (r1("baltic") !== r2("baltic") && (r1("baltic") || r2("baltic"))) {
+    wp.push(C.skagen);
+  }
+  
+  // ═══ ENGLISH CHANNEL ═══
+  else if (route("nwEurope", "med") || (r1("nwEurope") && lon2 < -10) || (r2("nwEurope") && lon1 < -10)) {
+    wp.push(C.englishCh);
   }
   
   wp.push([lat2, lon2]);
