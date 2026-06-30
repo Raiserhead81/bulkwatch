@@ -1,93 +1,84 @@
 // ═══════════════════════════════════════════════════════════════
-// OPEX MODEL — BROKER LEVEL
-// Daily operating cost estimation for commercial shipping
-// Sources: Drewry Ship Operating Costs 2025/26, Baltic Exchange
-//          BOPEX, ITF/ILO MLC, Gard/Skuld P&I, ClassNK/DNV,
-//          daily live data from opex_update.py (12+ sources)
+// OPEX MODEL — BROKER LEVEL (v2 — calibrated against Drewry 2025/26)
 // ═══════════════════════════════════════════════════════════════
-
-// ═══ CREW MANNING & COSTS ═══
-// Based on: ITF CBA minimums, Drewry Manning Review, maritime-zone.com
-// All-in cost = base wage + OT + leave pay + social insurance + travel +
-//               training + medical + P&I crew liability
 
 interface CrewMember {
   rank: string;
-  dept: "D" | "E" | "C"; // Deck, Engine, Catering
-  dailyUSD: number; // all-in cost to shipowner
+  dept: "D" | "E" | "C";
+  dailyUSD: number;
 }
 
-// Flag-state crew cost multiplier (manning nationality correlates with flag)
-// Source: Drewry Manning Review — Filipino baseline = 1.0
+// Flag-state crew cost multiplier
+// IMPORTANT: Most open-registry flags (Panama, Liberia, Marshall Islands)
+// use Filipino crew. Premium flags = higher wages by CBA requirement.
+// Source: Drewry Manning Review, ITF CBAs
 const FLAG_CREW_MULT: Record<string, number> = {
-  "Philippines":1.00, "Myanmar":0.85, "India":0.95, "Indonesia":0.90,
-  "China":1.05, "Vietnam":0.88, "Ukraine":1.10, "Russia":1.08,
-  "Croatia":1.25, "Poland":1.20, "Greece":1.40, "Norway":1.80,
-  "Denmark":1.75, "Germany":1.65, "Netherlands":1.55, "United Kingdom":1.50,
-  "Japan":1.60, "South Korea":1.45, "Singapore":1.35, "Ireland":1.45,
-  "Marshall Islands":1.00, "Panama":1.00, "Liberia":1.00, "Malta":1.10,
-  "Hong Kong":1.15, "Bahamas":1.05, "Bermuda":1.10, "Cyprus":1.15,
-  "Isle of Man":1.20, "Antigua and Barbuda":1.00, "Tuvalu":0.95,
+  // Open registry (Filipino/Indian/Myanmar crew typical)
+  "Philippines":1.00, "Myanmar":0.90, "India":0.95, "Indonesia":0.92,
+  "China":1.05, "Vietnam":0.90, "Ukraine":1.05, "Russia":1.05,
+  "Marshall Islands":1.00, "Panama":1.00, "Liberia":1.00, "Malta":1.02,
+  "Hong Kong":1.05, "Bahamas":1.00, "Bermuda":1.02, "Cyprus":1.05,
+  "Antigua and Barbuda":1.00, "Tuvalu":0.95,
+  // Premium flags (home-country or mixed crew)
+  "Greece":1.15, "Norway":1.25, "Denmark":1.20, "Germany":1.20,
+  "Netherlands":1.15, "United Kingdom":1.15, "Japan":1.20,
+  "South Korea":1.10, "Singapore":1.10, "Ireland":1.12,
+  "Croatia":1.08, "Poland":1.05, "Isle of Man":1.10,
 };
 
-// Crew templates by size class (Filipino baseline rates, $/day all-in)
+// Crew templates — Filipino baseline rates ($/day, all-in)
 const CREW: Record<string, CrewMember[]> = {
-  // <5k DWT: Coaster (10-12 crew)
-  coaster: [
-    {rank:"Master",dept:"D",dailyUSD:290},{rank:"Ch.Officer",dept:"D",dailyUSD:210},
+  coaster: [ // <5k DWT, 12 crew
+    {rank:"Master",dept:"D",dailyUSD:290},{rank:"Ch.Off",dept:"D",dailyUSD:210},
     {rank:"2/O",dept:"D",dailyUSD:155},{rank:"Bosun",dept:"D",dailyUSD:85},
     {rank:"AB",dept:"D",dailyUSD:65},{rank:"AB",dept:"D",dailyUSD:65},
-    {rank:"Ch.Engineer",dept:"E",dailyUSD:270},{rank:"2/E",dept:"E",dailyUSD:195},
+    {rank:"Ch.Eng",dept:"E",dailyUSD:270},{rank:"2/E",dept:"E",dailyUSD:195},
     {rank:"Oiler",dept:"E",dailyUSD:55},{rank:"Oiler",dept:"E",dailyUSD:55},
     {rank:"Cook",dept:"C",dailyUSD:65},{rank:"Steward",dept:"C",dailyUSD:50},
   ],
-  // 5-10k DWT: Mini-Bulker / GenCargo (14 crew)
-  small: [
-    {rank:"Master",dept:"D",dailyUSD:340},{rank:"Ch.Officer",dept:"D",dailyUSD:245},
+  small: [ // 5-10k DWT, 14 crew
+    {rank:"Master",dept:"D",dailyUSD:340},{rank:"Ch.Off",dept:"D",dailyUSD:245},
     {rank:"2/O",dept:"D",dailyUSD:175},{rank:"Bosun",dept:"D",dailyUSD:95},
     {rank:"AB",dept:"D",dailyUSD:72},{rank:"AB",dept:"D",dailyUSD:72},
     {rank:"OS",dept:"D",dailyUSD:52},
-    {rank:"Ch.Engineer",dept:"E",dailyUSD:315},{rank:"2/E",dept:"E",dailyUSD:225},
+    {rank:"Ch.Eng",dept:"E",dailyUSD:315},{rank:"2/E",dept:"E",dailyUSD:225},
     {rank:"3/E",dept:"E",dailyUSD:165},{rank:"Oiler",dept:"E",dailyUSD:60},
     {rank:"Oiler",dept:"E",dailyUSD:60},
     {rank:"Cook",dept:"C",dailyUSD:72},{rank:"Steward",dept:"C",dailyUSD:52},
   ],
-  // 10-45k DWT: Handysize/Supramax (18 crew)
-  medium: [
-    {rank:"Master",dept:"D",dailyUSD:375},{rank:"Ch.Officer",dept:"D",dailyUSD:265},
+  medium: [ // 10-60k DWT, 18 crew
+    {rank:"Master",dept:"D",dailyUSD:375},{rank:"Ch.Off",dept:"D",dailyUSD:265},
     {rank:"2/O",dept:"D",dailyUSD:190},{rank:"3/O",dept:"D",dailyUSD:155},
     {rank:"Bosun",dept:"D",dailyUSD:105},{rank:"AB",dept:"D",dailyUSD:78},
     {rank:"AB",dept:"D",dailyUSD:78},{rank:"AB",dept:"D",dailyUSD:78},
     {rank:"OS",dept:"D",dailyUSD:57},
-    {rank:"Ch.Engineer",dept:"E",dailyUSD:345},{rank:"2/E",dept:"E",dailyUSD:248},
+    {rank:"Ch.Eng",dept:"E",dailyUSD:345},{rank:"2/E",dept:"E",dailyUSD:248},
     {rank:"3/E",dept:"E",dailyUSD:178},{rank:"4/E",dept:"E",dailyUSD:145},
     {rank:"Electrician",dept:"E",dailyUSD:128},{rank:"Oiler",dept:"E",dailyUSD:65},
     {rank:"Oiler",dept:"E",dailyUSD:65},
     {rank:"Cook",dept:"C",dailyUSD:78},{rank:"Messman",dept:"C",dailyUSD:52},
   ],
-  // 45-100k DWT: Panamax/Kamsarmax (21 crew)
-  large: [
-    {rank:"Master",dept:"D",dailyUSD:395},{rank:"Ch.Officer",dept:"D",dailyUSD:285},
+  large: [ // 60-100k DWT, 21 crew
+    {rank:"Master",dept:"D",dailyUSD:395},{rank:"Ch.Off",dept:"D",dailyUSD:285},
     {rank:"2/O",dept:"D",dailyUSD:205},{rank:"3/O",dept:"D",dailyUSD:168},
     {rank:"Bosun",dept:"D",dailyUSD:115},{rank:"AB",dept:"D",dailyUSD:82},
     {rank:"AB",dept:"D",dailyUSD:82},{rank:"AB",dept:"D",dailyUSD:82},
     {rank:"AB",dept:"D",dailyUSD:82},{rank:"OS",dept:"D",dailyUSD:62},
-    {rank:"Ch.Engineer",dept:"E",dailyUSD:375},{rank:"2/E",dept:"E",dailyUSD:268},
+    {rank:"Ch.Eng",dept:"E",dailyUSD:375},{rank:"2/E",dept:"E",dailyUSD:268},
     {rank:"3/E",dept:"E",dailyUSD:192},{rank:"4/E",dept:"E",dailyUSD:158},
     {rank:"Electrician",dept:"E",dailyUSD:138},{rank:"Fitter",dept:"E",dailyUSD:92},
     {rank:"Oiler",dept:"E",dailyUSD:72},{rank:"Oiler",dept:"E",dailyUSD:72},
     {rank:"Cook",dept:"C",dailyUSD:82},{rank:"Messman",dept:"C",dailyUSD:55},
     {rank:"Steward",dept:"C",dailyUSD:58},
   ],
-  // 100k+ DWT: Capesize/VLOC/Newcastlemax (24 crew)
-  vlarge: [
-    {rank:"Master",dept:"D",dailyUSD:425},{rank:"Ch.Officer",dept:"D",dailyUSD:308},
+  vlarge: [ // 100k+ DWT, 24 crew
+    {rank:"Master",dept:"D",dailyUSD:425},{rank:"Ch.Off",dept:"D",dailyUSD:308},
     {rank:"2/O",dept:"D",dailyUSD:220},{rank:"3/O",dept:"D",dailyUSD:178},
     {rank:"Bosun",dept:"D",dailyUSD:128},{rank:"AB",dept:"D",dailyUSD:88},
     {rank:"AB",dept:"D",dailyUSD:88},{rank:"AB",dept:"D",dailyUSD:88},
     {rank:"AB",dept:"D",dailyUSD:88},{rank:"OS",dept:"D",dailyUSD:68},
     {rank:"OS",dept:"D",dailyUSD:68},
-    {rank:"Ch.Engineer",dept:"E",dailyUSD:398},{rank:"2/E",dept:"E",dailyUSD:288},
+    {rank:"Ch.Eng",dept:"E",dailyUSD:398},{rank:"2/E",dept:"E",dailyUSD:288},
     {rank:"3/E",dept:"E",dailyUSD:208},{rank:"4/E",dept:"E",dailyUSD:168},
     {rank:"Electrician",dept:"E",dailyUSD:148},{rank:"Fitter",dept:"E",dailyUSD:98},
     {rank:"Oiler",dept:"E",dailyUSD:78},{rank:"Oiler",dept:"E",dailyUSD:78},
@@ -97,19 +88,12 @@ const CREW: Record<string, CrewMember[]> = {
   ],
 };
 
-// ═══ LIVE RATES INTERFACE ═══
 export interface LiveOpexRates {
   date: string;
-  bunkerVLSFO: number;
-  bunkerHSFO: number;
-  bunkerMGO: number;
-  bdiIndex: number;
-  scrapPriceLDT: number;
-  steelScrapUSD: number;
-  insuranceRateHull: number;
-  insuranceRatePnI: number;
-  lubeOilPrice: number;
-  provisionsCostPerPersonDay: number;
+  bunkerVLSFO: number; bunkerHSFO: number; bunkerMGO: number;
+  bdiIndex: number; scrapPriceLDT: number; steelScrapUSD: number;
+  insuranceRateHull: number; insuranceRatePnI: number;
+  lubeOilPrice: number; provisionsCostPerPersonDay: number;
   charterRates: { handysize:number; supramax:number; panamax:number; capesize:number };
   sources: string[];
 }
@@ -137,57 +121,33 @@ export function getLiveRates(): LiveOpexRates {
   return DEFAULTS;
 }
 
-// ═══ OPEX CALCULATION ═══
-
 export interface OpexBreakdown {
-  // Crew
-  crewCostPerDay: number;
-  crewCount: number;
+  crewCostPerDay: number; crewCount: number;
   crewDetails: {rank:string; dept:string; dailyUSD:number}[];
   flagMultiplier: number;
-  // Fixed OPEX
   provisionsPerDay: number;
-  insuranceHMPerDay: number;
-  insurancePnIPerDay: number;
-  insuranceTotalPerDay: number;
-  maintenancePerDay: number;
-  lubeOilPerDay: number;
-  storesSpares: number;
-  managementPerDay: number;
-  drydockPerDay: number; // amortized over 5yr cycle
-  // Regulatory
-  euEtsPerDay: number;
-  // TOTAL
-  totalFixedOpex: number; // all above
-  // Voyage costs (variable, for reference)
-  fuelCostPerDay: number;
-  portCostsPerDay: number; // estimated
-  totalVoyexPerDay: number;
-  // Combined
-  totalCostPerDay: number; // OPEX + VOYEX
-  // Earnings
-  charterRatePerDay: number;
-  netEarningsPerDay: number;
-  annualOpex: number;
-  annualNetEarnings: number;
+  insuranceHMPerDay: number; insurancePnIPerDay: number; insuranceTotalPerDay: number;
+  maintenancePerDay: number; lubeOilPerDay: number; storesSpares: number;
+  managementPerDay: number; drydockPerDay: number; euEtsPerDay: number;
+  totalFixedOpex: number;
+  fuelCostPerDay: number; portCostsPerDay: number; totalVoyexPerDay: number;
+  totalCostPerDay: number;
+  charterRatePerDay: number; netEarningsPerDay: number;
+  annualOpex: number; annualNetEarnings: number;
   breakEvenCharterRate: number;
-  paybackYears: number|null;
-  roiPercent: number|null;
-  sizeClass: string;
-  ratesDate: string;
-  sources: string[];
+  paybackYears: number|null; roiPercent: number|null;
+  sizeClass: string; ratesDate: string; sources: string[];
 }
 
 function getSizeClass(dwt: number): string {
   if(dwt<5000) return "coaster";
   if(dwt<10000) return "small";
-  if(dwt<45000) return "medium";
+  if(dwt<60000) return "medium";   // ← was 45000, now 60k = Supramax/Ultramax still medium
   if(dwt<100000) return "large";
   return "vlarge";
 }
 
 function getCharterRate(dwt:number, type:string, rates:LiveOpexRates): number {
-  // Tanker/container premium on charter rates
   const tankerTypes = ["VLCC","Suezmax","Aframax","Product Tanker","Chemical Tanker","Crude Oil Tanker","Tanker","Oil/Chemical Tanker","LNG Tanker","LPG Tanker"];
   const containerTypes = ["Container Ship","ULCV","Neo-Panamax","Feeder"];
   let mult = 1.0;
@@ -205,107 +165,92 @@ function getCharterRate(dwt:number, type:string, rates:LiveOpexRates): number {
 }
 
 export function calculateOpex(
-  dwt: number,
-  yearBuilt: number,
-  shipType: string,
-  estimatedValueUSD: number,
-  flag?: string,
-  fuelConsumptionTonsDay?: number,
-  crewSizeOverride?: number,
-  grossTonnage?: number,
+  dwt: number, yearBuilt: number, shipType: string, estimatedValueUSD: number,
+  flag?: string, fuelConsumptionTonsDay?: number,
+  crewSizeOverride?: number, grossTonnage?: number,
 ): OpexBreakdown {
   const rates = getLiveRates();
   const year = new Date().getFullYear();
   const age = yearBuilt > 1900 ? year - yearBuilt : 10;
   const sc = getSizeClass(dwt);
 
-  // ─── 1. CREW ───
+  // 1. CREW — flag mult capped more conservatively
   const template = CREW[sc];
   const flagMult = (flag && FLAG_CREW_MULT[flag]) || 1.0;
-  // Age factor: older ships need more crew overtime for maintenance
-  const ageCrewMult = 1 + Math.max(0, age - 8) * 0.015;
+  // Age factor: +1% per year over 10yr (not 1.5%)
+  const ageCrewMult = 1 + Math.max(0, age - 10) * 0.01;
   const crewDetails = template.map(c => ({
-    rank: c.rank,
-    dept: c.dept,
+    rank: c.rank, dept: c.dept,
     dailyUSD: Math.round(c.dailyUSD * flagMult * ageCrewMult),
   }));
   const crewCount = crewSizeOverride || template.length;
   const crewCostPerDay = crewDetails.reduce((s,c)=>s+c.dailyUSD, 0);
 
-  // ─── 2. PROVISIONS ───
-  // ILO MLC minimum $10/person/day, market average $12-15
+  // 2. PROVISIONS
   const provisionsPerDay = Math.round(crewCount * rates.provisionsCostPerPersonDay);
 
-  // ─── 3. INSURANCE ───
-  // H&M: % of insured value (110% of market) — varies by age
+  // 3. INSURANCE
   const insuredValue = estimatedValueUSD * 1.10;
-  const hmAgeLoad = age > 15 ? 1.3 : age > 10 ? 1.15 : 1.0;
+  const hmAgeLoad = age > 20 ? 1.25 : age > 15 ? 1.15 : age > 10 ? 1.08 : 1.0;
   const hmRate = rates.insuranceRateHull * hmAgeLoad;
   const insuranceHMPerDay = Math.round((insuredValue * (hmRate/100)) / 365);
-  // P&I: $/GT/year — International Group clubs (Gard, Skuld, West of England)
   const gt = grossTonnage || Math.round(dwt * 0.6);
   const insurancePnIPerDay = Math.round((gt * rates.insuranceRatePnI) / 365);
   const insuranceTotalPerDay = insuranceHMPerDay + insurancePnIPerDay;
 
-  // ─── 4. MAINTENANCE & REPAIRS ───
-  // Drewry benchmark: $2,000-8,000/day depending on size & age
+  // 4. MAINTENANCE — more moderate age scaling
   const baseMaint: Record<string,number> = {
-    coaster:650, small:850, medium:1400, large:2000, vlarge:2800
+    coaster:500, small:700, medium:1100, large:1500, vlarge:2200
   };
-  const maintAgeFactor = age <= 5 ? 0.85 : age <= 10 ? 1.0 : age <= 15 ? 1.20 : age <= 20 ? 1.45 : 1.75;
-  const maintenancePerDay = Math.round((baseMaint[sc]||1500) * maintAgeFactor);
+  // Age factor: ×0.85 if <5yr, ×1.0 if 5-10, then +5% per year (not ×1.75 at 30yr)
+  const maintAgeFactor = age <= 5 ? 0.85 : age <= 10 ? 1.0
+    : 1.0 + Math.min((age - 10) * 0.05, 0.60); // cap at ×1.60
+  const maintenancePerDay = Math.round((baseMaint[sc]||1200) * maintAgeFactor);
 
-  // ─── 5. STORES & SPARES ───
-  // Consumables, paint, ropes, safety equipment
-  const storesSpares = Math.round(dwt < 10000 ? 350 : dwt < 45000 ? 550 : dwt < 100000 ? 750 : 1000);
+  // 5. STORES & SPARES
+  const storesSpares = Math.round(dwt < 5000 ? 250 : dwt < 10000 ? 350 : dwt < 60000 ? 500 : dwt < 100000 ? 650 : 850);
 
-  // ─── 6. LUBE OIL ───
-  // SFOC-based: ME power×0.7g/kWh cylinder + 0.15g/kWh system
+  // 6. LUBE OIL — simplified, based on typical ME power
   const approxMEkW = fuelConsumptionTonsDay
-    ? fuelConsumptionTonsDay * 1000 / (170 * 24 / 1000) // reverse from SFOC ~170g/kWh
-    : dwt < 5000 ? 1800 : dwt < 10000 ? 3000 : dwt < 45000 ? 7000 : dwt < 100000 ? 11000 : 18000;
-  const cylOilLitersDay = approxMEkW * 0.0007 * 24;
-  const sysOilLitersDay = approxMEkW * 0.00015 * 24;
-  const lubeOilPerDay = Math.round((cylOilLitersDay + sysOilLitersDay) * rates.lubeOilPrice);
+    ? fuelConsumptionTonsDay * 1000 / 4.08 // SFOC ~170g/kWh, 24h
+    : dwt < 5000 ? 1800 : dwt < 10000 ? 3000 : dwt < 60000 ? 7000 : dwt < 100000 ? 11000 : 18000;
+  const lubePerDay = approxMEkW * 0.00085 * 24; // total lube liters/day
+  const lubeOilPerDay = Math.round(lubePerDay * rates.lubeOilPrice);
 
-  // ─── 7. MANAGEMENT ───
-  // Technical + commercial management (V.Ships, Anglo-Eastern, etc.)
-  const managementPerDay = Math.round(dwt < 5000 ? 400 : dwt < 10000 ? 550 : dwt < 45000 ? 750 : dwt < 100000 ? 950 : 1150);
+  // 7. MANAGEMENT
+  const managementPerDay = dwt < 5000 ? 350 : dwt < 10000 ? 450 : dwt < 60000 ? 650 : dwt < 100000 ? 850 : 1050;
 
-  // ─── 8. DRYDOCK (amortized) ───
-  // Special survey every 5 years: $500k-3M depending on size
+  // 8. DRYDOCK (amortized over 5yr)
   const dockCost: Record<string,number> = {
-    coaster:350_000, small:500_000, medium:900_000, large:1_500_000, vlarge:2_500_000
+    coaster:250_000, small:400_000, medium:700_000, large:1_200_000, vlarge:2_000_000
   };
-  const dockAgeAdj = age > 20 ? 1.5 : age > 15 ? 1.3 : 1.0;
-  const drydockPerDay = Math.round(((dockCost[sc]||1_000_000) * dockAgeAdj) / (5*365));
+  const dockAgeAdj = age > 25 ? 1.3 : age > 20 ? 1.2 : age > 15 ? 1.1 : 1.0;
+  const drydockPerDay = Math.round(((dockCost[sc]||800_000) * dockAgeAdj) / (5*365));
 
-  // ─── 9. EU ETS (since 2024, 100% in 2026) ───
-  // ~3.2 tons CO2 per ton fuel × EU ETS price ~€60/ton ≈ $65
-  // Only for EU voyages, assume 30% of trading days
-  const fuelPerDay = fuelConsumptionTonsDay || (dwt < 5000 ? 8 : dwt < 10000 ? 14 : dwt < 45000 ? 25 : dwt < 100000 ? 35 : 55);
-  const co2PerDay = fuelPerDay * 3.15; // tons CO2
-  const etsPrice = 65; // $/ton CO2 (EU ETS ~€60)
-  const euTradeShare = 0.25; // ~25% of days in EU waters
-  const euEtsPerDay = Math.round(co2PerDay * etsPrice * euTradeShare);
+  // 9. EU ETS — conservative estimate
+  // At sea fuel consumption × fraction of time at sea × EU route share
+  // Typical: ~60-70% of time at sea, ~15-20% of voyages touch EU
+  const fuelAtSea = fuelConsumptionTonsDay || (dwt < 5000 ? 8 : dwt < 10000 ? 12 : dwt < 60000 ? 22 : dwt < 100000 ? 32 : 50);
+  const avgDailyFuel = fuelAtSea * 0.65; // ~65% time at sea (rest: port, canal, ballast slow)
+  const co2PerDay = avgDailyFuel * 3.15;
+  const etsPerTonCO2 = 65; // ~EUR60
+  const euShareOfTrading = 0.15; // 15% of trading days involve EU
+  const euEtsPerDay = Math.round(co2PerDay * etsPerTonCO2 * euShareOfTrading);
 
-  // ─── TOTAL FIXED OPEX ───
+  // TOTAL FIXED OPEX
   const totalFixedOpex = crewCostPerDay + provisionsPerDay + insuranceTotalPerDay +
     maintenancePerDay + storesSpares + lubeOilPerDay + managementPerDay + drydockPerDay + euEtsPerDay;
 
-  // ─── VOYAGE COSTS (variable, estimated) ───
-  const bunkerPrice = rates.bunkerVLSFO; // most ships now on VLSFO
-  const fuelCostPerDay = Math.round(fuelPerDay * bunkerPrice);
-  // Port costs amortized: ~$50-150k per port call, ~24 calls/year
-  const portCostsPerDay = Math.round(dwt < 10000 ? 350 : dwt < 45000 ? 650 : dwt < 100000 ? 1000 : 1500);
+  // VOYAGE COSTS (variable)
+  const fuelCostPerDay = Math.round(fuelAtSea * 0.65 * rates.bunkerVLSFO);
+  const portCostsPerDay = Math.round(dwt < 10000 ? 300 : dwt < 60000 ? 550 : dwt < 100000 ? 850 : 1200);
   const totalVoyexPerDay = fuelCostPerDay + portCostsPerDay;
 
-  // ─── COMBINED ───
   const totalCostPerDay = totalFixedOpex + totalVoyexPerDay;
 
-  // ─── EARNINGS ───
+  // EARNINGS (TC basis: owner pays OPEX, charterer pays voyage costs)
   const charterRatePerDay = getCharterRate(dwt, shipType, rates);
-  const netEarningsPerDay = charterRatePerDay - totalFixedOpex; // TC: owner pays OPEX, charterer pays VOYEX
+  const netEarningsPerDay = charterRatePerDay - totalFixedOpex;
   const annualOpex = totalFixedOpex * 365;
   const annualNetEarnings = netEarningsPerDay * 365;
   const paybackYears = netEarningsPerDay > 0
