@@ -326,7 +326,7 @@ export default function ValuationPage() {
     <div className="min-h-screen bg-slate-950 text-white">
       {/* Header */}
       <header className="border-b border-blue-500/10 bg-slate-950/90 backdrop-blur-md sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div className="max-w-screen-2xl mx-auto px-6 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-sm text-slate-400 hover:text-blue-400">
             <ArrowLeft className="h-4 w-4" /> Back
           </Link>
@@ -338,7 +338,7 @@ export default function ValuationPage() {
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-screen-2xl mx-auto px-6 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
           {/* Input Panel */}
@@ -407,7 +407,7 @@ export default function ValuationPage() {
             {/* Big Number */}
             <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/20 rounded-2xl p-8 text-center">
               <p className="text-xs text-slate-400 uppercase tracking-wider mb-2">Estimated Market Value</p>
-              <p className="text-5xl font-black text-blue-400 tracking-tight">{fmt(result.final)}</p>
+              <p className="text-7xl font-black text-blue-400 tracking-tight">{fmt(result.final)}</p>
               <p className="text-sm text-slate-500 mt-2">
                 {fmt(Math.round(result.final / dwt))}/DWT
                 {result.isScrapFloor && <span className="ml-2 text-amber-400">(at scrap floor)</span>}
@@ -460,7 +460,7 @@ export default function ValuationPage() {
                     <DollarSign className="h-5 w-5 text-blue-400" />
                     <span className="font-bold">Market Value</span>
                   </div>
-                  <span className="text-xl font-black text-blue-400">{fmt(result.final)}</span>
+                  <span className="text-3xl font-black text-blue-400">{fmt(result.final)}</span>
                 </div>
               </div>
             </div>
@@ -468,7 +468,7 @@ export default function ValuationPage() {
             {/* Depreciation Curve */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
               <h3 className="text-sm font-bold mb-4">Depreciation Curve (this vessel)</h3>
-              <div className="h-40">
+              <div className="h-56">
                 <svg viewBox="0 0 500 140" className="w-full h-full">
                   {/* Grid */}
                   {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => (
