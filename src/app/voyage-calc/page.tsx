@@ -2,6 +2,8 @@
 
 import { getRoutingFactors } from "@/lib/voyageRouting";
 import { calculateFreightRates, getRateForDwt } from "@/lib/freightRates";
+import dynamic from "next/dynamic";
+const RouteMap = dynamic(() => import("@/components/route-map"), { ssr: false });
 import { calculateOpex } from "@/lib/opex";
 
 import { useState, useMemo, useEffect } from "react";
@@ -181,15 +183,22 @@ export default function VoyageCalcPage() {
   const [freightRate, setFreightRate] = useState(15);
   const [liveRates, setLiveRates] = useState<any>(null);
 
-  // Auto-calculate freight rate from current BDI
+  // Fetch live BDI and calculate freight rates
+  const [liveBdi, setLiveBdi] = useState(2490);
+  useEffect(() => {
+    fetch("/api/market").then(r => r.json()).then(d => {
+      if (d.bdi) setLiveBdi(d.bdi);
+      if (d.bunkerVLSFO) setFuelPrice(d.bunkerVLSFO);
+    }).catch(() => {});
+  }, []);
   useMemo(() => {
-    const rates = calculateFreightRates(2524, "28 Jun 2026");
+    const rates = calculateFreightRates(liveBdi, new Date().toLocaleDateString("en-GB"));
     setLiveRates(rates);
     const match = getRateForDwt(rates, dwt, "Bulk Carrier");
     if (match && match.spotRate > 0) {
       setFreightRate(+match.spotRate.toFixed(1));
     }
-  }, [dwt]);
+  }, [dwt, liveBdi]);
   const [portDays, setPortDays] = useState(4);
   const [weather, setWeather] = useState<any>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
@@ -381,6 +390,19 @@ export default function VoyageCalcPage() {
                 </div>
 
                 <div style={box}>
+                  {/* Route Map */}
+                  <div style={{ marginBottom: 20, borderRadius: 8, overflow: "hidden", border: "1px solid #1e293b" }}>
+                    <RouteMap
+                      fromLat={result.from.lat} fromLon={result.from.lon} fromName={result.from.name}
+                      toLat={result.to.lat} toLon={result.to.lon} toName={result.to.name}
+                      shipName="Voyage"
+                      daysTotal={Math.round(parseFloat(result.totalDays))}
+                      daysRemaining={Math.round(parseFloat(result.totalDays))}
+                      distanceNm={result.distNm} progressPercent={0}
+                      height={220}
+                    />
+                  </div>
+
                   <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#38bdf8" }}>Fuel &amp; Costs</h2>
                   <div className="fuel-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                     <div>
