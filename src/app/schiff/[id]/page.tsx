@@ -414,7 +414,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                   </div>
                   <div className="flex flex-col items-center px-2">
                     <ArrowRight className="h-5 w-5 text-slate-400" />
-                    <span className="text-[9px] text-slate-500 mt-1">{voyage.durationDays}d</span>
+                    <span className="text-sm font-bold text-slate-300 mt-1">{voyage.durationDays} days</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-2xl flex-shrink-0">{voyage.to.countryFlag}</div>

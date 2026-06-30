@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import ThemeToggle from "@/components/theme-toggle";
 import { I18nProvider } from "@/lib/i18n";
 
 const geistSans = Geist({
@@ -68,6 +69,7 @@ export default function RootLayout({
         <I18nProvider>
           {children}
           <Toaster />
+          <ThemeToggle />
         </I18nProvider>
         <script dangerouslySetInnerHTML={{ __html: `if("serviceWorker"in navigator){navigator.serviceWorker.getRegistrations().then(function(regs){regs.forEach(function(r){r.unregister()})});caches.keys().then(function(k){k.forEach(function(n){caches.delete(n)})})}` }} />
       </body>
