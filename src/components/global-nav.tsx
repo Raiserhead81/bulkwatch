@@ -67,10 +67,10 @@ export default function GlobalNav() {
           </div>
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-1">
-            {NAV_LINKS.map(([label, href]) => (
+            {NAV_LINKS.map(([label, href, icon]) => (
               <a key={href} href={href}
-                className={`px-2.5 py-1.5 rounded text-xs ${path === href ? "text-blue-400 font-semibold" : "text-slate-500 hover:text-slate-200"}`}>
-                {label}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded text-xs ${path === href ? "text-blue-400 font-semibold" : "text-slate-500 hover:text-slate-200"}`}>
+                <span className="text-sm">{icon}</span> {label}
               </a>
             ))}
             <button onClick={toggleTheme} className="ml-2 px-2 py-1 rounded border border-slate-700 text-sm cursor-pointer" title="Toggle theme">
