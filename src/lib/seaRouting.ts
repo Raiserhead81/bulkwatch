@@ -222,13 +222,14 @@ export function findSeaRoute(fromLat: number, fromLon: number, toLat: number, to
   for (const [id] of nodes) dist.set(id, Infinity);
   dist.set("__from", 0);
 
-  while (true) {
+  let _iter = 0;
+  while (_iter++ < 500) {
     let u = "";
     let minD = Infinity;
     for (const [id, d] of dist) {
       if (!visited.has(id) && d < minD) { u = id; minD = d; }
     }
-    if (!u || u === "__to") break;
+    if (!u || u === "__to" || minD === Infinity) break;
     visited.add(u);
 
     for (const [v, w] of adj.get(u) || []) {
