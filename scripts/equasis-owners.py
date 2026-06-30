@@ -4,7 +4,8 @@ Cron: 30 5 * * *"""
 import sqlite3, re, time
 
 DB = "/opt/bulkwatch/db/ships.db"
-MAX_PER_RUN = 200
+import sys as _sys
+MAX_PER_RUN = int(_sys.argv[_sys.argv.index("--limit")+1]) if "--limit" in _sys.argv else 200
 DELAY = 6.0
 ACCOUNTS = [
     ("kayconrad81@googlemail.com", "!nfinitY!981"),

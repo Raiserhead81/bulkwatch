@@ -5,7 +5,8 @@ Detention%, Owner, Manager, ISM Manager, Status."""
 import sqlite3, urllib.request, urllib.parse, http.cookiejar, re, time, sys
 
 DB = "/opt/bulkwatch/db/ships.db"
-MAX_PER_RUN = 800
+import sys as _sys
+MAX_PER_RUN = int(_sys.argv[_sys.argv.index("--limit")+1]) if "--limit" in _sys.argv else 800
 DELAY = 5.0
 ACCOUNTS = [
     ("kayconrad@posteo.de", "!nfinitY!981"),
