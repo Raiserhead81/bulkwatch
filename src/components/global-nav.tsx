@@ -10,12 +10,14 @@ const NAV_LINKS: [string,string,string][] = [
 
 export default function GlobalNav() {
   const [theme, setTheme] = useState<"dark"|"light">("dark");
+  const [currentUser, setCurrentUser] = useState<{username:string;role:string}|null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [path, setPath] = useState("/");
   
 
   useEffect(() => {
     setPath(window.location.pathname);
+    fetch("/api/auth/me").then(r=>r.json()).then(d=>{if(d.user) setCurrentUser(d.user)}).catch(()=>{});
 
     const saved = localStorage.getItem("vessel-theme") || "dark";
     setTheme(saved as "dark"|"light");
@@ -48,6 +50,7 @@ export default function GlobalNav() {
             className="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white mt-4 border border-slate-700">
             {theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode"}
           </button>
+          {currentUser?.role === "admin" && <a href="/users" className="flex items-center gap-3 px-3 py-3 rounded-lg text-base text-slate-300 hover:text-white hover:bg-slate-800"><span className="text-lg w-7 text-center">👤</span>Users</a>}
           <a href="/api/auth/logout" className="block px-3 py-2 text-sm text-slate-500 hover:text-red-400 mt-2">Logout</a>
         </div>
       </div>
@@ -71,6 +74,7 @@ export default function GlobalNav() {
             <button onClick={toggleTheme} className="ml-2 px-2 py-1 rounded border border-slate-700 text-sm cursor-pointer" title="Toggle theme">
               {theme === "dark" ? "☀️" : "🌙"}
             </button>
+            {currentUser?.role === "admin" && <a href="/users" className="ml-2 text-xs text-slate-500 hover:text-slate-200">👤 Users</a>}
             <a href="/api/auth/logout" className="ml-2 text-xs text-slate-600 hover:text-red-400">Logout</a>
           </div>
           {/* Mobile hamburger */}
