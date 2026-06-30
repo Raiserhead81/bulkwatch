@@ -304,11 +304,21 @@ export default function WorldMap({ ships, height = "100%", typeFilter = "", focu
         popupAnchor: [0, -7],
       });
 
-      L.marker([pos.lat, pos.lon], { icon })
-        .bindPopup(buildPopup(ship, color), { maxWidth: 240, className: "vessel-popup" })
-        .addTo(cluster);
+      const marker = L.marker([pos.lat, pos.lon], { icon })
+        .bindPopup(buildPopup(ship, color), { maxWidth: 240, className: "vessel-popup" });
+      marker.addTo(cluster);
+
+      // If this is the focused ship, zoom in and open popup
+      if (focusImo && ship.imo === focusImo) {
+        setTimeout(() => {
+          map.setView([pos.lat, pos.lon], focusZoom || 10);
+          cluster.zoomToShowLayer(marker, () => {
+            marker.openPopup();
+          });
+        }, 800);
+      }
     }
-  }, [ships, showDB, activeType]);
+  }, [ships, showDB, activeType, focusImo, focusZoom]);
 
   // ── Live AIS markers (batch addLayers to avoid per-marker overhead) ─────────
   useEffect(() => {
