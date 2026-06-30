@@ -229,9 +229,9 @@ export default function Home() {
 
         <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
           <span style={{ fontSize: 12, color: textDim }}>Quick:</span>
-          {[["Arklow","Arklow"],["Oldendorff","Oldendorff"],["Maersk","Maersk"],["MSC","MSC"],["CMA CGM","CMA CGM"],["Hapag-Lloyd","Hapag-Lloyd"],["Evergreen","Evergreen"]].map(([label, q]) => (
-            <button key={q} onClick={() => { setSearch(search === q ? "" : q); setPage(1); }}
-              style={{ padding: "4px 10px", background: search === q ? "#0ea5e9" : cardBg, border: `1px solid ${search === q ? "#0ea5e9" : border}`, borderRadius: 20, color: search === q ? "#fff" : textMuted, fontSize: 12, cursor: "pointer" }}>
+          {[["Arklow","Arklow Shipping"],["Oldendorff","Oldendorff Carriers"],["Maersk","Maersk"],["MSC","MSC"],["CMA CGM","CMA CGM"],["Hapag-Lloyd","Hapag-Lloyd"],["Evergreen","Evergreen"]].map(([label, q]) => (
+            <button key={q} onClick={() => { setOperatorFilter(operatorFilter === q ? "" : q); setSearch(""); setPage(1); }}
+              style={{ padding: "4px 10px", background: operatorFilter === q ? "#0ea5e9" : cardBg, border: `1px solid ${search === q ? "#0ea5e9" : border}`, borderRadius: 20, color: operatorFilter === q ? "#fff" : textMuted, fontSize: 12, cursor: "pointer" }}>
               {label}
             </button>
           ))}
