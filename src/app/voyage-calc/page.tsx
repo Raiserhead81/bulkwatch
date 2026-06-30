@@ -257,16 +257,17 @@ export default function VoyageCalcPage() {
   }, [fromCode, toCode, dwt, speed, fuelPrice, fuelConsumption, freightRate, portDays]);
 
   // Fetch live weather for selected route
-  const fetchWeather = () => {
+  // Auto-fetch weather when route changes
+  useEffect(() => {
     const from = PORTS.find(p => p.code === fromCode);
     const to = PORTS.find(p => p.code === toCode);
-    if (!from || !to || from.code === to.code) return;
+    if (!from || !to || from.code === to.code) { setWeather(null); return; }
     setWeatherLoading(true);
-    fetch(`/api/weather/route?fromLat=${from.lat}&fromLon=${from.lon}&toLat=${to.lat}&toLon=${to.lon}`)
+    fetch(`/api/weather/route?fromLat=${from.lat}&fromLon=${from.lon}&toLat=${to.lat}&toLon=${to.lon}&history=1`)
       .then(r => r.json())
       .then(data => { setWeather(data); setWeatherLoading(false); })
       .catch(() => setWeatherLoading(false));
-  };
+  }, [fromCode, toCode]);
 
   const box: React.CSSProperties = { background: "#1e293b", borderRadius: 12, border: "1px solid #1e3a5f", padding: 20 };
   const labelStyle: React.CSSProperties = { fontSize: 12, color: "#64748b", marginBottom: 4, display: "block" };
@@ -401,6 +402,54 @@ export default function VoyageCalcPage() {
                       distanceNm={result.distNm} progressPercent={0}
                       height={220}
                     />
+                  </div>
+
+                  {/* Weather Conditions */}
+                  <div style={{ marginBottom: 20 }}>
+                    <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#38bdf8" }}>Weather Conditions</h2>
+                    {weatherLoading ? (
+                      <div style={{ color: "#64748b", fontSize: 13 }}>Loading weather data...</div>
+                    ) : weather?.current ? (
+                      <div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
+                          <div style={{ background: "#0f172a", borderRadius: 8, padding: 12, textAlign: "center" }}>
+                            <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>Condition</div>
+                            <div style={{ fontSize: 16, fontWeight: 700, color: weather.current.condition === "excellent" ? "#4ade80" : weather.current.condition === "good" ? "#38bdf8" : weather.current.condition === "moderate" ? "#fbbf24" : "#f87171" }}>
+                              {weather.current.condition.charAt(0).toUpperCase() + weather.current.condition.slice(1)}
+                            </div>
+                          </div>
+                          <div style={{ background: "#0f172a", borderRadius: 8, padding: 12, textAlign: "center" }}>
+                            <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>Waves (avg/max)</div>
+                            <div style={{ fontSize: 16, fontWeight: 700, color: "#e2e8f0" }}>{weather.current.avgWaveHeight}m / {weather.current.maxWaveHeight}m</div>
+                          </div>
+                          <div style={{ background: "#0f172a", borderRadius: 8, padding: 12, textAlign: "center" }}>
+                            <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>Wind (Beaufort)</div>
+                            <div style={{ fontSize: 16, fontWeight: 700, color: "#e2e8f0" }}>Bft {weather.current.avgBeaufort.scale} — {weather.current.avgBeaufort.description}</div>
+                          </div>
+                          <div style={{ background: "#0f172a", borderRadius: 8, padding: 12, textAlign: "center" }}>
+                            <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>Speed Loss</div>
+                            <div style={{ fontSize: 16, fontWeight: 700, color: weather.current.estimatedSpeedLoss > 10 ? "#f87171" : "#4ade80" }}>-{weather.current.estimatedSpeedLoss}%</div>
+                          </div>
+                        </div>
+                        {/* 7-Day Forecast */}
+                        {weather.forecast?.days?.length > 0 && (
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: "#94a3b8", marginBottom: 8 }}>7-Day Forecast</div>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+                              {weather.forecast.days.map((d: any) => (
+                                <div key={d.date} style={{ background: "#0f172a", borderRadius: 6, padding: "8px 4px", textAlign: "center", borderTop: d.condition === "good" ? "2px solid #4ade80" : d.condition === "moderate" ? "2px solid #fbbf24" : "2px solid #f87171" }}>
+                                  <div style={{ fontSize: 10, color: "#64748b" }}>{new Date(d.date).toLocaleDateString("en-GB", { weekday: "short" })}</div>
+                                  <div style={{ fontSize: 13, fontWeight: 700, color: "#e2e8f0", margin: "2px 0" }}>{d.waveHeightMax.toFixed(1)}m</div>
+                                  <div style={{ fontSize: 10, color: "#64748b" }}>Bft {d.beaufort}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{ color: "#475569", fontSize: 13 }}>Select a route to see weather conditions</div>
+                    )}
                   </div>
 
                   <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#38bdf8" }}>Fuel &amp; Costs</h2>
