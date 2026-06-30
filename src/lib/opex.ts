@@ -204,17 +204,20 @@ export function calculateOpex(
   };
   // Age factor: ×0.85 if <5yr, ×1.0 if 5-10, then +5% per year (not ×1.75 at 30yr)
   const maintAgeFactor = age <= 5 ? 0.85 : age <= 10 ? 1.0
-    : 1.0 + Math.min((age - 10) * 0.05, 0.60); // cap at ×1.60
+    : 1.0 + Math.min((age - 10) * 0.04, 0.50); // +4%/yr, cap at ×1.50
   const maintenancePerDay = Math.round((baseMaint[sc]||1200) * maintAgeFactor);
 
   // 5. STORES & SPARES
   const storesSpares = Math.round(dwt < 5000 ? 250 : dwt < 10000 ? 350 : dwt < 60000 ? 500 : dwt < 100000 ? 650 : 850);
 
-  // 6. LUBE OIL — simplified, based on typical ME power
-  const approxMEkW = fuelConsumptionTonsDay
-    ? fuelConsumptionTonsDay * 1000 / 4.08 // SFOC ~170g/kWh, 24h
+  // 6. LUBE OIL — based on ME power, with fuel consumption sanity cap
+  // DB sometimes has wrong fuel data (e.g. 80t/d for 50k DWT). Cap to reasonable max per size.
+  const maxFuelBySize = dwt < 5000 ? 15 : dwt < 10000 ? 20 : dwt < 30000 ? 30 : dwt < 60000 ? 40 : dwt < 100000 ? 55 : 75;
+  const cappedFuel = fuelConsumptionTonsDay ? Math.min(fuelConsumptionTonsDay, maxFuelBySize) : undefined;
+  const approxMEkW = cappedFuel
+    ? cappedFuel * 1000 / 4.08 // SFOC ~170g/kWh, 24h
     : dwt < 5000 ? 1800 : dwt < 10000 ? 3000 : dwt < 60000 ? 7000 : dwt < 100000 ? 11000 : 18000;
-  const lubePerDay = approxMEkW * 0.00085 * 24; // total lube liters/day
+  const lubePerDay = approxMEkW * 0.0007 * 24; // total lube liters/day (cyl + system)
   const lubeOilPerDay = Math.round(lubePerDay * rates.lubeOilPrice);
 
   // 7. MANAGEMENT
@@ -230,7 +233,7 @@ export function calculateOpex(
   // 9. EU ETS — conservative estimate
   // At sea fuel consumption × fraction of time at sea × EU route share
   // Typical: ~60-70% of time at sea, ~15-20% of voyages touch EU
-  const fuelAtSea = fuelConsumptionTonsDay || (dwt < 5000 ? 8 : dwt < 10000 ? 12 : dwt < 60000 ? 22 : dwt < 100000 ? 32 : 50);
+  const fuelAtSea = cappedFuel || (dwt < 5000 ? 8 : dwt < 10000 ? 12 : dwt < 60000 ? 22 : dwt < 100000 ? 32 : 50);
   const avgDailyFuel = fuelAtSea * 0.65; // ~65% time at sea (rest: port, canal, ballast slow)
   const co2PerDay = avgDailyFuel * 3.15;
   const etsPerTonCO2 = 65; // ~EUR60
@@ -242,7 +245,7 @@ export function calculateOpex(
     maintenancePerDay + storesSpares + lubeOilPerDay + managementPerDay + drydockPerDay + euEtsPerDay;
 
   // VOYAGE COSTS (variable)
-  const fuelCostPerDay = Math.round(fuelAtSea * 0.65 * rates.bunkerVLSFO);
+  const fuelCostPerDay = Math.round(fuelAtSea * 0.65 * rates.bunkerVLSFO); // uses capped fuel
   const portCostsPerDay = Math.round(dwt < 10000 ? 300 : dwt < 60000 ? 550 : dwt < 100000 ? 850 : 1200);
   const totalVoyexPerDay = fuelCostPerDay + portCostsPerDay;
 
