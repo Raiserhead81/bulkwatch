@@ -152,18 +152,17 @@ export default function Home() {
               <>
                 <img src="/logos/arklow-crest.png" alt="" style={{ height: 40 }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
                 <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#fff" }}>{currentUser.company}</h1>
-                <div style={{ width: 1, height: 28, background: border, margin: "0 4px" }} />
               </>
             ) : null}
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <img src="/icon-maritime-ai.png" alt="" style={{ width: 36, height: 36, borderRadius: "50%" }} />
-              <div>
-                <span style={{ fontSize: currentUser && currentUser.username !== "kay" && currentUser.username !== "admin" ? 14 : 22, fontWeight: 700, color: accent }}>Maritime AI</span>
-                {(!currentUser || currentUser.username === "kay" || currentUser.username === "admin") && (
+            {(!currentUser || currentUser.username === "kay" || currentUser.username === "admin") && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <img src="/icon-maritime-ai.png" alt="" style={{ width: 40, height: 40, borderRadius: "50%" }} />
+                <div>
+                  <span style={{ fontSize: 22, fontWeight: 700, color: accent }}>Maritime AI</span>
                   <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted }}>{stats.total.toLocaleString()} ships worldwide</p>
-                )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
           <button className="mobile-menu-btn" onClick={() => setMenuOpen(true)}>&#9776;</button>
           <nav className="nav-links">
@@ -175,6 +174,12 @@ export default function Home() {
               {theme === "dark" ? "Light" : "Dark"}
             </button>
 
+            {currentUser && currentUser.username !== "kay" && currentUser.username !== "admin" && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: 12 }}>
+                <img src="/icon-maritime-ai.png" alt="" style={{ width: 24, height: 24, borderRadius: "50%" }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: accent }}>Maritime AI</span>
+              </div>
+            )}
             <a href="/api/auth/logout" style={{ color: textDim, textDecoration: "none", fontSize: 12, marginLeft: 12 }}>Logout</a>
 
           </nav>
