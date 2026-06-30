@@ -1,34 +1,40 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <!-- Anchor shaft -->
-  <path d="M32 24V54" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round"/>
-  <!-- Anchor flukes (curved arms) -->
-  <path d="M18 44c0 9 6.3 13 14 13s14-4 14-13" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-  <!-- Anchor crossbar -->
-  <path d="M22 32h20" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Anchor base shape -->
+  <path d="M32 22V54" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+  <path d="M18 44c0 9 6.3 13 14 13s14-4 14-13" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+  <path d="M23 30h18" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Neural network replaces anchor ring -->
+  <!-- Layer 1 (top) -->
+  <circle cx="26" cy="6" r="2.5" fill="#2563eb" stroke="#38bdf8" stroke-width="1"/>
+  <circle cx="38" cy="6" r="2.5" fill="#2563eb" stroke="#38bdf8" stroke-width="1"/>
   
-  <!-- Brain shape (top, replaces anchor ring) -->
-  <path d="M25 18c-4-1-7 2-7 6s3 5 6 5h0c-1 0 1 0 0 0" stroke="none"/>
+  <!-- Layer 2 (middle) -->
+  <circle cx="22" cy="15" r="2.5" fill="#3b82f6" stroke="#38bdf8" stroke-width="1"/>
+  <circle cx="32" cy="13" r="3" fill="#2563eb" stroke="#38bdf8" stroke-width="1.5"/>
+  <circle cx="42" cy="15" r="2.5" fill="#3b82f6" stroke="#38bdf8" stroke-width="1"/>
   
-  <!-- Stylized brain outline -->
-  <path d="M32 8c-5 0-10 3-10 9 0 3 1.5 5 4 6.5" stroke="#2563eb" stroke-width="2" stroke-linecap="round" fill="none"/>
-  <path d="M32 8c5 0 10 3 10 9 0 3-1.5 5-4 6.5" stroke="#2563eb" stroke-width="2" stroke-linecap="round" fill="none"/>
-  <!-- Brain center line -->
-  <path d="M32 8v16" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
-  <!-- Brain folds left -->
-  <path d="M24 14c3 0 5 1 8 1" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7"/>
-  <path d="M23 18c4 1 6 1 9 0" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7"/>
-  <!-- Brain folds right -->
-  <path d="M40 14c-3 0-5 1-8 1" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7"/>
-  <path d="M41 18c-4 1-6 1-9 0" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <!-- Layer 3 (bottom, connects to anchor) -->
+  <circle cx="26" cy="23" r="2" fill="#60a5fa" stroke="#38bdf8" stroke-width="1"/>
+  <circle cx="38" cy="23" r="2" fill="#60a5fa" stroke="#38bdf8" stroke-width="1"/>
+
+  <!-- Neural connections L1→L2 -->
+  <line x1="26" y1="8" x2="22" y2="13" stroke="#60a5fa" stroke-width="1" opacity="0.5"/>
+  <line x1="26" y1="8" x2="32" y2="11" stroke="#60a5fa" stroke-width="1.2" opacity="0.7"/>
+  <line x1="26" y1="8" x2="42" y2="13" stroke="#60a5fa" stroke-width="0.7" opacity="0.3"/>
+  <line x1="38" y1="8" x2="22" y2="13" stroke="#60a5fa" stroke-width="0.7" opacity="0.3"/>
+  <line x1="38" y1="8" x2="32" y2="11" stroke="#60a5fa" stroke-width="1.2" opacity="0.7"/>
+  <line x1="38" y1="8" x2="42" y2="13" stroke="#60a5fa" stroke-width="1" opacity="0.5"/>
   
-  <!-- Circuit/AI dots along anchor -->
-  <circle cx="32" cy="28" r="2" fill="#2563eb"/>
-  <circle cx="32" cy="38" r="1.5" fill="#38bdf8" opacity="0.6"/>
-  <circle cx="32" cy="48" r="1.5" fill="#38bdf8" opacity="0.4"/>
-  
-  <!-- Signal waves from brain (AI processing) -->
-  <path d="M20 10c-2-3-2-6 0-6" stroke="#60a5fa" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
-  <path d="M17 11c-2-4-2-8 0-8" stroke="#60a5fa" stroke-width="1" stroke-linecap="round" opacity="0.25"/>
-  <path d="M44 10c2-3 2-6 0-6" stroke="#60a5fa" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
-  <path d="M47 11c2-4 2-8 0-8" stroke="#60a5fa" stroke-width="1" stroke-linecap="round" opacity="0.25"/>
+  <!-- Neural connections L2→L3 -->
+  <line x1="22" y1="17" x2="26" y2="21" stroke="#60a5fa" stroke-width="1" opacity="0.5"/>
+  <line x1="22" y1="17" x2="38" y2="21" stroke="#60a5fa" stroke-width="0.7" opacity="0.3"/>
+  <line x1="32" y1="16" x2="26" y2="21" stroke="#60a5fa" stroke-width="1.2" opacity="0.7"/>
+  <line x1="32" y1="16" x2="38" y2="21" stroke="#60a5fa" stroke-width="1.2" opacity="0.7"/>
+  <line x1="42" y1="17" x2="38" y2="21" stroke="#60a5fa" stroke-width="1" opacity="0.5"/>
+  <line x1="42" y1="17" x2="26" y2="21" stroke="#60a5fa" stroke-width="0.7" opacity="0.3"/>
+
+  <!-- Data pulse dots on anchor shaft -->
+  <circle cx="32" cy="36" r="1.5" fill="#38bdf8" opacity="0.5"/>
+  <circle cx="32" cy="44" r="1.2" fill="#38bdf8" opacity="0.3"/>
 </svg>
