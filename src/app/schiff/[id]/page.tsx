@@ -75,7 +75,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white">
       {/* Header */}
       <header className="sticky top-0 z-20 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-        <div className="max-w-[95%] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+        <div className="max-w-[min(95%,1600px)] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2 text-sm hover:text-blue-600 dark:hover:text-cyan-400">
             <ArrowLeft className="h-4 w-4" /> Back
           </Link>
@@ -90,14 +90,14 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       </header>
 
-      <main className="max-w-[95%] mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+      <main className="max-w-[min(95%,1600px)] mx-auto px-4 sm:px-6 py-5 space-y-5">
 
         {/* ═══ HERO: Ship Name + Image ═══ */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
           {/* Image */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-2">
             <Card className="overflow-hidden border-slate-200 dark:border-slate-800">
-              <div className="aspect-[16/9] bg-slate-200 dark:bg-slate-800">
+              <div className="aspect-[16/10] bg-slate-200 dark:bg-slate-800">
                 {ship.imageUrl ? (
                   <img src={ship.imageUrl} alt={ship.name} className="w-full h-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
                 ) : (
@@ -114,7 +114,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* Ship Info + Quick Stats */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-3 space-y-4">
             {/* Name & Type */}
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -122,7 +122,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                 <Badge variant="outline" className="border-blue-500/30 text-blue-700 dark:text-cyan-400">IMO: {ship.imo}</Badge>
                 {ship.mmsi && <Badge variant="outline" className="border-slate-500/30">MMSI: {ship.mmsi}</Badge>}
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">{ship.name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{ship.name}</h1>
               <p className="text-sm text-slate-600 dark:text-white/50 mt-1">
                 {ship.operator || "Unknown Operator"} \u00b7 {ship.flag} {age ? `\u00b7 ${age} years old` : ""}
               </p>
@@ -131,9 +131,9 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
             {/* Key Numbers */}
             {ship.dwt > 0 && (
               <Card className="border-slate-200 dark:border-slate-800 overflow-hidden">
-                <div className="bg-slate-800 text-white p-5">
+                <div className="bg-slate-800 text-white p-4">
                   <p className="text-xs uppercase tracking-wider text-white/70 mb-1">Estimated Value</p>
-                  <p className="text-3xl font-bold tabular-nums text-white">{formatPrice(price.estimatedValueUSD)}</p>
+                  <p className="text-2xl font-bold tabular-nums text-white">{formatPrice(price.estimatedValueUSD)}</p>
                   <div className="mt-2 flex items-center gap-2 text-xs">
                     <span>Confidence:</span>
                     <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
@@ -192,9 +192,9 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Recommendation */}
             <Card className={`border-2 ${getRecommendationColor(price.recommendation).split(" ").find(c => c.startsWith("border-"))}`}>
-              <CardContent className="p-5 space-y-3">
+              <CardContent className="p-4 space-y-2">
                 <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-white/40">Recommendation</p>
-                <p className="text-2xl font-bold">{getRecommendationEmoji(price.recommendation)} {getRecommendationLabel(price.recommendation)}</p>
+                <p className="text-xl font-bold">{getRecommendationEmoji(price.recommendation)} {getRecommendationLabel(price.recommendation)}</p>
                 <Separator />
                 <p className="text-xs text-slate-700 dark:text-white/70 leading-relaxed">{price.recommendationReasoning}</p>
               </CardContent>
@@ -204,7 +204,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
             <Card className="border-slate-200 dark:border-slate-800 overflow-hidden">
               <div className={`p-5 text-white ${opex.netEarningsPerDay > 0 ? "bg-slate-800" : "bg-slate-800"}`}>
                 <p className="text-xs uppercase tracking-wider text-white/70 mb-1">Net Earnings (TC)</p>
-                <p className="text-2xl font-bold tabular-nums text-white">{opex.netEarningsPerDay > 0 ? "+" : ""}${opex.netEarningsPerDay.toLocaleString()}/d</p>
+                <p className="text-xl font-bold tabular-nums text-white">{opex.netEarningsPerDay > 0 ? "+" : ""}${opex.netEarningsPerDay.toLocaleString()}/d</p>
                 <p className="text-xs text-white/60 mt-1">Charter ${opex.charterRatePerDay.toLocaleString()}/d \u2212 OPEX ${opex.totalFixedOpex.toLocaleString()}/d</p>
               </div>
               <CardContent className="p-4">
@@ -217,7 +217,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
 
             {/* OPEX Summary */}
             <Card className="border-slate-200 dark:border-slate-800">
-              <CardContent className="p-5">
+              <CardContent className="p-4">
                 <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-white/40 mb-2">Daily OPEX Breakdown</p>
                 <p className="text-2xl font-bold text-slate-700 dark:text-slate-300 mb-3">${opex.totalFixedOpex.toLocaleString()}/day</p>
                 {[
@@ -239,13 +239,13 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
         )}
 
         {/* ═══ SPECS & DETAILS: 2 columns ═══ */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
           {/* Technical Specs */}
           <Card className="border-slate-200 dark:border-slate-800">
             <CardHeader><CardTitle className="text-lg flex items-center gap-2"><ShipIcon className="h-5 w-5 text-slate-700 dark:text-slate-300" /> Technical Specifications</CardTitle></CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                 {[
                   ["Deadweight", ship.dwt > 0 ? `${ship.dwt.toLocaleString()} DWT` : "\u2014"],
                   ["Length", ship.length > 0 ? `${ship.length} m` : "\u2014"],
@@ -312,7 +312,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* ═══ PRICE FACTORS & HISTORY ═══ */}
         {ship.dwt > 0 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {/* Price Factors */}
             <Card className="border-slate-200 dark:border-slate-800">
               <CardHeader><CardTitle className="text-sm flex items-center gap-2"><BarChart3 className="h-4 w-4 text-slate-700 dark:text-slate-300" /> Value Factors</CardTitle></CardHeader>
