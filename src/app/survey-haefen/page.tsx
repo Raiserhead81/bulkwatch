@@ -75,17 +75,7 @@ export default function SurveyPortsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-blue-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-white">
-      <header className="sticky top-0 z-20 border-b border-blue-500/10 backdrop-blur-md bg-white/80 dark:bg-slate-950/80">
-        <div className="max-w-[95%] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-          <Link href="/" className="flex items-center gap-2 text-sm hover:text-blue-600 dark:hover:text-cyan-400">
-            <ArrowLeft className="h-4 w-4" /> Back
-          </Link>
-          <h1 className="font-bold text-sm sm:text-base flex items-center gap-2">
-            <Stethoscope className="h-4 w-4 text-purple-600 dark:text-purple-300" />
-            Survey Ports
-          </h1>
-        </div>
-      </header>
+      
 
       <main className="max-w-[95%] mx-auto px-4 sm:px-6 py-6 sm:py-10">
         <section className="mb-8">

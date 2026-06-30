@@ -94,10 +94,29 @@ def estimate(dwt, year_built, stype, builder, status, for_year=YEAR):
     return round(value)
 
 
+def get_bdi_factor():
+    """Load current BDI and calculate market factor"""
+    try:
+        import json
+        with open("/opt/bulkwatch/db/opex_rates.json") as f:
+            data = json.load(f)
+        bdi = data.get("bdiIndex", 1500)
+        # BDI 1500 = neutral (factor 1.0)
+        # BDI 3000+ = strong market (+12%)
+        # BDI 800 = weak market (-10%)
+        if bdi > 3000: return 1.12
+        elif bdi > 1500: return 1.0 + (bdi - 1500) * 0.00008
+        elif bdi > 800: return 1.0
+        else: return 0.85 + (bdi - 500) * 0.0005
+    except:
+        return 1.0
+
 def main():
     con = sqlite3.connect(DB)
     con.execute("PRAGMA journal_mode=WAL")
     today = time.strftime("%Y-%m-%d")
+    bdi_factor = get_bdi_factor()
+    print(f"BDI market factor: {bdi_factor:.3f}")
 
     existing = con.execute("SELECT COUNT(*) FROM price_history WHERE date = ?", (today,)).fetchone()[0]
     if existing > 100:
@@ -116,7 +135,7 @@ def main():
     inserted = 0
 
     for imo, name, stype, dwt, year_built, builder, flag, status in ships:
-        value = estimate(dwt, year_built, stype, builder, status)
+        value = round(estimate(dwt, year_built, stype, builder, status) * bdi_factor)
         if value > 0:
             con.execute(
                 "INSERT OR REPLACE INTO price_history (imo, date, estimated_value, confidence) VALUES (?, ?, ?, 60)",
