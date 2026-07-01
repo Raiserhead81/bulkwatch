@@ -70,7 +70,7 @@ function calculateBuyScore(ship: Ship, price: ReturnType<typeof estimatePrice>):
 
   // Recommendation alignment
   if (price.recommendation === "BUY") score += 10;
-  else if (price.recommendation === "SELL") score -= 10;
+  else if (price.recommendation === "AVOID") score -= 10;
 
   // Confidence
   score += Math.round((price.confidenceScore / 100) * 5);

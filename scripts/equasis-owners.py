@@ -22,11 +22,7 @@ def main():
         WHERE imo NOT LIKE 'cat-%'
         AND classification IS NOT NULL AND classification != ''
         AND (owner IS NULL OR owner = '' OR p_and_i IS NULL OR p_and_i = '')
-        ORDER BY
-            CASE WHEN UPPER(name) LIKE '%ARKLOW%' THEN 0
-                 WHEN UPPER(name) LIKE '%OLDENDORFF%' THEN 1
-                 ELSE 2 END,
-            dwt DESC
+        ORDER BY RANDOM()
         LIMIT ?
     """, (MAX_PER_RUN,)).fetchall()
 

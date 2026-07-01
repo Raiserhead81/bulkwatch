@@ -103,7 +103,7 @@ export const RECOMMENDATION_COLORS: Record<string, string> = {
 };
 
 export const RECOMMENDATION_LABELS: Record<string, string> = {
-  BUY: "BUY",
-  HOLD: "HOLD",
-  SELL: "SELL",
+  BUY: "Buy",
+  HOLD: "WATCH",
+  SELL: "AVOID",
 };

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import "./globals.css"
+import { VersionChecker } from "@/components/version-checker";
 import { Toaster } from "@/components/ui/toaster";
 import GlobalNav from "@/components/global-nav";
 import { I18nProvider } from "@/lib/i18n";
@@ -62,6 +63,9 @@ export default function RootLayout({
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem("vessel-theme");if(t==="light"){document.documentElement.classList.remove("dark");document.documentElement.classList.add("light")}})();` }} />
+              <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
@@ -69,9 +73,11 @@ export default function RootLayout({
         <I18nProvider>
           <GlobalNav />
           {children}
+        <VersionChecker />
           <Toaster />
         </I18nProvider>
-        <script dangerouslySetInnerHTML={{ __html: `if("serviceWorker"in navigator){navigator.serviceWorker.getRegistrations().then(function(regs){regs.forEach(function(r){r.unregister()})});caches.keys().then(function(k){k.forEach(function(n){caches.delete(n)})})}` }} />
+        <script dangerouslySetInnerHTML={{ __html: `if("serviceWorker"in navigator){navigator.serviceWorker.getRegistrations().then(function(regs){regs.forEach(function(r){r.unregister()})});caches.keys().then(function(k){k.forEach(function(n){caches.delete(n)})})};if(window.applicationCache){try{window.applicationCache.swapCache()}catch(e){}}` }} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){var K="_bv2";fetch("/api/version",{cache:"no-store"}).then(function(r){return r.json()}).then(function(d){var s=localStorage.getItem(K);if(!s){localStorage.setItem(K,d.version);if(window.caches){caches.keys().then(function(ks){Promise.all(ks.map(function(n){return caches.delete(n)})).then(function(){window.location.href=window.location.pathname+"?_r="+Date.now()})})}}else if(s!==d.version){localStorage.setItem(K,d.version);if(window.caches){caches.keys().then(function(ks){ks.forEach(function(n){caches.delete(n)})})}window.location.href=window.location.pathname+"?_r="+Date.now()}}).catch(function(){})})();` }} />
       </body>
     </html>
   );

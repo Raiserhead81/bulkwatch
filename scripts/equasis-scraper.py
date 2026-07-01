@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-"""Equasis Scraper v5 — HTTP-only (no Playwright), 3x faster.
-Extracts: DWT, GT, Year, Flag, MMSI, Call Sign, Classification, P&I, MOU,
-Detention%, Owner, Manager, ISM Manager, Status."""
+"""Equasis Scraper v6 — full enrichment in one pass.
+Extracts ALL available fields: DWT, GT, Year, Flag, Type, MMSI, Call Sign,
+Classification, P&I clubs, MOU colors, Inspections, Surveys,
+Owner, Manager, ISM Manager, Status.
+Skips ships scraped in the last 14 days via equasis_last_scraped."""
 import sqlite3, urllib.request, urllib.parse, http.cookiejar, re, time, sys
+from datetime import datetime, timedelta
 
 DB = "/opt/bulkwatch/db/ships.db"
-import sys as _sys
-MAX_PER_RUN = int(_sys.argv[_sys.argv.index("--limit")+1]) if "--limit" in _sys.argv else 800
+MAX_PER_RUN = int(sys.argv[sys.argv.index("--limit")+1]) if "--limit" in sys.argv else 800
 DELAY = 8.0
+RESCRAPE_DAYS = 14
 ACCOUNTS = [
     ("kayconrad@posteo.de", "!nfinitY!981"),
     ("kayconrad81@googlemail.com", "!nfinitY!981"),
@@ -22,10 +25,13 @@ STATUS_MAP = {
     "Total Loss": "lost", "Sunk": "lost", "Scuttled": "lost",
     "Laid Up": "laid_up", "Cancelled": "scrapped", "Converting": "active",
 }
-CLASS_NAMES = ["Lloyd's Register", "DNV", "Bureau Veritas", "Nippon Kaiji Kyokai",
-               "American Bureau of Shipping", "ClassNK", "RINA", "Korean Register",
-               "China Classification Society", "Indian Register", "Russian Maritime",
-               "Registro Italiano Navale"]
+CLASS_NAMES = [
+    "Lloyd's Register", "DNV", "Bureau Veritas", "Nippon Kaiji Kyokai",
+    "American Bureau of Shipping", "ClassNK", "RINA", "Korean Register",
+    "China Classification Society", "Indian Register", "Russian Maritime",
+    "Registro Italiano Navale", "Croatian Register", "Polish Register",
+    "Turk Loydu", "Biro Klasifikasi Indonesia",
+]
 
 
 def login(idx=None):
@@ -44,7 +50,7 @@ def login(idx=None):
         if "locked" in html.lower():
             print(f"  Account {email} locked, trying next...", flush=True)
             account_idx += 1
-            if account_idx < len(ACCOUNTS) * 2:  # try each account once
+            if account_idx < len(ACCOUNTS) * 2:
                 return login(account_idx)
             return None
         print(f"  Logged in as {email}", flush=True)
@@ -54,92 +60,162 @@ def login(idx=None):
         return None
 
 
-def search_and_detail(opener, imo):
-    """Search + detail in 2 HTTP requests. Returns dict with all data."""
+def scrape_ship(opener, imo):
+    """Search + detail page. Returns dict with all extracted data."""
     result = {}
     try:
-        # Search
+        # Step 1: Search (sets server-side session context)
         sd = urllib.parse.urlencode({"P_ENTREE_HOME": str(imo)}).encode()
         r = opener.open("https://www.equasis.org/EquasisWeb/restricted/Search?fs=HomePage", sd, timeout=20)
-        search_html = r.read().decode("utf-8", errors="ignore")
+        r.read()  # consume response
 
-        # Parse search result line
-        for line in re.findall(r"<tr[^>]*>.*?</tr>", search_html, re.DOTALL):
-            if str(imo) in line:
-                tds = re.findall(r"<td[^>]*>(.*?)</td>", line, re.DOTALL)
-                clean = [re.sub(r"<[^>]+>", "", td).strip() for td in tds]
-                if len(clean) >= 6:
-                    result["gross_tonnage"] = int(clean[2]) if clean[2].isdigit() else None
-                    result["type"] = clean[3] if clean[3] else None
-                    result["year_built"] = int(clean[4]) if clean[4].isdigit() else None
-                    result["flag"] = clean[5] if clean[5] else None
-                break
-
-        # Detail page
+        # Step 2: Detail page
         dd = urllib.parse.urlencode({"P_IMO": str(imo)}).encode()
         r2 = opener.open("https://www.equasis.org/EquasisWeb/restricted/ShipInfo?fs=Search", dd, timeout=20)
         html = r2.read().decode("utf-8", errors="ignore")
 
-        # Equasis uses Bootstrap div grid, not tables. Pattern:
-        # <b>LABEL </b>...</div>...<div class="col-...">VALUE</div>
-        def extract_field(label, html_text):
-            m = re.search(label + r'\s*</b>.*?<div[^>]*class="col-[^"]*"[^>]*>\s*([^<\r\n]+)', html_text, re.DOTALL | re.I)
+        # Check for error page
+        if "CtrlGeneralError" in html:
+            result["_session_expired"] = True
+            return result
+
+        # --- Header fields (Bootstrap div grid) ---
+        def extract_field(label):
+            m = re.search(label + r'\s*</b>.*?<div[^>]*class="col-[^"]*"[^>]*>\s*([^<\r\n]+)',
+                          html, re.DOTALL | re.I)
             return m.group(1).strip() if m else None
 
         # DWT
-        val = extract_field("DWT", html)
+        val = extract_field("DWT")
         if val and val.replace(",", "").isdigit():
             result["dwt"] = int(val.replace(",", ""))
 
-        # MMSI
-        val = extract_field("MMSI", html)
-        if val and re.match(r"\d{9}$", val):
-            result["mmsi"] = val
-
-        # Call Sign
-        val = extract_field("Call Sign", html)
-        if val and re.match(r"[A-Z0-9]{3,10}$", val):
-            result["call_sign"] = val
-
-        # Gross Tonnage (from detail, more reliable)
-        val = extract_field("Gross tonnage", html)
+        # Gross Tonnage
+        val = extract_field("Gross tonnage")
         if val and val.replace(",", "").isdigit():
             result["gross_tonnage"] = int(val.replace(",", ""))
 
+        # Year of build
+        val = extract_field("Year of build")
+        if val and val.strip().isdigit():
+            result["year_built"] = int(val)
+
+        # Type of ship
+        val = extract_field("Type of ship")
+        if val and len(val) > 2:
+            result["type"] = val[:50]
+
+        # Flag — extract from text, strip country code suffix
+        val = extract_field("Flag")
+        if val and len(val) > 1:
+            flag = re.sub(r"\s*\([A-Z]+\)\s*$", "", val).strip()
+            flag = flag.replace("&nbsp;", "").replace("\xa0", "").strip()
+            if flag and flag not in ("&nbsp;", ""):
+                result["flag"] = flag
+
+        # MMSI
+        val = extract_field("MMSI")
+        if val and re.match(r"\d{9}$", val.strip()):
+            result["mmsi"] = val.strip()
+
+        # Call Sign
+        val = extract_field("Call Sign")
+        if val and re.match(r"[A-Z0-9]{3,10}$", val.strip()):
+            result["call_sign"] = val.strip()
+
         # Status
-        val = extract_field("Status", html)
+        val = extract_field("Status")
         if val:
             for key in STATUS_MAP:
                 if key.lower() in val.lower():
                     result["equasis_status"] = STATUS_MAP[key]
                     break
 
-        # Classification
+        # --- Classification (substring search in HTML) ---
+        # Look specifically in the Classification section, not the whole page
+        class_section = ""
+        cs_start = html.find("Classification")
+        if cs_start > 0:
+            cs_end = html.find("Surveys", cs_start + 20)
+            if cs_end < 0:
+                cs_end = cs_start + 2000
+            class_section = html[cs_start:cs_end]
+
         for cls in CLASS_NAMES:
-            if cls in html:
+            if cls in class_section:
                 result["classification"] = cls
                 break
 
-        # Paris/Tokyo MOU (in main page, not AJAX)
+        # If not found in section, try broader search but with (IACS) suffix
+        if not result.get("classification"):
+            for cls in CLASS_NAMES:
+                pattern = cls + r'\s*\(IACS\)'
+                if re.search(pattern, html):
+                    result["classification"] = cls
+                    break
+            # Last resort: any mention
+            if not result.get("classification"):
+                for cls in CLASS_NAMES:
+                    if cls in html:
+                        result["classification"] = cls
+                        break
+
+        # --- Paris/Tokyo MOU ---
         m = re.search(r'Paris MOU.*?(White|Grey|Black)', html, re.DOTALL | re.I)
         if m:
-            result["flag_paris_mou"] = m.group(1)
+            result["flag_paris_mou"] = m.group(1).capitalize()
         m = re.search(r'Tokyo MOU.*?(White|Grey|Black)', html, re.DOTALL | re.I)
         if m:
-            result["flag_tokyo_mou"] = m.group(1)
+            result["flag_tokyo_mou"] = m.group(1).capitalize()
 
-        # Detention %
-        m = re.search(r'([\d.]+)%\s*Of inspections.*?detention', html, re.DOTALL | re.I)
+        # --- Inspections count ---
+        m = re.search(r'Inspections\s*\((\d+)\)', html)
         if m:
-            result["detention_pct"] = float(m.group(1))
+            result["inspections_count"] = int(m.group(1))
 
-        # Management: Owner, Manager, ISM — uses <td> with lots of whitespace
+        # --- Surveys: last/next renewal ---
+        m = re.search(r'Last renewal survey[^<]*?(\d{4}-\d{2}-\d{2})', html, re.DOTALL | re.I)
+        if m:
+            result["last_survey"] = m.group(1)
+        m = re.search(r'Next renewal survey[^<]*?(\d{4}-\d{2}-\d{2})', html, re.DOTALL | re.I)
+        if m:
+            result["next_survey"] = m.group(1)
+
+        # --- P&I Clubs ---
+        pi_start = html.find("P&amp;I Information")
+        if pi_start < 0:
+            pi_start = html.find("P&I Information")
+        if pi_start > 0:
+            pi_end = html.find("Geographical", pi_start)
+            if pi_end < 0:
+                pi_end = pi_start + 2000
+            pi_section = html[pi_start:pi_end]
+            # Extract club names — they appear as text between tags
+            pi_section = re.sub(r"<a[^>]*>", "", pi_section)
+            pi_section = re.sub(r"</a>", "", pi_section)
+            pi_text = re.sub(r"<[^>]+>", "\n", pi_section)
+            pi_lines = [l.strip() for l in pi_text.split("\n") if l.strip()]
+            clubs = []
+            for line in pi_lines:
+                if (len(line) > 5 and "P&I" not in line and "P&amp;I" not in line
+                    and "Inception" not in line and "Geographical" not in line
+                    and "Information" not in line and not line.startswith("20")
+                    and not line.startswith("<") and "href" not in line
+                    and "modal" not in line):
+                    clean_line = re.sub(r"<[^>]+>", "", line).strip()
+                    if clean_line and len(clean_line) > 3:
+                        clubs.append(clean_line[:60])
+            if clubs:
+                result["p_and_i"] = "; ".join(clubs[:3])  # max 3 clubs
+
+        # --- Management: Owner, Manager, ISM ---
         mgmt_start = html.find("Management detail")
         mgmt_end = html.find("Classification", mgmt_start + 20) if mgmt_start > 0 else -1
         mgmt = html[mgmt_start:mgmt_end] if mgmt_start > 0 and mgmt_end > 0 else ""
         if mgmt:
             def extract_role(role_name, section):
-                m = re.search(role_name + r'</td>\s*<td[^>]*>(.*?)</td>', section, re.DOTALL | re.I)
+                m = re.search(role_name + r'\s*</td>\s*<td[^>]*>\s*(.*?)\s*</td>',
+                              section, re.DOTALL | re.I)
                 if m:
                     val = re.sub(r'<[^>]+>', ' ', m.group(1)).strip()
                     val = re.sub(r'\s+', ' ', val).strip()
@@ -147,7 +223,9 @@ def search_and_detail(opener, imo):
                 return None
 
             result["owner"] = extract_role("Registered owner", mgmt)
-            result["manager"] = extract_role("Ship manager", mgmt) or extract_role("Commercial manager", mgmt)
+            result["manager"] = (extract_role("Ship manager", mgmt)
+                                 or extract_role("Commercial manager", mgmt)
+                                 or extract_role("manager", mgmt))
             result["ism_manager"] = extract_role("ISM Manager", mgmt)
 
     except urllib.error.HTTPError as e:
@@ -156,7 +234,7 @@ def search_and_detail(opener, imo):
             time.sleep(60)
         elif e.code in (404, 403):
             result["_session_expired"] = True
-    except Exception as e:
+    except Exception:
         pass
 
     return result
@@ -166,26 +244,19 @@ def main():
     con = sqlite3.connect(DB)
     con.execute("PRAGMA journal_mode=WAL")
 
+    cutoff = (datetime.now() - timedelta(days=RESCRAPE_DAYS)).strftime("%Y-%m-%d")
+
     ships = con.execute("""
         SELECT imo, name, dwt, year_built, gross_tonnage FROM ships
         WHERE imo NOT LIKE 'cat-%'
-        AND (
-            dwt IN (0,5000,10000,12000,15000,18000,20000,45000,46000,47000,50000,55000)
-            OR (year_built IS NULL OR year_built = 0)
-            OR (gross_tonnage IS NULL OR gross_tonnage = 0)
-            OR (classification IS NULL OR classification = '')
-            OR (p_and_i IS NULL OR p_and_i = '')
-            OR (owner IS NULL OR owner = '')
-        )
+        AND (equasis_last_scraped IS NULL OR equasis_last_scraped < ?)
         ORDER BY
-            CASE WHEN UPPER(name) LIKE '%ARKLOW%' THEN 0
-                 WHEN UPPER(name) LIKE '%OLDENDORFF%' THEN 1
-                 ELSE 2 END,
-            dwt DESC
+            CASE WHEN equasis_last_scraped IS NULL THEN 0 ELSE 1 END,
+            RANDOM()
         LIMIT ?
-    """, (MAX_PER_RUN,)).fetchall()
+    """, (cutoff, MAX_PER_RUN)).fetchall()
 
-    print(f"Enriching {len(ships)} ships from Equasis (HTTP mode)...", flush=True)
+    print(f"Enriching {len(ships)} ships from Equasis (v6, full extraction)...", flush=True)
 
     global account_idx
     opener = login()
@@ -194,20 +265,20 @@ def main():
 
     print("Equasis login OK", flush=True)
     enriched = 0
+    today = datetime.now().strftime("%Y-%m-%d")
 
     for i, (imo, name, dwt, year_built, gt) in enumerate(ships):
         if i % 100 == 0 and i > 0:
             print(f"  [{i}/{len(ships)}] enriched={enriched}", flush=True)
-            # Recalc valuations every 100 ships
             if enriched > 0:
                 import subprocess
                 subprocess.run(["python3", "/opt/bulkwatch/scripts/daily-valuations.py"],
                                capture_output=True, cwd="/opt/bulkwatch")
                 print(f"  Valuations recalculated", flush=True)
 
-        data = search_and_detail(opener, imo)
+        data = scrape_ship(opener, imo)
 
-        # Session expired? Switch account and re-login
+        # Session expired? Switch account
         if data.get("_session_expired"):
             account_idx += 1
             print(f"  Session expired, switching to account {account_idx % len(ACCOUNTS) + 1}...", flush=True)
@@ -221,63 +292,86 @@ def main():
                 if not opener:
                     print("  Still failed, stopping.", flush=True)
                     break
-            data = search_and_detail(opener, imo)
+            data = scrape_ship(opener, imo)
 
         if not data or data.get("_session_expired"):
             time.sleep(DELAY)
             continue
 
+        # Build UPDATE
         updates = []
         params = []
 
-        if data.get("gross_tonnage") and data["gross_tonnage"] > 0:
-            updates.append("gross_tonnage = ?"); params.append(data["gross_tonnage"])
-        if data.get("year_built") and (not year_built or year_built == 0):
-            updates.append("year_built = ?"); params.append(data["year_built"])
-        if data.get("flag"):
-            flag = re.sub(r"\s*\([A-Z]+\)\s*$", "", data["flag"]).strip()
-            if flag: updates.append("flag = ?"); params.append(flag)
-        if data.get("dwt") and data["dwt"] > 0 and dwt in DEFAULT_DWTS:
-            updates.append("dwt = ?"); params.append(data["dwt"])
-        if data.get("mmsi"):
-            updates.append("mmsi = COALESCE(NULLIF(mmsi, ''), ?)"); params.append(data["mmsi"])
-        if data.get("call_sign"):
-            updates.append("call_sign = COALESCE(NULLIF(call_sign, ''), ?)"); params.append(data["call_sign"])
-        if data.get("classification"):
-            updates.append("classification = ?"); params.append(data["classification"])
-        if data.get("p_and_i"):
-            updates.append("p_and_i = ?"); params.append(data["p_and_i"])
-        if data.get("flag_paris_mou"):
-            updates.append("flag_paris_mou = ?"); params.append(data["flag_paris_mou"])
-        if data.get("flag_tokyo_mou"):
-            updates.append("flag_tokyo_mou = ?"); params.append(data["flag_tokyo_mou"])
-        if data.get("detention_pct") is not None:
-            updates.append("detention_pct = ?"); params.append(data["detention_pct"])
-        if data.get("equasis_status"):
-            updates.append("status = ?"); params.append(data["equasis_status"])
-        if data.get("owner"):
-            updates.append("owner = ?"); params.append(data["owner"])
-        if data.get("manager"):
-            updates.append("manager = ?"); params.append(data["manager"])
+        field_map = {
+            "gross_tonnage": ("gross_tonnage = ?", lambda v: v and v > 0),
+            "dwt": ("dwt = ?", lambda v: v and v > 0 and dwt in DEFAULT_DWTS),
+            "year_built": ("year_built = ?", lambda v: v and (not year_built or year_built == 0)),
+            "flag": ("flag = ?", lambda v: v),
+            "type": ("type = ?", lambda v: v),
+            "mmsi": ("mmsi = ?", lambda v: v),
+            "call_sign": ("call_sign = ?", lambda v: v),
+            "classification": ("classification = ?", lambda v: v),
+            "p_and_i": ("p_and_i = ?", lambda v: v),
+            "flag_paris_mou": ("flag_paris_mou = ?", lambda v: v),
+            "flag_tokyo_mou": ("flag_tokyo_mou = ?", lambda v: v),
+            "inspections_count": ("inspections_count = ?", lambda v: v is not None),
+            "last_survey": ("last_survey = ?", lambda v: v),
+            "next_survey": ("next_survey = ?", lambda v: v),
+            "detention_pct": ("detention_pct = ?", lambda v: v is not None),
+            "equasis_status": ("status = ?", lambda v: v),
+            "owner": ("owner = ?", lambda v: v),
+            "manager": ("manager = ?", lambda v: v),
+            "ism_manager": ("ism_manager = ?", lambda v: v),
+        }
+
+        for key, (sql, check) in field_map.items():
+            val = data.get(key)
+            if check(val):
+                updates.append(sql)
+                params.append(val)
+
+        # ISM → operator fallback
         if data.get("ism_manager"):
-            updates.append("ism_manager = ?"); params.append(data["ism_manager"])
             cur_op = con.execute("SELECT operator FROM ships WHERE imo=?", (imo,)).fetchone()
             if cur_op and (not cur_op[0] or cur_op[0] == ""):
-                updates.append("operator = ?"); params.append(data["ism_manager"])
+                updates.append("operator = ?")
+                params.append(data["ism_manager"])
 
-        if updates:
-            params.append(imo)
-            con.execute(f"UPDATE ships SET {', '.join(updates)} WHERE imo = ?", params)
-            con.commit()
+        # Always mark as scraped
+        updates.append("equasis_last_scraped = ?")
+        params.append(today)
+
+        params.append(imo)
+        con.execute(f"UPDATE ships SET {', '.join(updates)} WHERE imo = ?", params)
+        con.commit()
+
+        # Count fields actually extracted (excluding timestamp)
+        field_count = len(updates) - 1  # minus the timestamp
+        if field_count > 0:
             enriched += 1
-            changes = []
-            if data.get("dwt"): changes.append(f"DWT={data['dwt']}")
-            if data.get("year_built") and (not year_built or year_built == 0): changes.append(f"Y={data['year_built']}")
-            if data.get("classification"): changes.append(f"C={data['classification'][:12]}")
-            if data.get("p_and_i"): changes.append(f"PI={data['p_and_i'][:15]}")
-            if data.get("owner"): changes.append(f"O={data['owner'][:15]}")
-            if data.get("equasis_status") and data["equasis_status"] != "active": changes.append(f"S={data['equasis_status']}")
-            print(f"  OK  {name[:25]:25} {' | '.join(changes)}", flush=True)
+
+        # Log with all fields
+        parts = []
+        if data.get("dwt"): parts.append(f"DWT={data['dwt']}")
+        if data.get("gross_tonnage"): parts.append(f"GT={data['gross_tonnage']}")
+        if data.get("year_built") and (not year_built or year_built == 0): parts.append(f"Y={data['year_built']}")
+        if data.get("type"): parts.append(f"T={data['type'][:15]}")
+        if data.get("flag"): parts.append(f"F={data['flag'][:12]}")
+        if data.get("mmsi"): parts.append(f"MMSI={data['mmsi']}")
+        if data.get("call_sign"): parts.append(f"CS={data['call_sign']}")
+        if data.get("classification"): parts.append(f"C={data['classification'][:12]}")
+        if data.get("owner"): parts.append(f"O={data['owner'][:20]}")
+        if data.get("manager"): parts.append(f"M={data['manager'][:20]}")
+        if data.get("ism_manager"): parts.append(f"ISM={data['ism_manager'][:20]}")
+        if data.get("p_and_i"): parts.append(f"PI={data['p_and_i'][:25]}")
+        if data.get("flag_paris_mou"): parts.append(f"PMou={data['flag_paris_mou']}")
+        if data.get("flag_tokyo_mou"): parts.append(f"TMou={data['flag_tokyo_mou']}")
+        if data.get("inspections_count"): parts.append(f"Insp={data['inspections_count']}")
+        if data.get("last_survey"): parts.append(f"Srv={data['last_survey']}")
+        if data.get("equasis_status") and data["equasis_status"] != "active": parts.append(f"S={data['equasis_status']}")
+
+        status = "OK" if field_count > 0 else "--"
+        print(f"  {status}  {name[:25]:25} [{field_count:2d}] {' | '.join(parts)}", flush=True)
 
         time.sleep(DELAY)
 
@@ -287,7 +381,8 @@ def main():
     if enriched > 0:
         print("Recalculating valuations...", flush=True)
         import subprocess
-        r = subprocess.run(["python3", "/opt/bulkwatch/scripts/daily-valuations.py"], capture_output=True, text=True, cwd="/opt/bulkwatch")
+        r = subprocess.run(["python3", "/opt/bulkwatch/scripts/daily-valuations.py"],
+                           capture_output=True, text=True, cwd="/opt/bulkwatch")
         print(r.stdout, flush=True)
 
 

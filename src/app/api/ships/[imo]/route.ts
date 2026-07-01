@@ -3,6 +3,34 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+
+function flagEmoji(flag: string | null | undefined): string {
+  if (!flag || flag === "Unknown") return "";
+  const n = flag.trim().toUpperCase();
+  if (n.length === 2 && /^[A-Z]{2}$/.test(n)) {
+    return String.fromCodePoint(0x1F1E6 + n.charCodeAt(0) - 65, 0x1F1E6 + n.charCodeAt(1) - 65);
+  }
+  const m: Record<string, string> = {
+    "PANAMA":"PA","LIBERIA":"LR","MARSHALL ISLANDS":"MH","HONG KONG":"HK",
+    "SINGAPORE":"SG","BAHAMAS":"BS","MALTA":"MT","CHINA":"CN","GREECE":"GR",
+    "JAPAN":"JP","NORWAY":"NO","UNITED KINGDOM":"GB","GERMANY":"DE","DENMARK":"DK",
+    "ITALY":"IT","FRANCE":"FR","NETHERLANDS":"NL","TURKEY":"TR","INDIA":"IN",
+    "SOUTH KOREA":"KR","KOREA":"KR","UNITED STATES":"US","USA":"US","BRAZIL":"BR",
+    "RUSSIA":"RU","INDONESIA":"ID","PHILIPPINES":"PH","VIETNAM":"VN","THAILAND":"TH",
+    "CYPRUS":"CY","BERMUDA":"BM","ISLE OF MAN":"IM","ANTIGUA AND BARBUDA":"AG",
+    "PORTUGAL":"PT","SPAIN":"ES","BELGIUM":"BE","SWEDEN":"SE","FINLAND":"FI",
+    "AUSTRALIA":"AU","CANADA":"CA","UAE":"AE","SAUDI ARABIA":"SA","TAIWAN":"TW",
+    "IRAN":"IR","EGYPT":"EG","MEXICO":"MX","VANUATU":"VU","TOGO":"TG",
+    "COMOROS":"KM","MONGOLIA":"MN","CAMBODIA":"KH","BELIZE":"BZ","TANZANIA":"TZ",
+    "TUVALU":"TV","PALAU":"PW","SIERRA LEONE":"SL","CAMEROON":"CM","BARBADOS":"BB",
+    "CROATIA":"HR","POLAND":"PL","IRELAND":"IE","NIGERIA":"NG","PAKISTAN":"PK",
+    "MALAYSIA":"MY","MYANMAR":"MM","GIBRALTAR":"GI",
+  };
+  const iso = m[n];
+  if (iso) return String.fromCodePoint(0x1F1E6 + iso.charCodeAt(0) - 65, 0x1F1E6 + iso.charCodeAt(1) - 65);
+  return "";
+}
+
 function toShip(row: Record<string, unknown>) {
   return {
     id: `imo-${row.imo}`,
@@ -17,6 +45,7 @@ function toShip(row: Record<string, unknown>) {
     yearBuilt: row.year_built || 0,
     builder: row.builder,
     flag: row.flag || "Unknown",
+    flagEmoji: flagEmoji(row.flag as string),
     operator: row.operator,
     homePort: row.home_port,
     imageUrl: row.image_url,
@@ -48,6 +77,9 @@ function toShip(row: Record<string, unknown>) {
     manager: row.manager,
     ismManager: row.ism_manager,
     deliveryDate: row.delivery_date,
+    inspectionsCount: row.inspections_count || 0,
+    lastSurvey: row.last_survey,
+    nextSurvey: row.next_survey,
   };
 }
 

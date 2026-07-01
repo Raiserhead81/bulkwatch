@@ -177,8 +177,8 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Recommendation
     "rec.BUY": "KAUFEN",
-    "rec.HOLD": "HALTEN",
-    "rec.SELL": "VERKAUFEN",
+    "rec.WATCH": "HALTEN",
+    "rec.AVOID": "AVOID",
 
     // Top Picks
     "topPicks.title": "Top Kauf-Empfehlungen",
@@ -391,8 +391,8 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Recommendation
     "rec.BUY": "BUY",
-    "rec.HOLD": "HOLD",
-    "rec.SELL": "SELL",
+    "rec.WATCH": "WATCH",
+    "rec.AVOID": "AVOID",
 
     // Top Picks
     "topPicks.title": "Top Buy Recommendations",

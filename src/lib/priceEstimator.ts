@@ -8,7 +8,7 @@ export interface PriceEstimate {
   estimatedValueUSD: number;
   confidenceScore: number;
   reasoning: string;
-  recommendation: "BUY" | "HOLD" | "SELL";
+  recommendation: "BUY" | "WATCH" | "AVOID";
   recommendationReasoning: string;
   factors: Array<{
     label: string;
@@ -177,42 +177,42 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   confidenceScore = Math.max(20, Math.min(95, confidenceScore));
 
   // Buy/Hold/Sell
-  let recommendation: "BUY" | "HOLD" | "SELL" = "HOLD";
+  let recommendation: "BUY" | "WATCH" | "AVOID" = "WATCH";
   let recommendationReasoning = "";
 
   if (ship.status === "lost") {
-    recommendation = "SELL";
-    recommendationReasoning = "Ship is lost — no resale value.";
+    recommendation = "AVOID";
+    recommendationReasoning = "Total loss — not a viable purchase.";
   } else if (ship.status === "scrapped") {
-    recommendation = "SELL";
-    recommendationReasoning = "Ship already scrapped.";
+    recommendation = "AVOID";
+    recommendationReasoning = "Already scrapped — not available for purchase.";
   } else if (ship.status === "under_construction") {
-    recommendation = "HOLD";
-    recommendationReasoning = "Newbuild under construction. Resale at premium possible in strong markets.";
+    recommendation = "WATCH";
+    recommendationReasoning = "Newbuild under construction — watch for post-delivery purchase opportunity.";
   } else if (age > 25) {
-    recommendation = "SELL";
-    recommendationReasoning = "Scrap-ready. Sell before further depreciation.";
+    recommendation = "AVOID";
+    recommendationReasoning = "Near scrap age — too risky to buy, minimal remaining value.";
   } else if (age > 15 && MARKET_FACTORS.bdiCurrent > 2000) {
-    recommendation = "SELL";
-    recommendationReasoning = "BDI elevated — sell window is now. Age factor compounds risk.";
+    recommendation = "AVOID";
+    recommendationReasoning = "Aging vessel in elevated market — overpriced, wait for correction.";
   } else if (age <= 5 && MARKET_FACTORS.bdiCurrent > 1500) {
-    recommendation = "HOLD";
-    recommendationReasoning = "Young ship in good market — value appreciation likely.";
+    recommendation = "WATCH";
+    recommendationReasoning = "Young ship in strong market — likely to appreciate, watch for dip.";
   } else if (age <= 5 && MARKET_FACTORS.bdiTrend === "falling") {
     recommendation = "BUY";
-    recommendationReasoning = "Young ship with BDI declining — entry opportunity.";
+    recommendationReasoning = "Young ship with declining BDI — good entry point to buy.";
   } else if (age <= 10 && ship.dwt > 100000) {
     recommendation = "BUY";
-    recommendationReasoning = "Large ship in prime life phase. Strong ore freight demand.";
+    recommendationReasoning = "Large vessel in prime life phase. Strong ore demand — buy opportunity.";
   } else if (ship.dwt < 40000 && MARKET_FACTORS.bdiCurrent < 1000) {
-    recommendation = "SELL";
-    recommendationReasoning = "Small ship in weak market — most sensitive to freight fluctuations.";
+    recommendation = "AVOID";
+    recommendationReasoning = "Small ship in weak market — too volatile, wait for recovery.";
   } else if (ship.type === "Valemax" || ship.type === "VLOC") {
-    recommendation = "HOLD";
-    recommendationReasoning = "Specialized VLOCs — long-term contracts, stable income.";
+    recommendation = "WATCH";
+    recommendationReasoning = "Specialized VLOC — long-term contracts, stable income. Watch for availability.";
   } else {
-    recommendation = "HOLD";
-    recommendationReasoning = "Balanced risk-return. Market monitoring recommended.";
+    recommendation = "WATCH";
+    recommendationReasoning = "Balanced risk-return profile. Monitor market before buying.";
   }
 
   const reasoning = `${ship.type} newbuild $${(newbuild * tm / 1e6).toFixed(1)}M · Age ${age}yr (×${(ad * 100).toFixed(0)}%) · BDI ${MARKET_FACTORS.bdiCurrent} ${MARKET_FACTORS.bdiTrend} · Scrap floor $${(scrapValue / 1e6).toFixed(1)}M`;
@@ -227,22 +227,23 @@ export function formatPrice(usd: number): string {
   return `$${usd}`;
 }
 
-export function getRecommendationColor(rec: "BUY" | "HOLD" | "SELL"): string {
+export function getRecommendationColor(rec: "BUY" | "WATCH" | "AVOID"): string {
   switch (rec) {
     case "BUY": return "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30";
-    case "HOLD": return "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30";
-    case "SELL": return "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30";
+    case "WATCH": return "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30";
+    case "AVOID": return "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30";
   }
 }
 
-export function getRecommendationEmoji(rec: "BUY" | "HOLD" | "SELL"): string {
+export function getRecommendationEmoji(rec: "BUY" | "WATCH" | "AVOID"): string {
   switch (rec) {
     case "BUY": return "🟢";
-    case "HOLD": return "🟡";
-    case "SELL": return "🔴";
+    case "WATCH": return "👀";
+    case "AVOID": return "⛔";
   }
 }
 
-export function getRecommendationLabel(rec: "BUY" | "HOLD" | "SELL"): string {
-  return rec;
+export function getRecommendationLabel(rec: "BUY" | "WATCH" | "AVOID"): string {
+  const labels: Record<string, string> = { BUY: "Buy", WATCH: "Watch", AVOID: "Avoid" };
+  return labels[rec] || rec;
 }

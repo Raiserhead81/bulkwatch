@@ -76,11 +76,11 @@ function estimateValue(ship: ReturnType<typeof toShip>) {
   const scrap = Math.round(ship.dwt * 0.35 * 450);
   const value = Math.max(raw, ship.status === "active" ? scrap : 0);
 
-  let rec: "BUY" | "HOLD" | "SELL" = "HOLD";
+  let rec: "BUY" | "WATCH" | "AVOID" = "WATCH";
   let reason = "Balanced risk-return profile.";
-  if (age > 25) { rec = "SELL"; reason = "Scrap-ready. Sell before further depreciation."; }
-  else if (age <= 5) { rec = "BUY"; reason = "Young ship, strong appreciation potential."; }
-  else if (age > 15) { rec = "SELL"; reason = "Aging vessel, consider selling in current market."; }
+  if (age > 25) { rec = "AVOID"; reason = "Near scrap age — too risky to buy."; }
+  else if (age <= 5) { rec = "BUY"; reason = "Young ship — good buy candidate."; }
+  else if (age > 15) { rec = "AVOID"; reason = "Aging vessel — too risky to purchase."; }
 
   return { value, rec, reason, age };
 }
@@ -93,7 +93,7 @@ function fmtUSD(n: number) {
 
 function recColor(r: string) {
   if (r === "BUY") return "#10b981";
-  if (r === "SELL") return "#f43f5e";
+  if (r === "AVOID") return "#f43f5e";
   return "#f59e0b";
 }
 

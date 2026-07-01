@@ -221,7 +221,7 @@ FLEET VALUE PER OPERATOR (copy exactly):
   | Port Costs | -$60,000 |
   | **Net Profit** | **$2,137,000** |
 - For ship lists, ALWAYS include: Name, IMO, Type, DWT, Age, Est. Value, Recommendation.
-- Use emoji for visual indicators: 🟢 BUY, 🟡 HOLD, 🔴 SELL, ↑ up, ↓ down.
+- Use emoji for visual indicators: 🟢 Buy, 👀 Watch, ⛔ Avoid, ↑ up, ↓ down.
 - For trends, use arrow indicators: ▲ +5.2% or ▼ -3.1%
 - When showing multiple metrics, use a summary box at the top:
   **Key Metrics:** BDI 2,524 ▲ | Iron Ore $100/t ▼ | VLSFO $590/t | Capesize TCE $23,550/day
