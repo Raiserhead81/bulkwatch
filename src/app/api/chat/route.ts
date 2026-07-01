@@ -183,7 +183,7 @@ FLEET VALUE PER OPERATOR (copy exactly):
   FROM ships WHERE operator IS NOT NULL AND operator != ''
   GROUP BY operator ORDER BY COUNT(*) DESC LIMIT 20
 - Never show ages > 50 years — that means data is missing
-- For fleet value: use dwt * price_per_dwt_by_type, don't require year_built
+- For fleet value: query price_history for each ship's latest estimated_value and SUM them. Example: SELECT SUM(p.estimated_value) FROM ships s JOIN price_history p ON s.imo = p.imo WHERE p.date = (SELECT MAX(date) FROM price_history) AND s.operator = ?
 - For individual ship valuations, query price_history: SELECT estimated_value, recommendation FROM price_history WHERE imo = ? ORDER BY date DESC LIMIT 1
 - For top valuable ships: SELECT s.name, s.imo, s.type, s.dwt, s.year_built, s.operator, p.estimated_value, p.recommendation FROM ships s JOIN price_history p ON s.imo = p.imo WHERE p.date = (SELECT MAX(date) FROM price_history) ORDER BY p.estimated_value DESC LIMIT 10
 - NEVER output NULL or N/A for ship names — the name column always has data
