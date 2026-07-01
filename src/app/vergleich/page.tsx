@@ -14,10 +14,7 @@ const NAV: [string,string][] = [["Ships","/"],["Map","/karte"],["Live","/live"],
 function fmtDwt(d: number) { return d >= 1000 ? `${(d / 1000).toFixed(0)}k` : d > 0 ? d.toLocaleString() : "\u2014"; }
 
 function estimateValue(ship: Ship): number {
-  const age = ship.yearBuilt > 0 ? new Date().getFullYear() - ship.yearBuilt : 10;
-  const basePricePerDwt = 250;
-  const ageFactor = Math.max(0.3, 1 - age * 0.035);
-  return ship.dwt * basePricePerDwt * ageFactor;
+  return estimatePrice(ship).estimatedValueUSD;
 }
 
 export default function ComparePage() {

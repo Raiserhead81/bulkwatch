@@ -71,10 +71,7 @@ export default function FleetPage() {
   const currentYear = new Date().getFullYear();
 
   const fleetValue = ships.reduce((sum, s) => {
-    const age = s.yearBuilt > 0 ? currentYear - s.yearBuilt : 10;
-    const basePricePerDwt = 250;
-    const ageFactor = Math.max(0.3, 1 - age * 0.035);
-    return sum + s.dwt * basePricePerDwt * ageFactor;
+    return sum + estimatePrice(s).estimatedValueUSD;
   }, 0);
 
   const isLight = theme === "light";
