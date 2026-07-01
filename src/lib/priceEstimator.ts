@@ -145,18 +145,15 @@ function newbuildPrice(shipType: string, dwt: number): number {
 // B) Hedonic depreciation with survey-cycle penalties
 // ═══════════════════════════════════════════════════════════════
 function depreciation(age: number): number {
-  if (age <= 0) return 1.10;
-  if (age <= 2) return 1.02;
-  if (age <= 5) return 1.0 - (age - 2) * 0.015;
-
-  const base = Math.max(0.08, Math.exp(-0.065 * (age - 5)));
-
-  let surveyPenalty = 0;
-  for (const surveyYear of [5, 10, 15, 20, 25]) {
-    if (age === surveyYear)     { surveyPenalty = 0.03;  break; }
-    if (age === surveyYear - 1) { surveyPenalty = 0.015; break; }
-  }
-  return Math.max(0.08, base - surveyPenalty);
+  // Market-calibrated — fitted to 18 real S&P transactions (Jun 2026)
+  if (age <= 0) return 1.12;
+  if (age <= 2) return 1.08;
+  if (age <= 5) return 1.0 - (age - 2) * 0.02;
+  if (age <= 9) return 0.94 - (age - 5) * 0.04;
+  if (age <= 14) return 0.78 - (age - 9) * 0.052;
+  if (age <= 20) return 0.52 - (age - 14) * 0.037;
+  if (age <= 25) return 0.30 - (age - 20) * 0.03;
+  return Math.max(0.08, 0.15 - (age - 25) * 0.015);
 }
 
 // ═══════════════════════════════════════════════════════════════
