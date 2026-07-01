@@ -1,145 +1,365 @@
 #!/usr/bin/env python3
-"""Broker-Level Daily Vessel Valuations v3.
-Power-law newbuild × exponential depreciation, per DWT class.
-Optimized against 86 S&P comps. Cron: 30 19 * * *"""
-import sqlite3, time, math
+"""Broker-Quality Daily Vessel Valuations v4.
+Hedonic pricing model: segment-specific newbuild prices, survey-cycle depreciation,
+segment-specific market factors, LDT-based scrap floor, eco premium.
+Cron: 30 19 * * *"""
+import sqlite3, time, math, json
 
-DB = "/opt/bulkwatch/db/ships.db"
+DB   = "/opt/bulkwatch/db/ships.db"
+OPEX = "/opt/bulkwatch/db/opex_rates.json"
 YEAR = 2026
 
-# ═══ Size-class parameters (A, B, rate, floor) ═══
-# Newbuild = A × DWT^(1-B)
-# Depreciation = max(floor, exp(-rate × (age-5))) for age > 5
-SIZE_PARAMS = {
-    "small":  (2100, 0.10, 0.057, 0.10),  # <10k DWT, RMSE 26.9%
-    "medium": (1600, 0.10, 0.057, 0.10),  # 10-40k, RMSE 24.3%
-    "large":  (14200, 0.32, 0.057, 0.10), # 40-100k, RMSE 13.5%
-    "vlarge": (1100, 0.10, 0.057, 0.40),  # 100k+, RMSE 20.7%
+# ═══════════════════════════════════════════════════════════════
+# A) SEGMENT-SPECIFIC NEWBUILD PRICES (mid-2026 benchmarks, USD)
+# ═══════════════════════════════════════════════════════════════
+NEWBUILD_PRICES = {
+    # Dry Bulk
+    "Capesize":          {"dwt": 180000, "nb": 70_000_000},
+    "Newcastlemax":      {"dwt": 210000, "nb": 72_000_000},
+    "Kamsarmax":         {"dwt": 82000,  "nb": 38_000_000},
+    "Panamax":           {"dwt": 77000,  "nb": 35_000_000},
+    "Post-Panamax":      {"dwt": 95000,  "nb": 42_000_000},
+    "Ultramax":          {"dwt": 64000,  "nb": 35_000_000},
+    "Supramax":          {"dwt": 58000,  "nb": 33_000_000},
+    "Handymax":          {"dwt": 50000,  "nb": 32_000_000},
+    "Handysize":         {"dwt": 38000,  "nb": 31_000_000},
+    "Mini-Bulker":       {"dwt": 12000,  "nb": 18_000_000},
+    # Tanker
+    "VLCC":                  {"dwt": 300000, "nb": 125_000_000},
+    "Suezmax":               {"dwt": 157000, "nb": 85_000_000},
+    "Aframax":               {"dwt": 115000, "nb": 65_000_000},
+    "Product Tanker":        {"dwt": 50000,  "nb": 44_000_000},
+    "Chemical Tanker":       {"dwt": 25000,  "nb": 42_000_000},
+    "Crude Oil Tanker":      {"dwt": 105000, "nb": 60_000_000},
+    "Oil/Chemical Tanker":   {"dwt": 45000,  "nb": 40_000_000},
+    # Container
+    "Container Ship":    {"dwt": 70000, "nb": 95_000_000},
+    # Gas
+    "LNG Tanker":        {"dwt": 80000,  "nb": 250_000_000},
+    "LPG Tanker":        {"dwt": 50000,  "nb": 85_000_000},
+    # Specialized
+    "Car Carrier":       {"dwt": 15000, "nb": 70_000_000},
+    "RoRo":              {"dwt": 12000, "nb": 45_000_000},
+    "Reefer":            {"dwt": 12000, "nb": 35_000_000},
+    "Multipurpose":      {"dwt": 15000, "nb": 22_000_000},
+    "Heavy Lift":        {"dwt": 20000, "nb": 45_000_000},
+    "General Cargo":     {"dwt": 10000, "nb": 18_000_000},
+    "Bulk Carrier":      {"dwt": 60000, "nb": 34_000_000},  # generic fallback
 }
 
-# Type multipliers for non-bulk vessels
-TYPE_MULT = {
-    "VLCC": 1.15, "Suezmax": 1.15, "Aframax": 1.20,
-    "Product Tanker": 1.30, "Chemical Tanker": 1.80, "Oil/Chemical Tanker": 1.50,
-    "Crude Oil Tanker": 1.15, "Tanker": 1.20,
-    "LNG Tanker": 2.50, "LPG Tanker": 1.60,
-    "Container Ship": 1.10, "ULCV": 1.30, "Neo-Panamax": 1.20, "Feeder": 1.15,
-    "Car Carrier": 2.00, "RoRo": 1.40, "RoPax": 1.60,
-    "Cruise Ship": 3.00, "Passenger": 2.50, "Ferry": 1.50,
-    "Reefer": 1.30, "Multipurpose": 1.20, "Heavy Lift": 1.50,
-    "Offshore": 1.80, "OSV": 1.80, "Tug": 2.50, "Dredger": 1.50,
+# Fallback power-law for ship types not in NEWBUILD_PRICES
+# Uses Bulk Carrier curve × type multiplier
+FALLBACK_TYPE_MULT = {
+    "Valemax": 1.05, "VLOC": 1.00, "Gearless": 0.98, "Geared": 0.95,
+    "Tanker": 1.10, "ULCV": 1.60, "Neo-Panamax": 1.30, "Feeder": 0.80,
+    "RoPax": 1.80, "Cruise Ship": 4.50, "Passenger": 3.00, "Ferry": 1.60,
+    "OSV": 1.80, "Offshore": 1.60, "Tug": 2.50, "Dredger": 1.50,
 }
 
-BULK_TYPES = {"General Cargo", "Bulk Carrier", "Handymax", "Handysize", "Mini-Bulker",
-              "Capesize", "Newcastlemax", "Valemax", "VLOC", "Kamsarmax", "Panamax",
-              "Post-Panamax", "Supramax", "Ultramax", "Gearless", "Geared"}
+# ═══════════════════════════════════════════════════════════════
+# Segment type groupings for market factor
+# ═══════════════════════════════════════════════════════════════
+CAPESIZE_TYPES  = {"Capesize", "Newcastlemax", "Valemax", "VLOC", "Post-Panamax"}
+PANAMAX_TYPES   = {"Panamax", "Kamsarmax", "Gearless"}
+SUPRAMAX_TYPES  = {"Supramax", "Ultramax", "Geared"}
+HANDYSIZE_TYPES = {"Handysize", "Handymax", "Mini-Bulker"}
 
-PREMIUM_BUILDERS = ["hyundai", "samsung", "daewoo", "imabari", "oshima", "tsuneishi",
-                    "namura", "mitsubishi", "mitsui", "kawasaki", "jmu"]
-DISCOUNT_BUILDERS = ["spain", "spanish", "huelva", "navantia", "astilleros",
-                     "constanta", "mangalia", "gdynia", "split"]
+# ═══════════════════════════════════════════════════════════════
+# Builder quality tiers
+# ═══════════════════════════════════════════════════════════════
+TIER1_BUILDERS = [
+    "hyundai", "samsung", "daewoo", "imabari", "oshima", "tsuneishi",
+    "namura", "mitsubishi", "mitsui", "kawasaki", "jmu", "hanjin",
+    "universal shipbuilding", "sanoyas", "shin kurushima",
+]
+TIER2_BUILDERS = [
+    "cosco", "jiangnan", "hudong", "dalian", "yangzijiang", "nantong",
+    "new times", "jinhai", "zhejiang", "cssc", "csic",
+]
+TIER4_BUILDERS = [
+    "spain", "spanish", "huelva", "navantia", "astilleros",
+    "constanta", "mangalia", "gdynia", "split", "uljanik",
+]
 
-DEFAULT_DWTS = {0, 5000, 10000, 12000, 15000, 18000, 20000, 45000, 46000, 47000, 50000, 55000}
+# LDT/DWT ratios for scrap value
+LDT_RATIOS = {
+    "Bulk Carrier": 0.17, "Capesize": 0.15, "Newcastlemax": 0.15,
+    "Handymax": 0.18, "Handysize": 0.18, "Supramax": 0.17, "Ultramax": 0.17,
+    "Kamsarmax": 0.16, "Panamax": 0.16, "Post-Panamax": 0.16,
+    "Tanker": 0.18, "VLCC": 0.15, "Suezmax": 0.17, "Aframax": 0.18,
+    "Product Tanker": 0.19, "Chemical Tanker": 0.20, "Crude Oil Tanker": 0.17,
+    "Container Ship": 0.22, "General Cargo": 0.25,
+    "RoRo": 0.30, "Car Carrier": 0.35, "Reefer": 0.28,
+    "LNG Tanker": 0.25, "LPG Tanker": 0.22,
+}
+
+# Eco benchmarks (tons/day fuel consumption)
+ECO_BENCHMARKS = {
+    "Capesize": 35, "Newcastlemax": 37, "Kamsarmax": 28, "Panamax": 26,
+    "Post-Panamax": 30, "Ultramax": 24, "Supramax": 23, "Handymax": 20,
+    "Handysize": 18, "Mini-Bulker": 12,
+    "VLCC": 65, "Suezmax": 45, "Aframax": 38, "Product Tanker": 28,
+    "Chemical Tanker": 22, "Crude Oil Tanker": 40, "LNG Tanker": 80,
+    "LPG Tanker": 40, "Container Ship": 120, "General Cargo": 15,
+}
 
 
-def get_size_class(dwt):
-    if dwt < 10000: return "small"
-    elif dwt < 40000: return "medium"
-    elif dwt < 100000: return "large"
-    else: return "vlarge"
+# ═══════════════════════════════════════════════════════════════
+# A) Newbuild price with DWT scaling
+# ═══════════════════════════════════════════════════════════════
+def newbuild_price(ship_type, dwt):
+    dwt = max(dwt, 500)
+    if ship_type in NEWBUILD_PRICES:
+        ref = NEWBUILD_PRICES[ship_type]
+        # Economies of scale: exponent 0.7
+        nb = ref["nb"] * ((dwt / ref["dwt"]) ** 0.7)
+        return nb
+    # Fallback: use Bulk Carrier curve × type multiplier
+    ref = NEWBUILD_PRICES["Bulk Carrier"]
+    mult = FALLBACK_TYPE_MULT.get(ship_type, 1.0)
+    nb = ref["nb"] * ((dwt / ref["dwt"]) ** 0.7) * mult
+    return nb
 
 
-def estimate(dwt, year_built, stype, builder, status, for_year=YEAR):
-    if not dwt or dwt <= 0:
-        return 0
+# ═══════════════════════════════════════════════════════════════
+# B) Hedonic depreciation with survey-cycle penalties
+# ═══════════════════════════════════════════════════════════════
+def depreciation(age):
+    if age <= 0:
+        return 1.10   # under construction / newbuild premium
+    if age <= 2:
+        return 1.02   # nearly new
+    if age <= 5:
+        return 1.0 - (age - 2) * 0.015  # 0.985 at age 5
 
-    eff_year = year_built if year_built and year_built > 1900 else for_year - 10
-    age = for_year - eff_year
+    base = max(0.08, math.exp(-0.065 * (age - 5)))
 
-    # 1. Newbuild price (power-law per size class)
-    sc = get_size_class(dwt)
-    A, B, rate, floor = SIZE_PARAMS[sc]
-    newbuild = A * (max(dwt, 500) ** (1 - B))
+    survey_penalty = 0.0
+    for survey_year in [5, 10, 15, 20, 25]:
+        if age == survey_year:
+            survey_penalty = 0.03
+            break
+        elif age == survey_year - 1:
+            survey_penalty = 0.015
+            break
 
-    # 2. Type multiplier (non-bulk types)
-    if stype not in BULK_TYPES:
-        tm = TYPE_MULT.get(stype, 1.0)
-        newbuild *= tm
+    return max(0.08, base - survey_penalty)
 
-    # 3. Age depreciation (exponential with floor)
-    if age < 0:
-        ad = 1.10  # under construction
-    elif age <= 2:
-        ad = 1.05
-    elif age <= 5:
-        ad = 1.0
+
+# ═══════════════════════════════════════════════════════════════
+# C) Segment-specific market factor
+# ═══════════════════════════════════════════════════════════════
+def market_factor(ship_type, bdi, charter_rates):
+    if ship_type in CAPESIZE_TYPES:
+        rate     = charter_rates.get("capesize", 29000)
+        baseline = 22000
+    elif ship_type in PANAMAX_TYPES:
+        rate     = charter_rates.get("panamax", 21500)
+        baseline = 16000
+    elif ship_type in SUPRAMAX_TYPES:
+        rate     = charter_rates.get("supramax", 24000)
+        baseline = 14000
+    elif ship_type in HANDYSIZE_TYPES:
+        rate     = charter_rates.get("handysize", 13500)
+        baseline = 11000
     else:
-        ad = max(floor, math.exp(-rate * (age - 5)))
+        rate     = bdi
+        baseline = 1500
 
-    # 4. Builder factor
-    bf = 1.0
-    if builder:
-        bl = builder.lower()
-        if any(p in bl for p in PREMIUM_BUILDERS): bf = 1.05
-        elif any(d in bl for d in DISCOUNT_BUILDERS): bf = 0.92
-
-    # 5. Status factor
-    sf = {"scrapped": 0.20, "laid_up": 0.75, "under_construction": 1.10}.get(status, 1.0)
-
-    # 6. Scrap value floor
-    ldt_ratio = 0.20
-    scrap = dwt * ldt_ratio * 480  # $480/LDT
-
-    value = max(newbuild * ad * bf * sf, scrap)
-    return round(value)
+    ratio = rate / baseline
+    return 0.85 + 0.15 * (ratio ** 0.5)
 
 
-def get_bdi_factor():
-    """Load current BDI and calculate market factor"""
-    try:
-        import json
-        with open("/opt/bulkwatch/db/opex_rates.json") as f:
-            data = json.load(f)
-        bdi = data.get("bdiIndex", 1500)
-        # BDI 1500 = neutral (factor 1.0)
-        # BDI 3000+ = strong market (+12%)
-        # BDI 800 = weak market (-10%)
-        if bdi > 3000: return 1.12
-        elif bdi > 1500: return 1.0 + (bdi - 1500) * 0.00008
-        elif bdi > 800: return 1.0
-        else: return 0.85 + (bdi - 500) * 0.0005
-    except:
+# ═══════════════════════════════════════════════════════════════
+# D) Scrap value (LDT-based)
+# ═══════════════════════════════════════════════════════════════
+def scrap_value(dwt, ship_type, scrap_price_per_ldt=530):
+    ldt_ratio = LDT_RATIOS.get(ship_type, 0.20)
+    ldt = dwt * ldt_ratio
+    return ldt * scrap_price_per_ldt
+
+
+# ═══════════════════════════════════════════════════════════════
+# E) Eco premium (NPV of fuel savings vs. benchmark)
+# ═══════════════════════════════════════════════════════════════
+def eco_premium(fuel_consumption, dwt, ship_type, age, fuel_price=550):
+    if not fuel_consumption or fuel_consumption <= 0 or age > 20:
+        return 0
+    benchmark = ECO_BENCHMARKS.get(ship_type, dwt * 0.0003 + 10)
+    savings_per_day = max(0.0, benchmark - fuel_consumption)
+    if savings_per_day <= 0:
+        return 0
+    daily_saving_usd  = savings_per_day * fuel_price
+    remaining_life    = max(1, 25 - age)
+    utilization       = 0.85
+    discount_rate     = 0.08
+    npv = sum(
+        daily_saving_usd * 365 * utilization / (1 + discount_rate) ** t
+        for t in range(1, remaining_life + 1)
+    )
+    return round(npv)
+
+
+# ═══════════════════════════════════════════════════════════════
+# F) Builder quality factor
+# ═══════════════════════════════════════════════════════════════
+def builder_factor(builder):
+    if not builder:
         return 1.0
+    bl = builder.lower()
+    if any(p in bl for p in TIER1_BUILDERS):
+        return 1.07   # Tier 1 (Japan/Korea top): +5-8% → midpoint 7%
+    if any(p in bl for p in TIER2_BUILDERS):
+        return 1.015  # Tier 2 (China major): +0-3% → midpoint 1.5%
+    if any(p in bl for p in TIER4_BUILDERS):
+        return 0.925  # Tier 4 (Minor yards): -5-10% → midpoint 7.5%
+    return 1.0        # Tier 3 (China small / EU standard): 0%
+
+
+# ═══════════════════════════════════════════════════════════════
+# G) Confidence score
+# ═══════════════════════════════════════════════════════════════
+def confidence_score(dwt, year_built, ship_type, fuel_consumption,
+                     classification, bdi_fresh, builder, length, beam):
+    score = 30
+    if dwt and dwt > 0:           score += 15
+    if year_built and year_built > 1900: score += 15
+    if ship_type in NEWBUILD_PRICES: score += 10
+    if fuel_consumption and fuel_consumption > 0: score += 5
+    if classification:            score += 5
+    if bdi_fresh:                 score += 5
+    if builder:                   score += 3
+    if length and length > 0 and beam and beam > 0: score += 5
+    return min(92, score)
+
+
+# ═══════════════════════════════════════════════════════════════
+# Load market data
+# ═══════════════════════════════════════════════════════════════
+def load_market_data():
+    try:
+        with open(OPEX) as f:
+            data = json.load(f)
+        return {
+            "bdi":           data.get("bdiIndex", 1500),
+            "charter_rates": data.get("charterRates", {}),
+            "scrap_ldt":     data.get("scrapPriceLDT", 530),
+            "fuel_vlsfo":    data.get("bunkerVLSFO", 550),
+            "date":          data.get("date", "unknown"),
+        }
+    except Exception as e:
+        print(f"Warning: could not load {OPEX}: {e}")
+        return {
+            "bdi":           1500,
+            "charter_rates": {"capesize": 29000, "panamax": 21500,
+                              "supramax": 24000, "handysize": 13500},
+            "scrap_ldt":     530,
+            "fuel_vlsfo":    550,
+            "date":          "fallback",
+        }
+
+
+# ═══════════════════════════════════════════════════════════════
+# H) Final estimate
+# ═══════════════════════════════════════════════════════════════
+def estimate(ship_row, market):
+    imo, name, stype, dwt, year_built, builder, flag, status = ship_row
+    stype    = stype or ""
+    dwt      = dwt or 0
+    builder  = builder or ""
+    status   = status or "active"
+
+    if dwt <= 0:
+        return 0, 30
+
+    eff_year = year_built if year_built and year_built > 1900 else YEAR - 10
+    age      = YEAR - eff_year
+
+    nb  = newbuild_price(stype, dwt)
+    dep = depreciation(age)
+    mf  = market_factor(stype, market["bdi"], market["charter_rates"])
+    bf  = builder_factor(builder)
+    eco = eco_premium(None, dwt, stype, age, market["fuel_vlsfo"])
+    scrap = scrap_value(dwt, stype, market["scrap_ldt"])
+
+    status_mult = {"scrapped": 0.20, "laid_up": 0.75,
+                   "under_construction": 1.10, "lost": 0.0}.get(status, 1.0)
+
+    base_value = nb * dep * mf * bf * status_mult
+    value      = max(base_value + eco, scrap if status not in ("scrapped", "lost") else 0)
+
+    conf = confidence_score(
+        dwt, year_built, stype,
+        fuel_consumption=None, classification=None,
+        bdi_fresh=True, builder=builder, length=None, beam=None
+    )
+    return round(value), conf
+
+
+# ═══════════════════════════════════════════════════════════════
+# I) Recommendation logic
+# ═══════════════════════════════════════════════════════════════
+def recommendation(value, stype, dwt, age, status, market):
+    mf = market_factor(stype, market["bdi"], market["charter_rates"])
+    nb = newbuild_price(stype, dwt)
+    ratio = value / max(nb * mf, 1)
+
+    if status in ("scrapped", "lost"):
+        return "AVOID", "Vessel is scrapped or lost — not available for purchase."
+    if age > 25:
+        return "AVOID", "Near scrap age — too risky to buy."
+    if ratio < 0.35 and age < 15:
+        return "BUY", "Significantly below replacement cost."
+    if ratio < 0.50 and age < 10 and mf > 1.0:
+        return "BUY", "Good value in strong market."
+    if age <= 5 and mf < 0.95:
+        return "BUY", "Young ship in soft market — entry opportunity."
+    if age > 20:
+        return "AVOID", "Approaching end of economic life."
+    if age > 15 and mf > 1.05:
+        return "AVOID", "Aging vessel in elevated market — overpriced."
+    return "WATCH", "Fair value — monitor market conditions."
+
 
 def main():
+    market = load_market_data()
+    print(f"Market data ({market['date']}): BDI={market['bdi']}, "
+          f"Capesize={market['charter_rates'].get('capesize')}, "
+          f"Panamax={market['charter_rates'].get('panamax')}, "
+          f"Scrap={market['scrap_ldt']} $/LDT, "
+          f"VLSFO={market['fuel_vlsfo']} $/t")
+
     con = sqlite3.connect(DB)
     con.execute("PRAGMA journal_mode=WAL")
     today = time.strftime("%Y-%m-%d")
-    bdi_factor = get_bdi_factor()
-    print(f"BDI market factor: {bdi_factor:.3f}")
 
-    existing = con.execute("SELECT COUNT(*) FROM price_history WHERE date = ?", (today,)).fetchone()[0]
+    existing = con.execute(
+        "SELECT COUNT(*) FROM price_history WHERE date = ?", (today,)
+    ).fetchone()[0]
     if existing > 100:
         con.execute("DELETE FROM price_history WHERE date = ?", (today,))
         con.commit()
 
     ships = con.execute("""
         SELECT imo, name, type, dwt, year_built, builder, flag, status
-        FROM ships WHERE type IS NOT NULL AND type != '' AND dwt > 0
-        AND NOT (dwt IN (0,5000,10000,12000,15000,18000,20000,45000,46000,47000,50000,55000)
-                 AND (year_built IS NULL OR year_built = 0))
-        AND status NOT IN ('scrapped', 'lost')
+        FROM ships
+        WHERE type IS NOT NULL AND type != '' AND dwt > 0
+          AND NOT (dwt IN (0,5000,10000,12000,15000,18000,20000,
+                           45000,46000,47000,50000,55000)
+                   AND (year_built IS NULL OR year_built = 0))
+          AND status NOT IN ('scrapped', 'lost')
     """).fetchall()
 
     print(f"Valuating {len(ships)} ships for {today}...")
     inserted = 0
 
-    for imo, name, stype, dwt, year_built, builder, flag, status in ships:
-        value = round(estimate(dwt, year_built, stype, builder, status) * bdi_factor)
+    for row in ships:
+        value, conf = estimate(row, market)
         if value > 0:
             con.execute(
-                "INSERT OR REPLACE INTO price_history (imo, date, estimated_value, confidence) VALUES (?, ?, ?, 60)",
-                (imo, today, value)
+                "INSERT OR REPLACE INTO price_history "
+                "(imo, date, estimated_value, confidence) VALUES (?, ?, ?, ?)",
+                (row[0], today, value, conf)
             )
             inserted += 1
 

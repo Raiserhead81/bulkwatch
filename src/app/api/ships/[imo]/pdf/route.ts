@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
+import { estimatePrice, formatPrice, getRecommendationLabel } from "@/lib/priceEstimator";
 
 export const dynamic = "force-dynamic";
 
@@ -39,60 +40,8 @@ function toShip(row: Record<string, unknown>) {
   };
 }
 
-// Price estimation (server-side copy to avoid client imports)
-const BASE_PRICES: Record<string, number> = {
-  Valemax: 95_000_000, VLOC: 85_000_000, Newcastlemax: 65_000_000,
-  Capesize: 38_000_000, "Post-Panamax": 32_000_000, Kamsarmax: 28_000_000,
-  Panamax: 22_000_000, Ultramax: 21_000_000, Supramax: 19_000_000,
-  Handymax: 18_000_000, Handysize: 12_000_000, "Mini-Bulker": 6_000_000,
-  "Bulk Carrier": 22_000_000, Gearless: 25_000_000, Geared: 20_000_000,
-  "Crude Oil Tanker": 65_000_000, Tanker: 45_000_000,
-  "Product Tanker": 40_000_000, "Chemical Tanker": 30_000_000,
-  "LNG Tanker": 200_000_000, "LPG Tanker": 75_000_000,
-  "Container Ship": 55_000_000, "General Cargo": 12_000_000,
-  RoRo: 35_000_000, "Car Carrier": 70_000_000, Ferry: 20_000_000,
-  Passenger: 30_000_000, Offshore: 20_000_000, Tug: 4_000_000,
-  Other: 10_000_000,
-};
-
-function estimateValue(ship: ReturnType<typeof toShip>) {
-  const base = BASE_PRICES[ship.type] ?? 10_000_000;
-  const age = new Date().getFullYear() - (ship.yearBuilt > 1900 ? ship.yearBuilt : new Date().getFullYear() - 10);
-  let mult = 1.0;
-  if (age <= 2) mult = 1.05;
-  else if (age <= 5) mult = 1.0;
-  else if (age <= 10) mult = 0.85;
-  else if (age <= 15) mult = 0.65;
-  else if (age <= 20) mult = 0.45;
-  else if (age <= 25) mult = 0.30;
-  else mult = 0.15;
-
-  if (ship.status === "scrapped") mult *= 0.20;
-  else if (ship.status === "under_construction") mult *= 1.15;
-  else if (ship.status === "lost") mult *= 0;
-
-  const dwtBonus = (ship.dwt / 1000) * 250;
-  const raw = Math.round((base + dwtBonus) * mult);
-  const scrap = Math.round(ship.dwt * 0.35 * 450);
-  const value = Math.max(raw, ship.status === "active" ? scrap : 0);
-
-  let rec: "BUY" | "WATCH" | "AVOID" = "WATCH";
-  let reason = "Balanced risk-return profile.";
-  if (age > 25) { rec = "AVOID"; reason = "Near scrap age — too risky to buy."; }
-  else if (age <= 5) { rec = "BUY"; reason = "Young ship — good buy candidate."; }
-  else if (age > 15) { rec = "AVOID"; reason = "Aging vessel — too risky to purchase."; }
-
-  return { value, rec, reason, age };
-}
-
-function fmtUSD(n: number) {
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
-  if (n >= 1e3) return `$${(n / 1e3).toFixed(0)}K`;
-  return `$${n}`;
-}
-
 function recColor(r: string) {
-  if (r === "BUY") return "#10b981";
+  if (r === "BUY")   return "#10b981";
   if (r === "AVOID") return "#f43f5e";
   return "#f59e0b";
 }
@@ -107,7 +56,10 @@ export async function GET(
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const ship = toShip(row);
-  const est = estimateValue(ship);
+  const price = estimatePrice(ship);
+  const currentYear = new Date().getFullYear();
+  const effectiveYear = ship.yearBuilt > 1900 ? ship.yearBuilt : currentYear - 10;
+  const age = currentYear - effectiveYear;
   const now = new Date().toISOString().split("T")[0];
 
   // Voyage simulation (simplified server-side)
@@ -150,6 +102,9 @@ export async function GET(
     ? `<div style="text-align:center;margin-bottom:24px;"><img src="${ship.imageUrl}" alt="${ship.name}" style="max-width:100%;max-height:400px;border-radius:12px;border:1px solid #334155;" onerror="this.style.display='none'"/></div>`
     : "";
 
+  const confidencePct = `${price.confidenceScore}%`;
+  const recLabel = getRecommendationLabel(price.recommendation);
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -188,16 +143,17 @@ export async function GET(
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <div>
         <div style="font-size:12px;color:#64748b;text-transform:uppercase;">Estimated Value</div>
-        <div style="font-size:32px;font-weight:800;color:#38bdf8;">${fmtUSD(est.value)}</div>
-        <div style="font-size:13px;color:#94a3b8;">Age: ${est.age} years &middot; Status: ${ship.status}</div>
+        <div style="font-size:32px;font-weight:800;color:#38bdf8;">${formatPrice(price.estimatedValueUSD)}</div>
+        <div style="font-size:13px;color:#94a3b8;">Age: ${age} years &middot; Status: ${ship.status} &middot; Confidence: ${confidencePct}</div>
       </div>
       <div style="text-align:center;">
-        <div style="background:${recColor(est.rec)}22;border:2px solid ${recColor(est.rec)};border-radius:12px;padding:12px 24px;">
-          <div style="font-size:24px;font-weight:800;color:${recColor(est.rec)};">${est.rec}</div>
+        <div style="background:${recColor(price.recommendation)}22;border:2px solid ${recColor(price.recommendation)};border-radius:12px;padding:12px 24px;">
+          <div style="font-size:24px;font-weight:800;color:${recColor(price.recommendation)};">${recLabel}</div>
         </div>
       </div>
     </div>
-    <div style="font-size:13px;color:#94a3b8;border-top:1px solid #334155;padding-top:12px;">${est.reason}</div>
+    <div style="font-size:13px;color:#94a3b8;border-top:1px solid #334155;padding-top:12px;">${price.recommendationReasoning}</div>
+    <div style="font-size:12px;color:#64748b;margin-top:6px;">${price.reasoning}</div>
     ${voyageHtml}
   </div>
 

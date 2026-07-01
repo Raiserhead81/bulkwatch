@@ -63,34 +63,83 @@ const BUILDER_GROUPS: Record<string, string[]> = {
 };
 const BUILDERS = Object.values(BUILDER_GROUPS).flat();
 
-// ═══ BROKER MODEL (same as daily-valuations.py) ═══
-const SIZE_PARAMS: Record<string, [number, number, number, number]> = {
-  small:  [2100, 0.10, 0.057, 0.10],
-  medium: [1600, 0.10, 0.057, 0.10],
-  large:  [14200, 0.32, 0.057, 0.10],
-  vlarge: [1100, 0.10, 0.057, 0.40],
+// ═══ HEDONIC PRICING MODEL v4 (mirrors priceEstimator.ts) ═══
+
+const NEWBUILD_PRICES: Record<string, { dwt: number; nb: number }> = {
+  // Dry Bulk
+  "Capesize":          { dwt: 180000, nb: 70_000_000 },
+  "Newcastlemax":      { dwt: 210000, nb: 72_000_000 },
+  "Kamsarmax":         { dwt: 82000,  nb: 38_000_000 },
+  "Panamax":           { dwt: 77000,  nb: 35_000_000 },
+  "Post-Panamax":      { dwt: 95000,  nb: 42_000_000 },
+  "Ultramax":          { dwt: 64000,  nb: 35_000_000 },
+  "Supramax":          { dwt: 58000,  nb: 33_000_000 },
+  "Handymax":          { dwt: 50000,  nb: 32_000_000 },
+  "Handysize":         { dwt: 38000,  nb: 31_000_000 },
+  "Mini-Bulker":       { dwt: 12000,  nb: 18_000_000 },
+  // Tanker
+  "VLCC":              { dwt: 300000, nb: 125_000_000 },
+  "Suezmax":           { dwt: 157000, nb: 85_000_000  },
+  "Aframax":           { dwt: 115000, nb: 65_000_000  },
+  "Product Tanker":    { dwt: 50000,  nb: 44_000_000  },
+  "Chemical Tanker":   { dwt: 25000,  nb: 42_000_000  },
+  "Crude Oil Tanker":  { dwt: 105000, nb: 60_000_000  },
+  "Oil/Chemical Tanker": { dwt: 45000, nb: 40_000_000 },
+  // Container
+  "Container Ship":    { dwt: 70000,  nb: 95_000_000  },
+  // Gas
+  "LNG Tanker":        { dwt: 80000,  nb: 250_000_000 },
+  "LPG Tanker":        { dwt: 50000,  nb: 85_000_000  },
+  // Specialized
+  "Car Carrier":       { dwt: 15000,  nb: 70_000_000  },
+  "RoRo":              { dwt: 12000,  nb: 45_000_000  },
+  "Reefer":            { dwt: 12000,  nb: 35_000_000  },
+  "Multipurpose":      { dwt: 15000,  nb: 22_000_000  },
+  "Heavy Lift":        { dwt: 20000,  nb: 45_000_000  },
+  "General Cargo":     { dwt: 10000,  nb: 18_000_000  },
+  "Bulk Carrier":      { dwt: 60000,  nb: 34_000_000  },
 };
 
-const TYPE_MULT: Record<string, number> = {
-  "VLCC": 1.15, "Suezmax": 1.15, "Aframax": 1.20,
-  "Product Tanker": 1.30, "Chemical Tanker": 1.80, "Oil/Chemical Tanker": 1.50,
-  "Crude Oil Tanker": 1.15, "Tanker": 1.20,
-  "LNG Tanker": 2.50, "LPG Tanker": 1.60,
-  "Container Ship": 1.10, "ULCV": 1.30, "Neo-Panamax": 1.20, "Feeder": 1.15,
-  "Car Carrier": 2.00, "RoRo": 1.40, "RoPax": 1.60,
-  "Cruise Ship": 3.00, "Passenger": 2.50, "Ferry": 1.50,
-  "Reefer": 1.30, "Multipurpose": 1.20, "Heavy Lift": 1.50,
-  "Offshore": 1.80, "OSV": 1.80, "Tug": 2.50, "Dredger": 1.50,
+const FALLBACK_TYPE_MULT: Record<string, number> = {
+  "Valemax": 1.05, "VLOC": 1.00, "Gearless": 0.98, "Geared": 0.95,
+  "Tanker": 1.10, "ULCV": 1.60, "Neo-Panamax": 1.30, "Feeder": 0.80,
+  "RoPax": 1.80, "Cruise Ship": 4.50, "Passenger": 3.00, "Ferry": 1.60,
+  "OSV": 1.80, "Offshore": 1.60, "Tug": 2.50, "Dredger": 1.50,
 };
 
-const BULK_TYPES = new Set([
-  "General Cargo", "Bulk Carrier", "Handymax", "Handysize", "Mini-Bulker",
-  "Capesize", "Newcastlemax", "Valemax", "VLOC", "Kamsarmax", "Panamax",
-  "Post-Panamax", "Supramax", "Ultramax", "Gearless", "Geared",
-]);
+const CAPESIZE_TYPES  = new Set(["Capesize", "Newcastlemax", "Valemax", "VLOC", "Post-Panamax"]);
+const PANAMAX_TYPES   = new Set(["Panamax", "Kamsarmax", "Gearless"]);
+const SUPRAMAX_TYPES  = new Set(["Supramax", "Ultramax", "Geared"]);
+const HANDYSIZE_TYPES = new Set(["Handysize", "Handymax", "Mini-Bulker"]);
 
-const PREMIUM_BUILDERS = ["hyundai", "samsung", "daewoo", "imabari", "oshima", "tsuneishi", "namura", "mitsubishi", "mitsui", "kawasaki", "jmu"];
-const DISCOUNT_BUILDERS = ["huelva", "navantia", "astilleros", "constanta", "mangalia", "gdynia"];
+const LDT_RATIOS: Record<string, number> = {
+  "Bulk Carrier": 0.17, "Capesize": 0.15, "Newcastlemax": 0.15,
+  "Handymax": 0.18, "Handysize": 0.18, "Supramax": 0.17, "Ultramax": 0.17,
+  "Kamsarmax": 0.16, "Panamax": 0.16, "Post-Panamax": 0.16,
+  "Tanker": 0.18, "VLCC": 0.15, "Suezmax": 0.17, "Aframax": 0.18,
+  "Product Tanker": 0.19, "Chemical Tanker": 0.20, "Crude Oil Tanker": 0.17,
+  "Container Ship": 0.22, "General Cargo": 0.25,
+  "RoRo": 0.30, "Car Carrier": 0.35, "Reefer": 0.28,
+  "LNG Tanker": 0.25, "LPG Tanker": 0.22,
+};
+
+const TIER1_BUILDERS = [
+  "hyundai", "samsung", "daewoo", "imabari", "oshima", "tsuneishi",
+  "namura", "mitsubishi", "mitsui", "kawasaki", "jmu", "hanjin",
+  "universal shipbuilding", "sanoyas", "shin kurushima",
+];
+const TIER2_BUILDERS = [
+  "cosco", "jiangnan", "hudong", "dalian", "yangzijiang", "nantong",
+  "new times", "jinhai", "zhejiang", "cssc", "csic",
+];
+const TIER4_BUILDERS = [
+  "huelva", "navantia", "astilleros", "constanta", "mangalia",
+  "gdynia", "split", "uljanik",
+];
+
+const SCRAP_PER_LDT = 478;
+const MARKET_CHARTER = { capesize: 29000, panamax: 21500, supramax: 24000, handysize: 13500 };
+const MARKET_BDI_DEFAULT = 2562;
 
 interface Factor {
   name: string;
@@ -99,90 +148,148 @@ interface Factor {
   impact: "positive" | "neutral" | "negative";
 }
 
+function calcNewbuild(shipType: string, dwt: number): number {
+  const safeDwt = Math.max(dwt, 500);
+  if (NEWBUILD_PRICES[shipType]) {
+    const ref = NEWBUILD_PRICES[shipType];
+    return ref.nb * Math.pow(safeDwt / ref.dwt, 0.7);
+  }
+  const ref  = NEWBUILD_PRICES["Bulk Carrier"];
+  const mult = FALLBACK_TYPE_MULT[shipType] ?? 1.0;
+  return ref.nb * Math.pow(safeDwt / ref.dwt, 0.7) * mult;
+}
+
+function calcDepreciation(age: number): number {
+  if (age <= 0) return 1.10;
+  if (age <= 2) return 1.02;
+  if (age <= 5) return 1.0 - (age - 2) * 0.015;
+  const base = Math.max(0.08, Math.exp(-0.065 * (age - 5)));
+  let surveyPenalty = 0;
+  for (const surveyYear of [5, 10, 15, 20, 25]) {
+    if (age === surveyYear)     { surveyPenalty = 0.03;  break; }
+    if (age === surveyYear - 1) { surveyPenalty = 0.015; break; }
+  }
+  return Math.max(0.08, base - surveyPenalty);
+}
+
+function calcMarketFactor(shipType: string, bdiOverride: number): number {
+  let rate: number;
+  let baseline: number;
+
+  if (CAPESIZE_TYPES.has(shipType)) {
+    rate = MARKET_CHARTER.capesize; baseline = 22000;
+  } else if (PANAMAX_TYPES.has(shipType)) {
+    rate = MARKET_CHARTER.panamax; baseline = 16000;
+  } else if (SUPRAMAX_TYPES.has(shipType)) {
+    rate = MARKET_CHARTER.supramax; baseline = 14000;
+  } else if (HANDYSIZE_TYPES.has(shipType)) {
+    rate = MARKET_CHARTER.handysize; baseline = 11000;
+  } else {
+    // Non-bulk: use BDI override scaled to factor
+    const ratio = bdiOverride / 1500;
+    return 0.85 + 0.15 * Math.pow(Math.max(ratio, 0), 0.5);
+  }
+
+  const ratio = rate / baseline;
+  return 0.85 + 0.15 * Math.pow(ratio, 0.5);
+}
+
+function calcBuilderFactor(builder: string): number {
+  if (!builder) return 1.0;
+  const bl = builder.toLowerCase();
+  if (TIER1_BUILDERS.some(p => bl.includes(p))) return 1.07;
+  if (TIER2_BUILDERS.some(p => bl.includes(p))) return 1.015;
+  if (TIER4_BUILDERS.some(p => bl.includes(p))) return 0.925;
+  return 1.0;
+}
+
+function calcScrap(dwt: number, shipType: string): number {
+  const ldt = dwt * (LDT_RATIOS[shipType] ?? 0.20);
+  return ldt * SCRAP_PER_LDT;
+}
+
 function calculate(dwt: number, yearBuilt: number, shipType: string, builder: string, fuelType: string = "conventional", surveyStatus: string = "mid_cycle", bdiOverride: number = 2490) {
   const year = 2026;
   const age = year - yearBuilt;
   const factors: Factor[] = [];
 
-  // 1. Size class
-  const sc = dwt < 10000 ? "small" : dwt < 40000 ? "medium" : dwt < 100000 ? "large" : "vlarge";
-  const [A, B, rate, floor] = SIZE_PARAMS[sc];
-
-  // 2. Newbuild price
-  const newbuild = A * Math.pow(Math.max(dwt, 500), 1 - B);
+  // 1. Newbuild price (segment-specific + DWT scaling)
+  const newbuild = calcNewbuild(shipType, dwt);
   factors.push({ name: "Newbuild Replacement", value: newbuild, label: `$${(newbuild / 1e6).toFixed(1)}M`, impact: "neutral" });
 
-  // 3. Type multiplier
-  let tm = 1.0;
-  if (!BULK_TYPES.has(shipType)) {
-    tm = TYPE_MULT[shipType] || 1.0;
-  }
-  if (tm !== 1.0) {
-    factors.push({ name: "Type Premium", value: tm, label: `×${tm.toFixed(2)}`, impact: tm > 1 ? "positive" : "negative" });
-  }
-
-  // 4. Age depreciation
-  let ad: number;
-  if (age < 0) { ad = 1.10; }
-  else if (age <= 2) { ad = 1.05; }
-  else if (age <= 5) { ad = 1.0; }
-  else { ad = Math.max(floor, Math.exp(-rate * (age - 5))); }
-  const adPct = ((1 - ad) * 100).toFixed(0);
+  // 2. Hedonic depreciation with survey-cycle penalties
+  const dep = calcDepreciation(age);
+  const depPct = ((1 - dep) * 100).toFixed(0);
+  const surveyYears = [5, 10, 15, 20, 25];
+  let ageLabel = age <= 5
+    ? `${age}yr (new)`
+    : `${age}yr (−${depPct}%)${surveyYears.includes(age) ? " [SURVEY]" : surveyYears.includes(age + 1) ? " [pre-survey]" : ""}`;
   factors.push({
     name: "Age Depreciation",
-    value: ad,
-    label: age <= 5 ? `${age}yr (new)` : `${age}yr (−${adPct}%)`,
-    impact: age <= 5 ? "positive" : age <= 15 ? "neutral" : "negative"
+    value: dep,
+    label: ageLabel,
+    impact: age <= 5 ? "positive" : age <= 15 ? "neutral" : "negative",
   });
 
-  // 5. Builder
-  let bf = 1.0;
-  if (builder) {
-    const bl = builder.toLowerCase();
-    if (PREMIUM_BUILDERS.some(p => bl.includes(p))) { bf = 1.05; }
-    else if (DISCOUNT_BUILDERS.some(d => bl.includes(d))) { bf = 0.92; }
-  }
+  // 3. Segment-specific market factor
+  const mf = calcMarketFactor(shipType, bdiOverride);
+  const mfSegLabel = CAPESIZE_TYPES.has(shipType)  ? `Capesize $${MARKET_CHARTER.capesize.toLocaleString()}/d`
+                   : PANAMAX_TYPES.has(shipType)    ? `Panamax $${MARKET_CHARTER.panamax.toLocaleString()}/d`
+                   : SUPRAMAX_TYPES.has(shipType)   ? `Supramax $${MARKET_CHARTER.supramax.toLocaleString()}/d`
+                   : HANDYSIZE_TYPES.has(shipType)  ? `Handysize $${MARKET_CHARTER.handysize.toLocaleString()}/d`
+                   : `BDI ${bdiOverride}`;
+  factors.push({
+    name: "Market Factor",
+    value: mf,
+    label: `${mfSegLabel} (×${mf.toFixed(3)})`,
+    impact: mf > 1.02 ? "positive" : mf < 0.98 ? "negative" : "neutral",
+  });
+
+  // 4. Builder quality (3-tier)
+  const bf = calcBuilderFactor(builder);
   if (bf !== 1.0) {
-    factors.push({ name: "Builder", value: bf, label: bf > 1 ? "+5% Premium" : "−8% Discount", impact: bf > 1 ? "positive" : "negative" });
+    const tier = bf >= 1.05 ? "Tier 1 (+7%)" : bf >= 1.01 ? "Tier 2 (+1.5%)" : "Tier 4 (−7.5%)";
+    factors.push({ name: "Builder", value: bf, label: `${tier}`, impact: bf >= 1.0 ? "positive" : "negative" });
   }
 
-  // 6. Eco premium
+  // 5. Eco premium (fuel type)
   let eco = 1.0;
-  if (fuelType === "scrubber") { eco = 1.03; factors.push({ name: "Scrubber Fitted", value: eco, label: "+3%", impact: "positive" }); }
-  else if (fuelType === "lng_ready") { eco = 1.08; factors.push({ name: "LNG/Dual Fuel", value: eco, label: "+8%", impact: "positive" }); }
-  else if (fuelType === "methanol") { eco = 1.06; factors.push({ name: "Methanol Ready", value: eco, label: "+6%", impact: "positive" }); }
-  else if (fuelType === "tier3") { eco = 1.02; factors.push({ name: "IMO Tier III", value: eco, label: "+2%", impact: "positive" }); }
+  if (fuelType === "scrubber")   { eco = 1.03; factors.push({ name: "Scrubber Fitted",  value: eco, label: "+3%",  impact: "positive" }); }
+  else if (fuelType === "lng_ready") { eco = 1.08; factors.push({ name: "LNG/Dual Fuel", value: eco, label: "+8%",  impact: "positive" }); }
+  else if (fuelType === "methanol")  { eco = 1.06; factors.push({ name: "Methanol Ready", value: eco, label: "+6%", impact: "positive" }); }
+  else if (fuelType === "tier3")     { eco = 1.02; factors.push({ name: "IMO Tier III",   value: eco, label: "+2%", impact: "positive" }); }
 
-  // 7. Survey status
+  // 6. Survey status
   let sv = 1.0;
-  if (surveyStatus === "freshly_surveyed") { sv = 1.05; factors.push({ name: "Survey Status", value: sv, label: "Fresh SS (+5%)", impact: "positive" }); }
-  else if (surveyStatus === "due_soon") { sv = 0.95; factors.push({ name: "Survey Due", value: sv, label: "Due <12mo (-5%)", impact: "negative" }); }
-  else if (surveyStatus === "overdue") { sv = 0.88; factors.push({ name: "Survey Overdue", value: sv, label: "Overdue (-12%)", impact: "negative" }); }
+  if (surveyStatus === "freshly_surveyed") { sv = 1.05; factors.push({ name: "Survey Status", value: sv, label: "Fresh SS (+5%)",    impact: "positive" }); }
+  else if (surveyStatus === "due_soon")    { sv = 0.95; factors.push({ name: "Survey Due",    value: sv, label: "Due <12mo (−5%)",   impact: "negative" }); }
+  else if (surveyStatus === "overdue")     { sv = 0.88; factors.push({ name: "Survey Overdue", value: sv, label: "Overdue (−12%)",   impact: "negative" }); }
 
-  // 8. BDI Market Cycle
-  let bdiMult = 1.0;
-  if (bdiOverride > 3000) { bdiMult = 1.12; }
-  else if (bdiOverride > 1500) { bdiMult = 1.0 + (bdiOverride - 1500) * 0.00008; }
-  else if (bdiOverride > 800) { bdiMult = 1.0; }
-  else { bdiMult = 0.85 + (bdiOverride - 500) * 0.0005; }
-  factors.push({ name: "BDI Market", value: bdiMult, label: "BDI " + bdiOverride + " (\u00d7" + bdiMult.toFixed(2) + ")", impact: bdiMult > 1.05 ? "positive" : bdiMult < 0.95 ? "negative" : "neutral" });
-
-  // 9. Scrap floor
-  const scrap = dwt * 0.20 * 480;
+  // 7. Scrap floor (LDT-based)
+  const scrapValue = calcScrap(dwt, shipType);
 
   // Final
-  const raw = newbuild * tm * ad * bf * eco * sv * bdiMult;
-  const final = Math.max(raw, scrap);
+  const raw   = newbuild * dep * mf * bf * eco * sv;
+  const final = Math.max(raw, scrapValue);
+
+  // Determine size class label for display
+  let sizeClass = "custom";
+  if (CAPESIZE_TYPES.has(shipType))  sizeClass = "capesize";
+  else if (PANAMAX_TYPES.has(shipType))   sizeClass = "panamax";
+  else if (SUPRAMAX_TYPES.has(shipType))  sizeClass = "supramax";
+  else if (HANDYSIZE_TYPES.has(shipType)) sizeClass = "handysize";
+  else if (NEWBUILD_PRICES[shipType])     sizeClass = shipType.toLowerCase().replace(/ /g, "_");
 
   return {
-    newbuild: Math.round(newbuild * tm),
+    newbuild: Math.round(newbuild),
     depreciated: Math.round(raw),
     final: Math.round(final),
-    scrapValue: Math.round(scrap),
+    scrapValue: Math.round(scrapValue),
     factors,
-    sizeClass: sc,
+    sizeClass,
     age,
-    isScrapFloor: final <= scrap * 1.01,
+    isScrapFloor: final <= scrapValue * 1.01,
+    depFactor: dep,
   };
 }
 
@@ -216,7 +323,7 @@ export default function ValuationPage() {
             <Calculator className="h-5 w-5 text-blue-400" />
             Vessel Valuation Calculator
           </h1>
-          <span className="text-xs text-slate-500">Broker Model v3</span>
+          <span className="text-xs text-slate-500">Hedonic Model v4</span>
         </div>
       </header>
 
@@ -308,7 +415,7 @@ export default function ValuationPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">BDI Market Cycle</label>
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">BDI Override (non-bulk segments)</label>
                   <input type="range" min={500} max={5000} step={50} value={bdiOverride}
                     onChange={e => setBdiOverride(Number(e.target.value))}
                     className="w-full mt-2 accent-blue-500" />
@@ -324,9 +431,9 @@ export default function ValuationPage() {
 
             {/* Model Info */}
             <div className="bg-white/50 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-5 text-xs text-slate-500">
-              <p className="font-semibold text-slate-400 mb-2">Model: Power-Law × Exponential Depreciation</p>
+              <p className="font-semibold text-slate-400 mb-2">Model: Hedonic Pricing v4 — 27 Segments × Survey-Cycle Depreciation</p>
               <p>Calibrated against 86 real S&P transactions (Q2 2026). Sources: NautiSNP, Xclusiv Shipbrokers, Clarksons, Hellenic Shipping News.</p>
-              <p className="mt-2">Size class: <span className="text-blue-400 font-mono">{result.sizeClass}</span> — RMSE: {result.sizeClass === "large" ? "13.5%" : result.sizeClass === "vlarge" ? "20.7%" : result.sizeClass === "medium" ? "24.3%" : "26.9%"}</p>
+              <p className="mt-2">Segment: <span className="text-blue-400 font-mono">{result.sizeClass}</span> — Market data: 01 Jul 2026</p>
             </div>
           </div>
 
@@ -363,7 +470,7 @@ export default function ValuationPage() {
                   <div key={i} className="flex justify-between items-center py-2 border-b border-slate-800/50">
                     <div className="flex items-center gap-2">
                       {f.name === "Age Depreciation" && <TrendingDown className="h-4 w-4 text-red-400" />}
-                      {f.name === "Type Premium" && <Ship className="h-4 w-4 text-purple-400" />}
+                      {f.name === "Market Factor" && <Ship className="h-4 w-4 text-blue-400" />}
                       {f.name === "Builder" && <Wrench className="h-4 w-4 text-amber-400" />}
                       <span className="text-sm">{f.name}</span>
                     </div>
@@ -377,7 +484,7 @@ export default function ValuationPage() {
                 <div className="flex justify-between items-center py-2 border-b border-slate-800/50">
                   <div className="flex items-center gap-2">
                     <Shield className="h-4 w-4 text-amber-400" />
-                    <span className="text-sm">Scrap Value Floor</span>
+                    <span className="text-sm">Scrap Value Floor (LDT-based)</span>
                   </div>
                   <span className="text-sm font-bold text-amber-400">{fmt(result.scrapValue)}</span>
                 </div>
@@ -411,30 +518,45 @@ export default function ValuationPage() {
                   {[0, 5, 10, 15, 20, 25, 30].map(yr => (
                     <text key={yr} x={40 + yr * 15} y={138} textAnchor="middle" fill="#64748b" fontSize={9}>{yr}yr</text>
                   ))}
-                  {/* Curve */}
+                  {/* Curve — hedonic depreciation with survey penalties */}
                   <polyline
                     fill="none" stroke="#3b82f6" strokeWidth={2}
                     points={Array.from({ length: 31 }, (_, age) => {
-                      const [, , rate, floor] = SIZE_PARAMS[result.sizeClass];
-                      let ad: number;
-                      if (age <= 2) ad = 1.05;
-                      else if (age <= 5) ad = 1.0;
-                      else ad = Math.max(floor, Math.exp(-rate * (age - 5)));
+                      let dep: number;
+                      if (age <= 0) dep = 1.10;
+                      else if (age <= 2) dep = 1.02;
+                      else if (age <= 5) dep = 1.0 - (age - 2) * 0.015;
+                      else {
+                        const base = Math.max(0.08, Math.exp(-0.065 * (age - 5)));
+                        let sp = 0;
+                        for (const sy of [5, 10, 15, 20, 25]) {
+                          if (age === sy) { sp = 0.03; break; }
+                          if (age === sy - 1) { sp = 0.015; break; }
+                        }
+                        dep = Math.max(0.08, base - sp);
+                      }
                       const x = 40 + age * 15;
-                      const y = 10 + (1 - ad) * 120;
+                      const y = 10 + (1 - dep) * 120;
                       return `${x},${y}`;
                     }).join(" ")}
                   />
+                  {/* Survey year markers */}
+                  {[5, 10, 15, 20, 25].map(sy => {
+                    let dep: number;
+                    const base = Math.max(0.08, Math.exp(-0.065 * (sy - 5)));
+                    dep = Math.max(0.08, base - 0.03);
+                    if (sy === 5) dep = 1.0 - (5 - 2) * 0.015 - 0.03;
+                    return (
+                      <circle key={sy} cx={40 + sy * 15} cy={10 + (1 - dep) * 120}
+                        r={3} fill="#f59e0b" stroke="#0f172a" strokeWidth={1} />
+                    );
+                  })}
                   {/* Current position dot */}
                   {(() => {
-                    const age = result.age;
-                    const [, , rate, floor] = SIZE_PARAMS[result.sizeClass];
-                    let ad: number;
-                    if (age <= 2) ad = 1.05;
-                    else if (age <= 5) ad = 1.0;
-                    else ad = Math.max(floor, Math.exp(-rate * (age - 5)));
+                    const age = Math.max(0, result.age);
+                    const dep = result.depFactor;
                     const x = 40 + Math.min(age, 30) * 15;
-                    const y = 10 + (1 - ad) * 120;
+                    const y = 10 + (1 - dep) * 120;
                     return (
                       <>
                         <circle cx={x} cy={y} r={5} fill="#3b82f6" stroke="#0f172a" strokeWidth={2} />
@@ -451,7 +573,7 @@ export default function ValuationPage() {
               </div>
               <div className="flex justify-between text-xs text-slate-500 mt-1 px-10">
                 <span>New</span>
-                <span className="text-amber-400">— Scrap Floor</span>
+                <span className="text-amber-400">— Scrap Floor &nbsp; <span className="text-amber-300">&#9679; Survey years</span></span>
                 <span>30 years</span>
               </div>
             </div>
