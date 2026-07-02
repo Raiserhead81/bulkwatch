@@ -228,8 +228,14 @@ export default function SettingsPage() {
             >
               Reset to Default
             </button>
+            <button
+              onClick={() => { localStorage.setItem("nav-order", JSON.stringify(navItems.map((n: any) => n[1]))); setNavMsg("Saved!"); }}
+              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold"
+            >
+              Save Order
+            </button>
           </div>
-          <p className="text-xs text-slate-500 mb-4">Use the arrows to reorder nav items. Changes apply on next page load.</p>
+          <p className="text-xs text-slate-500 mb-4">Use the arrows to reorder, then click Save Order.</p>
           <div className="space-y-2">
             {navItems.map(([label, href, icon], idx) => (
               <div
