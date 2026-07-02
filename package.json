@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
-    "build": "bash scripts/stamp-version.sh && next build && cp -r .next/static .next/standalone/bulkwatch/.next/static && cp -r .next/server .next/standalone/bulkwatch/.next/server && mkdir -p .next/standalone/bulkwatch/public && cp -r public/* .next/standalone/bulkwatch/public/ && bash scripts/cloudflare-purge.sh",
+    "build": "bash scripts/stamp-version.sh && next build && rsync -a --delete .next/static/ .next/standalone/bulkwatch/.next/static/ && rsync -a --delete .next/server/ .next/standalone/bulkwatch/.next/server/ && mkdir -p .next/standalone/bulkwatch/public && rsync -a --delete public/ .next/standalone/bulkwatch/public/ && bash scripts/cloudflare-purge.sh",
     "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
     "lint": "eslint .",
     "db:push": "prisma db push",

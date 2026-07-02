@@ -2,6 +2,9 @@
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
+    // Take control of any already-open clients immediately, so this
+    // kill-switch worker (not a stale one) is the one that unregisters.
+    await self.clients.claim();
     // Delete ALL caches
     const keys = await caches.keys();
     await Promise.all(keys.map(k => caches.delete(k)));
