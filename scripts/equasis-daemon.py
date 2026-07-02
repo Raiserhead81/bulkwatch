@@ -336,6 +336,33 @@ def main():
             fields = update_ship(con, imo, dwt, data)
             enriched += 1
             
+            # Quality monitor every 50 ships
+            if enriched % 50 == 0 and enriched > 0:
+                bad = con.execute("""SELECT COUNT(*) FROM ships 
+                    WHERE equasis_last_scraped = ? 
+                    AND classification IS NOT NULL 
+                    AND owner IS NULL AND manager IS NULL AND mmsi IS NULL
+                    AND dwt IN (0,5000,10000,12000,15000,18000,20000,45000,46000,47000,50000,55000)
+                """, (datetime.now().strftime("%Y-%m-%d"),)).fetchone()[0]
+                if bad > 0:
+                    # Auto-repair: reset bad records
+                    con.execute("""UPDATE ships SET classification = NULL, equasis_last_scraped = NULL
+                        WHERE equasis_last_scraped = ?
+                        AND classification IS NOT NULL
+                        AND owner IS NULL AND manager IS NULL AND mmsi IS NULL
+                        AND dwt IN (0,5000,10000,12000,15000,18000,20000,45000,46000,47000,50000,55000)
+                    """, (datetime.now().strftime("%Y-%m-%d"),))
+                    con.commit()
+                    print(f"  ⚠ QUALITY CHECK: {bad} fake records detected and reset", flush=True)
+                    # Force re-login all sessions
+                    for s in sessions:
+                        s.opener = None
+                        s.consecutive_fails = 0
+                    print(f"  ⚠ All sessions reset — re-logging in...", flush=True)
+                    for s in sessions:
+                        if s.is_available():
+                            s.login()
+
             if enriched % LOG_EVERY == 0 or enriched <= 3:
                 parts = []
                 if data.get("dwt"): parts.append(f"DWT={data['dwt']}")
