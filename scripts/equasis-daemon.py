@@ -148,6 +148,12 @@ class EquasisSession:
             m = re.search(r'Tokyo MOU.*?(White|Grey|Black)', html, re.DOTALL|re.I)
             if m: result["flag_tokyo_mou"] = m.group(1).capitalize()
             
+            # Detention %
+            m = re.search(r"([\d.]+)%\s*Of inspections.*?detention", html, re.DOTALL|re.I)
+            if m:
+                try: result["detention_pct"] = float(m.group(1))
+                except: pass
+            
             # Inspections
             m = re.search(r'Inspections\s*\((\d+)\)', html)
             if m: result["inspections_count"] = int(m.group(1))
@@ -246,6 +252,7 @@ def update_ship(con, imo, dwt, data):
         "last_survey": "last_survey = ?",
         "next_survey": "next_survey = ?",
         "equasis_status": "status = ?",
+        "detention_pct": "detention_pct = ?",
         "owner": "owner = ?",
         "manager": "manager = ?",
         "ism_manager": "ism_manager = ?",
