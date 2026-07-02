@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import GlobalNav from "@/components/global-nav";
 import { calculateOpex, fetchLiveRates, type LiveOpexRates } from "@/lib/opex";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -149,7 +148,6 @@ export default function OpexCalcPage() {
   // ── Render ──────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      <GlobalNav />
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Page header */}
