@@ -7,6 +7,7 @@ const RouteMap = dynamic(() => import("@/components/route-map"), { ssr: false })
 import { calculateOpex } from "@/lib/opex";
 
 import { useState, useMemo, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Port {
   code: string; name: string; country: string;
@@ -157,24 +158,10 @@ function haversine(lat1: number, lon1: number, lat2: number, lon2: number): numb
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-const NAV: [string,string][] = [["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"],["AI Chat","/chat"]];
-const inpStyleDark: React.CSSProperties = { padding: "10px 14px", background: "#1e293b", border: "1px solid #334155", borderRadius: 8, color: "#e2e8f0", fontSize: 14, width: "100%" };
-const inpStyleLight: React.CSSProperties = { padding: "10px 14px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: 8, color: "#1e293b", fontSize: 14, width: "100%" };
+const inp = "w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
+const lbl = "block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1";
 
 export default function VoyageCalcPage() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [theme, setTheme] = useState<"dark"|"light">("dark");
-
-  useEffect(() => {
-    const readTheme = () => {
-      const saved = localStorage.getItem("vessel-theme") || "dark";
-      setTheme(saved as "dark"|"light");
-    };
-    readTheme();
-    const obs = new MutationObserver(() => readTheme());
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => obs.disconnect();
-  }, []);
   const [fromCode, setFromCode] = useState("");
   const [toCode, setToCode] = useState("");
   const [dwt, setDwt] = useState(80000);
@@ -193,17 +180,18 @@ export default function VoyageCalcPage() {
     else if (dwt >= 15000) setFuelConsumption(15);
     else setFuelConsumption(10);
   }, [dwt]);
+
   const [freightRate, setFreightRate] = useState(15);
   const [liveRates, setLiveRates] = useState<any>(null);
-
-  // Fetch live BDI and calculate freight rates
   const [liveBdi, setLiveBdi] = useState(2490);
+
   useEffect(() => {
     fetch("/api/market").then(r => r.json()).then(d => {
       if (d.bdi) setLiveBdi(d.bdi);
       if (d.bunkerVLSFO) setFuelPrice(d.bunkerVLSFO);
     }).catch(() => {});
   }, []);
+
   useMemo(() => {
     const rates = calculateFreightRates(liveBdi, new Date().toLocaleDateString("en-GB"));
     setLiveRates(rates);
@@ -212,6 +200,7 @@ export default function VoyageCalcPage() {
       setFreightRate(+match.spotRate.toFixed(1));
     }
   }, [dwt, liveBdi]);
+
   const [portDays, setPortDays] = useState(4);
   const [weather, setWeather] = useState<any>(null);
   const [realRouteNm, setRealRouteNm] = useState<number>(0);
@@ -225,10 +214,8 @@ export default function VoyageCalcPage() {
     const gcDist = haversine(from.lat, from.lon, to.lat, to.lon);
     const rf = getRoutingFactors(from.lat, from.lon, to.lat, to.lon, from.country, to.country);
 
-    // Apply routing multiplier (coastal deviation, canal routing)
     const routeDist = realRouteNm > 0 ? realRouteNm : gcDist * rf.routingMultiplier;
 
-    // Effective speed after weather and current
     const weatherLoss = speed * (rf.weatherMargin / 100);
     const currentGain = speed * (rf.currentEffect / 100);
     const effectiveSpeed = Math.max(speed - weatherLoss + currentGain, speed * 0.6);
@@ -241,18 +228,17 @@ export default function VoyageCalcPage() {
     const fuelCost = fuelTonsTotal * fuelPrice;
     const portCosts = portDays * 15000;
     const canalCost = rf.canalTransit?.cost || 0;
-    const warRiskPremium = rf.piracyRisk ? dwt * 0.15 : 0; // ~$0.15/DWT
+    const warRiskPremium = rf.piracyRisk ? dwt * 0.15 : 0;
     const totalVoyageCost = fuelCost + portCosts + canalCost + warRiskPremium;
 
-    // OPEX (crew, insurance, maintenance, etc.)
     const opex = calculateOpex(dwt, 2016, "Bulk Carrier", dwt * 400, undefined, fuelConsumption);
     const opexTotal = Math.round(opex.totalFixedOpex * totalDays);
     const totalCostWithOpex = totalVoyageCost + opexTotal;
 
     const revenue = dwt * freightRate;
     const profit = revenue - totalCostWithOpex;
-    const tce = (revenue - totalVoyageCost) / totalDays; // TCE excludes OPEX (industry standard)
-    const netTce = (revenue - totalCostWithOpex) / totalDays; // Net after OPEX
+    const tce = (revenue - totalVoyageCost) / totalDays;
+    const netTce = (revenue - totalCostWithOpex) / totalDays;
     const breakEvenRate = totalCostWithOpex / dwt;
 
     return {
@@ -270,8 +256,6 @@ export default function VoyageCalcPage() {
     };
   }, [fromCode, toCode, dwt, speed, fuelPrice, fuelConsumption, freightRate, portDays]);
 
-  // Fetch live weather for selected route
-  // Auto-fetch weather + real sea route distance
   useEffect(() => {
     const from = PORTS.find(p => p.code === fromCode);
     const to = PORTS.find(p => p.code === toCode);
@@ -287,180 +271,259 @@ export default function VoyageCalcPage() {
       .catch(() => {});
   }, [fromCode, toCode]);
 
-  const isLight = theme === "light";
-  const inpStyle = isLight ? inpStyleLight : inpStyleDark;
-  const box: React.CSSProperties = { background: isLight ? "#ffffff" : "#1e293b", borderRadius: 12, border: `1px solid ${isLight ? "#e2e8f0" : "#1e3a5f"}`, padding: 20 };
-  const labelStyle: React.CSSProperties = { fontSize: 12, color: isLight ? "#475569" : "#64748b", marginBottom: 4, display: "block" };
-  const bigNum: React.CSSProperties = { fontSize: 28, fontWeight: 700, color: "#38bdf8" };
+  const tcePositive = result ? result.tce >= 0 : false;
+  const profitPositive = result ? result.profit >= 0 : false;
 
   return (
-    <div style={{ minHeight: "100vh", background: isLight ? "#f8fafc" : "#1e293b", color: isLight ? "#1e293b" : "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
-      {/* Mobile menu */}
-      <div className={`mobile-nav-overlay${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
-      <div className={`mobile-nav-panel${menuOpen ? " open" : ""}`}>
-        <button className="mobile-nav-close" onClick={() => setMenuOpen(false)}>&#x2715;</button>
-        {NAV.map(([l,h]: [string,string]) => (
-          <a key={h} href={h} className={h==="/voyage-calc" ? "active" : ""}>{l}</a>
-        ))}
-      </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+      <div className="max-w-7xl mx-auto px-4 py-6">
 
-      <div className="page-header" style={{ background: isLight ? "#ffffff" : "#1e293b", borderBottom: `1px solid ${isLight ? "#e2e8f0" : "#1e3a5f"}`, padding: "16px 24px" }}>
-        <div style={{ maxWidth: "95%", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#38bdf8" }}>Voyage Calculator</h1>
-            <p style={{ margin: "4px 0 0", fontSize: 13, color: "#94a3b8" }}>Estimate costs, duration and TCE</p>
-          </div>
-          <button className="mobile-menu-btn" onClick={() => setMenuOpen(true)}>&#9776;</button>
-          <nav className="nav-links">
-            {NAV.map(([l, h]) => (
-              <a key={h} href={h} style={{ color: h==="/voyage-calc" ? "#38bdf8" : "#94a3b8", textDecoration: "none" }}>{l}</a>
-            ))}
-          </nav>
+        {/* Page header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Voyage Calculator</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Estimate costs, duration and TCE for any bulk voyage
+          </p>
         </div>
-      </div>
 
-      <div className="page-content" style={{ maxWidth: "95%", margin: "0 auto", padding: "24px" }}>
-        <div className="voyage-layout" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={box}>
-              <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#38bdf8" }}>Route</h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-6">
+
+          {/* ── LEFT: Input panel ─────────────────────────────── */}
+          <div className="space-y-4">
+
+            {/* Route */}
+            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Route</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div>
-                  <label style={labelStyle}>Loading Port</label>
-                  <select value={fromCode} onChange={e => setFromCode(e.target.value)} style={inpStyle}>
+                  <label className={lbl}>Loading Port</label>
+                  <select value={fromCode} onChange={e => setFromCode(e.target.value)} className={inp}>
                     <option value="">Select port...</option>
                     {PORTS.map(p => <option key={p.code} value={p.code}>{p.name}, {p.country}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}>Discharge Port</label>
-                  <select value={toCode} onChange={e => setToCode(e.target.value)} style={inpStyle}>
+                  <label className={lbl}>Discharge Port</label>
+                  <select value={toCode} onChange={e => setToCode(e.target.value)} className={inp}>
                     <option value="">Select port...</option>
                     {PORTS.map(p => <option key={p.code} value={p.code}>{p.name}, {p.country}</option>)}
                   </select>
                 </div>
-              </div>
-            </div>
 
-            <div style={box}>
-              <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#38bdf8" }}>Vessel Parameters</h2>
-              <div className="vessel-params-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {/* Quick Routes */}
                 <div>
-                  <label style={labelStyle}>DWT (tonnes)</label>
-                  <input type="number" value={dwt} onChange={e => setDwt(Number(e.target.value))} style={inpStyle} />
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mb-2">Quick Routes</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      ["PDA", "QIN", "Port Hedland – Qingdao"],
+                      ["TUB", "NBO", "Tubarao – Ningbo"],
+                      ["NCT", "YOK", "Newcastle – Yokohama"],
+                      ["NOL", "RTM", "New Orleans – Rotterdam"],
+                      ["RGT", "SHA", "Richards Bay – Shanghai"],
+                    ].map(([f, t, label]) => (
+                      <button
+                        key={f + t}
+                        onClick={() => { setFromCode(f); setToCode(t); }}
+                        className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                          fromCode === f && toCode === t
+                            ? "bg-blue-500 border-blue-500 text-white"
+                            : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-blue-400 hover:text-blue-500"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <label style={labelStyle}>Speed (knots)</label>
-                  <input type="number" value={speed} onChange={e => setSpeed(Number(e.target.value))} style={inpStyle} step="0.5" />
-                </div>
-                <div>
-                  <label style={labelStyle}>Fuel Consumption (t/day)</label>
-                  <input type="number" value={fuelConsumption} onChange={e => setFuelConsumption(Number(e.target.value))} style={inpStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Port Days (load+discharge)</label>
-                  <input type="number" value={portDays} onChange={e => setPortDays(Number(e.target.value))} style={inpStyle} />
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            <div style={box}>
-              <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#38bdf8" }}>Market Parameters</h2>
-              <div className="market-params-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <div>
-                  <label style={labelStyle}>VLSFO Price ($/t)</label>
-                  <input type="number" value={fuelPrice} onChange={e => setFuelPrice(Number(e.target.value))} style={inpStyle} />
+            {/* Vessel Parameters */}
+            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Vessel Parameters</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={lbl}>DWT (tonnes)</label>
+                    <input type="number" value={dwt} onChange={e => setDwt(Number(e.target.value))} className={inp} />
+                  </div>
+                  <div>
+                    <label className={lbl}>Speed (knots)</label>
+                    <input type="number" value={speed} onChange={e => setSpeed(Number(e.target.value))} className={inp} step="0.5" />
+                  </div>
+                  <div>
+                    <label className={lbl}>Fuel Consumption (t/day)</label>
+                    <input type="number" value={fuelConsumption} onChange={e => setFuelConsumption(Number(e.target.value))} className={inp} />
+                  </div>
+                  <div>
+                    <label className={lbl}>Port Days (load + discharge)</label>
+                    <input type="number" value={portDays} onChange={e => setPortDays(Number(e.target.value))} className={inp} />
+                  </div>
                 </div>
-                <div>
-                  <label style={labelStyle}>Freight Rate ($/t)</label>
-                  <input type="number" value={freightRate} onChange={e => setFreightRate(Number(e.target.value))} style={inpStyle} step="0.5" />
+              </CardContent>
+            </Card>
+
+            {/* Market Parameters */}
+            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Market Parameters</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={lbl}>VLSFO Price ($/t)</label>
+                    <input type="number" value={fuelPrice} onChange={e => setFuelPrice(Number(e.target.value))} className={inp} />
+                  </div>
+                  <div>
+                    <label className={lbl}>Freight Rate ($/t)</label>
+                    <input type="number" value={freightRate} onChange={e => setFreightRate(Number(e.target.value))} className={inp} step="0.5" />
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
+
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* ── RIGHT: Results panel ──────────────────────────── */}
+          <div className="space-y-4">
+
             {!result ? (
-              <div style={{ ...box, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 300, color: "#64748b" }}>
-                Select loading and discharge ports to calculate
-              </div>
+              <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <CardContent className="flex items-center justify-center min-h-[300px]">
+                  <p className="text-slate-400 dark:text-slate-500 text-sm">Select loading and discharge ports to calculate</p>
+                </CardContent>
+              </Card>
             ) : (
               <>
-                <div style={box}>
-                  <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#38bdf8" }}>Route Summary</h2>
-                  <div style={{ fontSize: 14, color: "#94a3b8", marginBottom: 12 }}>
-                    {result.from.name} &rarr; {result.to.name}
+                {/* Summary bar */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="rounded-xl bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/20 p-4">
+                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium uppercase tracking-wide">Distance</p>
+                    <p className="text-2xl font-bold text-blue-700 dark:text-blue-300 mt-1">{result.distNm.toLocaleString()} nm</p>
                   </div>
-                  <div className="route-summary-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
-                    <div>
-                      <div style={labelStyle}>Distance</div>
-                      <div className="big-number" style={bigNum}>{result.distNm.toLocaleString()}</div>
-                      <div style={{ fontSize: 11, color: "#64748b" }}>nautical miles</div>
-                    </div>
-                    <div>
-                      <div style={labelStyle}>Sea Days</div>
-                      <div className="big-number" style={bigNum}>{result.seaDays}</div>
-                      <div style={{ fontSize: 11, color: "#64748b" }}>at {speed} kn</div>
-                    </div>
-                    <div>
-                      <div style={labelStyle}>Total Voyage</div>
-                      <div className="big-number" style={bigNum}>{result.totalDays}</div>
-                      <div style={{ fontSize: 11, color: "#64748b" }}>incl. port days</div>
-                    </div>
+                  <div className="rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 p-4">
+                    <p className="text-xs text-amber-600 dark:text-amber-400 font-medium uppercase tracking-wide">Total Voyage</p>
+                    <p className="text-2xl font-bold text-amber-700 dark:text-amber-300 mt-1">{result.totalDays} days</p>
+                  </div>
+                  <div className={`rounded-xl border p-4 ${
+                    tcePositive
+                      ? "bg-emerald-500/10 dark:bg-emerald-500/15 border-emerald-500/20"
+                      : "bg-rose-500/10 dark:bg-rose-500/15 border-rose-500/20"
+                  }`}>
+                    <p className={`text-xs font-medium uppercase tracking-wide ${tcePositive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                      TCE
+                    </p>
+                    <p className={`text-2xl font-bold mt-1 ${tcePositive ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"}`}>
+                      ${result.tce.toLocaleString(undefined, { maximumFractionDigits: 0 })}/day
+                    </p>
                   </div>
                 </div>
 
-                <div style={box}>
-                  {/* Route Map */}
-                  <div style={{ marginBottom: 20, borderRadius: 8, overflow: "hidden", border: `1px solid ${isLight ? "#e2e8f0" : "#1e293b"}` }}>
-                    <RouteMap
-                      fromLat={result.from.lat} fromLon={result.from.lon} fromName={result.from.name}
-                      toLat={result.to.lat} toLon={result.to.lon} toName={result.to.name}
-                      shipName="Voyage"
-                      daysTotal={Math.round(parseFloat(result.totalDays))}
-                      daysRemaining={Math.round(parseFloat(result.totalDays))}
-                      distanceNm={result.distNm} progressPercent={0}
-                      height={220}
-                    />
-                  </div>
+                {/* Route detail + Map */}
+                <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold">
+                      {result.from.name} &rarr; {result.to.name}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Map */}
+                    <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+                      <RouteMap
+                        fromLat={result.from.lat} fromLon={result.from.lon} fromName={result.from.name}
+                        toLat={result.to.lat} toLon={result.to.lon} toName={result.to.name}
+                        shipName="Voyage"
+                        daysTotal={Math.round(parseFloat(result.totalDays))}
+                        daysRemaining={Math.round(parseFloat(result.totalDays))}
+                        distanceNm={result.distNm} progressPercent={0}
+                        height={220}
+                      />
+                    </div>
 
-                  {/* Weather Conditions */}
-                  <div style={{ marginBottom: 20 }}>
-                    <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#38bdf8" }}>Weather Conditions</h2>
-                    {weatherLoading ? (
-                      <div style={{ color: "#64748b", fontSize: 13 }}>Loading weather data...</div>
-                    ) : weather?.current ? (
+                    {/* Route stats */}
+                    <div className="grid grid-cols-3 gap-4 pt-1">
                       <div>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
-                          <div style={{ background: isLight ? "#f1f5f9" : "#1e293b", borderRadius: 8, padding: 12, textAlign: "center" }}>
-                            <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>Condition</div>
-                            <div style={{ fontSize: 16, fontWeight: 700, color: weather.current.condition === "excellent" ? "#4ade80" : weather.current.condition === "good" ? "#38bdf8" : weather.current.condition === "moderate" ? "#fbbf24" : "#f87171" }}>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Sea Days</p>
+                        <p className="text-lg font-bold">{result.seaDays}</p>
+                        <p className="text-xs text-slate-400">at {speed} kn</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Port Days</p>
+                        <p className="text-lg font-bold">{portDays}</p>
+                        <p className="text-xs text-slate-400">load + discharge</p>
+                      </div>
+                      {result.canalDays > 0 && (
+                        <div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Canal Transit</p>
+                          <p className="text-lg font-bold">{result.canalDays}</p>
+                          <p className="text-xs text-slate-400">days</p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Eff. Speed</p>
+                        <p className="text-lg font-bold">{result.effectiveSpeed} kn</p>
+                        <p className="text-xs text-slate-400">after weather</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Weather Conditions */}
+                <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold">Weather Conditions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {weatherLoading ? (
+                      <p className="text-slate-400 text-sm">Loading weather data...</p>
+                    ) : weather?.current ? (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-4 gap-3">
+                          <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-3 text-center">
+                            <p className="text-xs text-slate-400 mb-1">Condition</p>
+                            <p className={`text-sm font-bold ${
+                              weather.current.condition === "excellent" ? "text-emerald-500"
+                              : weather.current.condition === "good" ? "text-sky-500"
+                              : weather.current.condition === "moderate" ? "text-amber-500"
+                              : "text-rose-500"
+                            }`}>
                               {weather.current.condition.charAt(0).toUpperCase() + weather.current.condition.slice(1)}
-                            </div>
+                            </p>
                           </div>
-                          <div style={{ background: isLight ? "#f1f5f9" : "#1e293b", borderRadius: 8, padding: 12, textAlign: "center" }}>
-                            <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>Waves (avg/max)</div>
-                            <div style={{ fontSize: 16, fontWeight: 700, color: "#e2e8f0" }}>{weather.current.avgWaveHeight}m / {weather.current.maxWaveHeight}m</div>
+                          <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-3 text-center">
+                            <p className="text-xs text-slate-400 mb-1">Waves avg/max</p>
+                            <p className="text-sm font-bold">{weather.current.avgWaveHeight}m / {weather.current.maxWaveHeight}m</p>
                           </div>
-                          <div style={{ background: isLight ? "#f1f5f9" : "#1e293b", borderRadius: 8, padding: 12, textAlign: "center" }}>
-                            <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>Wind (Beaufort)</div>
-                            <div style={{ fontSize: 16, fontWeight: 700, color: "#e2e8f0" }}>Bft {weather.current.avgBeaufort.scale} — {weather.current.avgBeaufort.description}</div>
+                          <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-3 text-center">
+                            <p className="text-xs text-slate-400 mb-1">Wind</p>
+                            <p className="text-sm font-bold">Bft {weather.current.avgBeaufort.scale}</p>
+                            <p className="text-xs text-slate-400">{weather.current.avgBeaufort.description}</p>
                           </div>
-                          <div style={{ background: isLight ? "#f1f5f9" : "#1e293b", borderRadius: 8, padding: 12, textAlign: "center" }}>
-                            <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>Speed Loss</div>
-                            <div style={{ fontSize: 16, fontWeight: 700, color: weather.current.estimatedSpeedLoss > 10 ? "#f87171" : "#4ade80" }}>-{weather.current.estimatedSpeedLoss}%</div>
+                          <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-3 text-center">
+                            <p className="text-xs text-slate-400 mb-1">Speed Loss</p>
+                            <p className={`text-sm font-bold ${weather.current.estimatedSpeedLoss > 10 ? "text-rose-500" : "text-emerald-500"}`}>
+                              -{weather.current.estimatedSpeedLoss}%
+                            </p>
                           </div>
                         </div>
-                        {/* 7-Day Forecast */}
+
                         {weather.forecast?.days?.length > 0 && (
                           <div>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: "#94a3b8", marginBottom: 8 }}>7-Day Forecast</div>
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+                            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">7-Day Forecast</p>
+                            <div className="grid grid-cols-7 gap-1">
                               {weather.forecast.days.map((d: any) => (
-                                <div key={d.date} style={{ background: isLight ? "#f1f5f9" : "#1e293b", borderRadius: 6, padding: "8px 4px", textAlign: "center", borderTop: d.condition === "good" ? "2px solid #4ade80" : d.condition === "moderate" ? "2px solid #fbbf24" : "2px solid #f87171" }}>
-                                  <div style={{ fontSize: 10, color: "#64748b" }}>{new Date(d.date).toLocaleDateString("en-GB", { weekday: "short" })}</div>
-                                  <div style={{ fontSize: 13, fontWeight: 700, color: "#e2e8f0", margin: "2px 0" }}>{d.waveHeightMax.toFixed(1)}m</div>
-                                  <div style={{ fontSize: 10, color: "#64748b" }}>Bft {d.beaufort}</div>
+                                <div key={d.date} className={`rounded-md bg-slate-50 dark:bg-slate-800 p-2 text-center border-t-2 ${
+                                  d.condition === "good" ? "border-emerald-500"
+                                  : d.condition === "moderate" ? "border-amber-500"
+                                  : "border-rose-500"
+                                }`}>
+                                  <p className="text-xs text-slate-400">{new Date(d.date).toLocaleDateString("en-GB", { weekday: "short" })}</p>
+                                  <p className="text-sm font-bold mt-0.5">{d.waveHeightMax.toFixed(1)}m</p>
+                                  <p className="text-xs text-slate-400">Bft {d.beaufort}</p>
                                 </div>
                               ))}
                             </div>
@@ -468,94 +531,106 @@ export default function VoyageCalcPage() {
                         )}
                       </div>
                     ) : (
-                      <div style={{ color: "#475569", fontSize: 13 }}>Select a route to see weather conditions</div>
+                      <p className="text-slate-400 text-sm">No weather data available for this route</p>
                     )}
-                  </div>
+                  </CardContent>
+                </Card>
 
-                  <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#38bdf8" }}>Fuel &amp; Costs</h2>
-                  <div className="fuel-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                    <div>
-                      <div style={labelStyle}>Fuel Consumption</div>
-                      <div style={{ fontSize: 20, fontWeight: 600, color: "#e2e8f0" }}>{result.fuelTons.toLocaleString()} t</div>
-                    </div>
-                    <div>
-                      <div style={labelStyle}>Fuel Cost</div>
-                      <div style={{ fontSize: 20, fontWeight: 600, color: "#f87171" }}>${(result.fuelCost / 1000).toFixed(0)}k</div>
-                    </div>
-                    <div>
-                      <div style={labelStyle}>Port Costs</div>
-                      <div style={{ fontSize: 20, fontWeight: 600, color: "#f87171" }}>${(result.portCosts / 1000).toFixed(0)}k</div>
-                    </div>
-                    <div>
-                      <div style={labelStyle}>OPEX ({result.totalDays}d)</div>
-                      <div style={{ fontSize: 20, fontWeight: 600, color: "#f87171" }}>${(result.opexTotal / 1000).toFixed(0)}k</div>
-                    </div>
-                    <div>
-                      <div style={labelStyle}>OPEX/day</div>
-                      <div style={{ fontSize: 14, color: "#94a3b8" }}>${result.opexPerDay.toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <div style={labelStyle}>Total Voyage Cost</div>
-                      <div style={{ fontSize: 20, fontWeight: 600, color: "#f87171" }}>${(result.totalVoyageCost / 1000).toFixed(0)}k</div>
-                    </div>
-                    <div>
-                      <div style={labelStyle}>Total incl. OPEX</div>
-                      <div style={{ fontSize: 20, fontWeight: 600, color: "#ef4444" }}>${(result.totalCostWithOpex / 1000).toFixed(0)}k</div>
-                    </div>
-                  </div>
-                </div>
+                {/* Fuel & Costs */}
+                <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold">Fuel &amp; Costs</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <table className="w-full text-sm">
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        <tr>
+                          <td className="py-2 text-slate-600 dark:text-slate-400">Fuel Consumption</td>
+                          <td className="py-2 text-right font-semibold">{result.fuelTons.toLocaleString()} t</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 text-slate-600 dark:text-slate-400">Fuel Cost</td>
+                          <td className="py-2 text-right font-semibold text-rose-600 dark:text-rose-400">${(result.fuelCost / 1000).toFixed(0)}k</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 text-slate-600 dark:text-slate-400">Port Costs</td>
+                          <td className="py-2 text-right font-semibold text-rose-600 dark:text-rose-400">${(result.portCosts / 1000).toFixed(0)}k</td>
+                        </tr>
+                        {result.canalCost > 0 && (
+                          <tr>
+                            <td className="py-2 text-slate-600 dark:text-slate-400">Canal Costs</td>
+                            <td className="py-2 text-right font-semibold text-rose-600 dark:text-rose-400">${(result.canalCost / 1000).toFixed(0)}k</td>
+                          </tr>
+                        )}
+                        {result.warRiskPremium > 0 && (
+                          <tr>
+                            <td className="py-2 text-slate-600 dark:text-slate-400">War Risk Premium</td>
+                            <td className="py-2 text-right font-semibold text-rose-600 dark:text-rose-400">${(result.warRiskPremium / 1000).toFixed(0)}k</td>
+                          </tr>
+                        )}
+                        <tr>
+                          <td className="py-2 text-slate-600 dark:text-slate-400">
+                            OPEX ({result.totalDays}d)
+                            <span className="ml-2 text-xs text-slate-400">${result.opexPerDay.toLocaleString()}/day</span>
+                          </td>
+                          <td className="py-2 text-right font-semibold text-rose-600 dark:text-rose-400">${(result.opexTotal / 1000).toFixed(0)}k</td>
+                        </tr>
+                        <tr className="bg-slate-50 dark:bg-slate-800/60 font-bold">
+                          <td className="py-2.5 px-2 rounded-l text-slate-700 dark:text-slate-200">Total Voyage Cost</td>
+                          <td className="py-2.5 px-2 rounded-r text-right text-slate-700 dark:text-slate-200">${(result.totalVoyageCost / 1000).toFixed(0)}k</td>
+                        </tr>
+                        <tr className="bg-rose-50 dark:bg-rose-900/20 font-bold">
+                          <td className="py-2.5 px-2 rounded-l text-rose-700 dark:text-rose-300">Total incl. OPEX</td>
+                          <td className="py-2.5 px-2 rounded-r text-right text-rose-700 dark:text-rose-300">${(result.totalCostWithOpex / 1000).toFixed(0)}k</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </CardContent>
+                </Card>
 
-                <div style={{ ...box, background: "linear-gradient(135deg, #1e293b, #0f2744)" }}>
-                  <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#38bdf8" }}>Economics</h2>
-                  <div className="economics-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                    <div>
-                      <div style={labelStyle}>TCE (Time Charter Equivalent)</div>
-                      <div style={{ fontSize: 28, fontWeight: 700, color: result.tce >= 0 ? "#4ade80" : "#f87171" }}>
-                        ${result.tce.toLocaleString(undefined, { maximumFractionDigits: 0 })}/day
-                      </div>
-                    </div>
-                    <div>
-                      <div style={labelStyle}>Break-Even Freight Rate</div>
-                      <div style={{ fontSize: 28, fontWeight: 700, color: "#fbbf24" }}>
-                        ${result.breakEvenRate.toFixed(2)}/t
-                      </div>
-                    </div>
-                    <div>
-                      <div style={labelStyle}>Net Profit (after OPEX)</div>
-                      <div style={{ fontSize: 20, fontWeight: 600, color: result.profit > 0 ? "#4ade80" : "#f87171" }}>${(result.profit / 1000).toFixed(0)}k</div>
-                    </div>
-                    <div>
-                      <div style={labelStyle}>Gross Revenue</div>
-                      <div style={{ fontSize: 20, fontWeight: 600, color: "#e2e8f0" }}>${(result.revenue / 1_000_000).toFixed(2)}M</div>
-                    </div>
-                    <div>
-                      <div style={labelStyle}>Voyage P&amp;L</div>
-                      <div style={{ fontSize: 20, fontWeight: 600, color: result.profit >= 0 ? "#4ade80" : "#f87171" }}>
-                        {result.profit >= 0 ? "+" : ""}${(result.profit / 1000).toFixed(0)}k
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={box}>
-                  <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Quick Routes</div>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {[
-                      ["PDA", "QIN", "Port Hedland - Qingdao"],
-                      ["TUB", "NBO", "Tubarao - Ningbo"],
-                      ["NCT", "YOK", "Newcastle - Yokohama"],
-                      ["NOL", "RTM", "New Orleans - Rotterdam"],
-                      ["RGT", "SHA", "Richards Bay - Shanghai"],
-                    ].map(([f, t, lbl]) => (
-                      <button key={f + t} onClick={() => { setFromCode(f); setToCode(t); }}
-                        style={{ padding: "6px 12px", background: fromCode === f && toCode === t ? "#2563eb" : "#1e293b",
-                          border: "1px solid #334155", borderRadius: 20, color: fromCode === f && toCode === t ? "#fff" : "#94a3b8",
-                          fontSize: 11, cursor: "pointer" }}>
-                        {lbl}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                {/* Economics */}
+                <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold">Economics</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <table className="w-full text-sm">
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        <tr>
+                          <td className="py-2 text-slate-600 dark:text-slate-400">Gross Revenue</td>
+                          <td className="py-2 text-right font-semibold">${(result.revenue / 1_000_000).toFixed(2)}M</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 text-slate-600 dark:text-slate-400">
+                            TCE (Time Charter Equivalent)
+                            <span className="ml-2 text-xs text-slate-400">excl. OPEX</span>
+                          </td>
+                          <td className={`py-2 text-right font-bold text-lg ${tcePositive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                            ${result.tce.toLocaleString(undefined, { maximumFractionDigits: 0 })}/day
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 text-slate-600 dark:text-slate-400">Net TCE (after OPEX)</td>
+                          <td className={`py-2 text-right font-semibold ${result.netTce >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                            ${result.netTce.toLocaleString(undefined, { maximumFractionDigits: 0 })}/day
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 text-slate-600 dark:text-slate-400">Break-Even Freight Rate</td>
+                          <td className="py-2 text-right font-semibold text-amber-600 dark:text-amber-400">${result.breakEvenRate.toFixed(2)}/t</td>
+                        </tr>
+                        <tr className={`font-bold ${profitPositive ? "bg-emerald-50 dark:bg-emerald-900/20" : "bg-rose-50 dark:bg-rose-900/20"}`}>
+                          <td className={`py-2.5 px-2 rounded-l ${profitPositive ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"}`}>
+                            Voyage P&amp;L (after OPEX)
+                          </td>
+                          <td className={`py-2.5 px-2 rounded-r text-right ${profitPositive ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"}`}>
+                            {result.profit >= 0 ? "+" : ""}${(result.profit / 1000).toFixed(0)}k
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </CardContent>
+                </Card>
               </>
             )}
           </div>
