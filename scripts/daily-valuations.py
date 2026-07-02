@@ -256,7 +256,8 @@ def load_market_data():
 # H) Final estimate
 # ═══════════════════════════════════════════════════════════════
 def estimate(ship_row, market):
-    imo, name, stype, dwt, year_built, builder, flag, status = ship_row
+    imo, name, stype, dwt, year_built, builder, flag, status = ship_row[:8]
+    has_scrubber = ship_row[8] if len(ship_row) > 8 else None
     stype    = stype or ""
     dwt      = dwt or 0
     builder  = builder or ""
@@ -334,7 +335,7 @@ def main():
         con.commit()
 
     ships = con.execute("""
-        SELECT imo, name, type, dwt, year_built, builder, flag, status
+        SELECT imo, name, type, dwt, year_built, builder, flag, status, has_scrubber
         FROM ships
         WHERE type IS NOT NULL AND type != '' AND dwt > 0
           AND NOT (dwt IN (0,5000,10000,12000,15000,18000,20000,

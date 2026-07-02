@@ -80,6 +80,8 @@ function toShip(row: Record<string, unknown>) {
     inspectionsCount: row.inspections_count || 0,
     lastSurvey: row.last_survey,
     nextSurvey: row.next_survey,
+    hasScrubber: row.has_scrubber,
+    scrubberType: row.scrubber_type,
   };
 }
 
