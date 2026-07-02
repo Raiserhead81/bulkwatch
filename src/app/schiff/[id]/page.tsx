@@ -155,10 +155,10 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
   const ismMgr = ((ship as any).ismManager || "").toLowerCase();
   const oper = (ship.operator || "").toLowerCase();
   const mgmtType = (ismMgr && oper && (ismMgr.includes(oper.split(" ")[0]) || oper.includes(ismMgr.split(" ")[0]))) ? "own" as const : "third-party" as const;
+  const s = ship as any;
   const opex = ship.dwt > 0 ? calculateOpex(ship.dwt, ship.yearBuilt, ship.type, price.estimatedValueUSD, ship.flag, ship.fuelConsumption, ship.crewSize, ship.grossTonnage, mgmtType, !!(s.hasScrubber)) : null;
   const nearbySurveyPorts = getNearbySurveyPorts(voyage.currentPosition.lat, voyage.currentPosition.lon, 3000).slice(0, 3);
   const age = ship.yearBuilt > 1900 ? new Date().getFullYear() - ship.yearBuilt : null;
-  const s = ship as any;
   const nextSurveyAlert = getSurveyAlert(s.nextSurvey);
   const daysTotal = realDistanceNm ? Math.max(1, Math.round(realDistanceNm / (12 * 24))) : (voyage.durationDays || Math.max(1, Math.round(voyage.distanceNm / (12 * 24))));
   const daysRemaining = Math.round(daysTotal * (100 - voyage.progressPercent) / 100);
