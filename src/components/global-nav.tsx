@@ -69,6 +69,7 @@ export default function GlobalNav() {
             {theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode"}
           </button>
           {currentUser?.role === "admin" && <a href="/users" className="flex items-center gap-3 px-3 py-3 rounded-lg text-base text-slate-300 hover:text-white hover:bg-slate-800"><span className="text-lg w-7 text-center">👤</span>Users</a>}
+          {currentUser?.role === "admin" && <a href="/admin/dashboard" className="flex items-center gap-3 px-3 py-3 rounded-lg text-base text-slate-300 hover:text-white hover:bg-slate-800"><span className="text-lg w-7 text-center">📊</span>Dashboard</a>}
           <a href="/api/auth/logout" className="block px-3 py-2 text-sm text-slate-500 hover:text-red-400 mt-2">Logout</a>
         </div>
       </div>
@@ -93,6 +94,7 @@ export default function GlobalNav() {
               {theme === "dark" ? "☀️" : "🌙"}
             </button>
             {currentUser?.role === "admin" && <a href="/users" className="ml-2 text-xs text-slate-500 hover:text-slate-200">👤 Users</a>}
+            {currentUser?.role === "admin" && <a href="/admin/dashboard" className="ml-2 text-xs text-slate-500 hover:text-blue-400">📊 Dashboard</a>}
             <a href="/api/auth/logout" className="ml-2 text-xs text-slate-600 hover:text-red-400">Logout</a>
             {/* Settings gear icon — always at the end */}
             <a href="/settings" title="Settings"
