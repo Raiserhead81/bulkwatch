@@ -73,11 +73,9 @@ export default function RootLayout({
         <I18nProvider>
           <GlobalNav />
           {children}
-        <VersionChecker />
           <Toaster />
         </I18nProvider>
         <script dangerouslySetInnerHTML={{ __html: `if("serviceWorker"in navigator){navigator.serviceWorker.getRegistrations().then(function(regs){regs.forEach(function(r){r.unregister()})});caches.keys().then(function(k){k.forEach(function(n){caches.delete(n)})})};if(window.applicationCache){try{window.applicationCache.swapCache()}catch(e){}}` }} />
-        <script dangerouslySetInnerHTML={{ __html: `(function(){var K="_bv2";fetch("/api/version",{cache:"no-store"}).then(function(r){return r.json()}).then(function(d){var s=localStorage.getItem(K);if(!s){localStorage.setItem(K,d.version);if(window.caches){caches.keys().then(function(ks){Promise.all(ks.map(function(n){return caches.delete(n)})).then(function(){window.location.href=window.location.pathname+"?_r="+Date.now()})})}}else if(s!==d.version){localStorage.setItem(K,d.version);if(window.caches){caches.keys().then(function(ks){ks.forEach(function(n){caches.delete(n)})})}window.location.href=window.location.pathname+"?_r="+Date.now()}}).catch(function(){})})();` }} />
       </body>
     </html>
   );

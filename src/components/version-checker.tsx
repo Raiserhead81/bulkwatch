@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
-const BUILD_VERSION = "1782899470";
+const BUILD_VERSION = "1782988881";
 
 export function VersionChecker() {
   const pathname = usePathname();

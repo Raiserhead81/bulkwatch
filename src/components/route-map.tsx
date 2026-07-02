@@ -40,7 +40,7 @@ export default function RouteMap({
     const map = L.map(ref.current, {
       zoomControl: false, attributionControl: false, dragging: true, scrollWheelZoom: false,
     });
-    const isDark = document.documentElement.classList.contains("dark");
+    const isDark = (localStorage.getItem("vessel-theme") || "dark") !== "light";
     const tileUrl = isDark
       ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";

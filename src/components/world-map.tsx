@@ -212,7 +212,7 @@ export default function WorldMap({ ships, height = "100%", typeFilter = "", focu
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
     // Dark CartoDB base layer
-    const isDark = document.documentElement.classList.contains("dark");
+    const isDark = (localStorage.getItem("vessel-theme") || "dark") !== "light";
     L.tileLayer(isDark
       ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
