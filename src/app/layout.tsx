@@ -68,14 +68,14 @@ export default function RootLayout({
         <meta httpEquiv="Expires" content="0" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground overflow-x-hidden`}
       >
         <I18nProvider>
           <GlobalNav />
           {children}
           <Toaster />
         </I18nProvider>
-        <script dangerouslySetInnerHTML={{ __html: `if("serviceWorker"in navigator){navigator.serviceWorker.getRegistrations().then(function(regs){regs.forEach(function(r){r.unregister()})});caches.keys().then(function(k){k.forEach(function(n){caches.delete(n)})})};if(window.applicationCache){try{window.applicationCache.swapCache()}catch(e){}}` }} />
+        <script dangerouslySetInnerHTML={{ __html: `if("serviceWorker"in navigator){navigator.serviceWorker.getRegistrations().then(function(regs){regs.forEach(function(r){try{r.update()}catch(e){};r.unregister()})});navigator.serviceWorker.addEventListener("controllerchange",function(){window.location.reload()});caches.keys().then(function(k){k.forEach(function(n){caches.delete(n)})})};if(window.applicationCache){try{window.applicationCache.swapCache()}catch(e){}}` }} />
       </body>
     </html>
   );
