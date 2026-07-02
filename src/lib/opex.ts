@@ -248,15 +248,42 @@ export function calculateOpex(
     maintenancePerDay + storesSpares + lubeOilPerDay + managementPerDay + drydockPerDay + euEtsPerDay;
 
   // VOYAGE COSTS (variable)
-  // Scrubber fuel savings: HSFO vs VLSFO, reduced by port/region restrictions
-  // Open-loop scrubber bans: Singapore, China coast, Belgium, Germany ports,
-  // Norway fjords, California, Panama Canal, most EU ports
-  // Estimated: scrubber can only be used ~70% of sailing time (30% in restricted zones)
-  const scrubberUsagePct = 0.70; // 70% of time scrubber can run
+  // Scrubber fuel cost — accounts for open-loop ban zones
+  // Sources: NorthStandard, SAFETY4SEA, ICS, DNV (Jul 2026)
+  //
+  // Open-loop BANNED in ports/waters of:
+  //   Europe: Belgium, Denmark, Finland, France, Germany, Ireland, Lithuania,
+  //           Netherlands, Norway, Portugal, Spain, Sweden, UK (Forth/Tay),
+  //           Gibraltar, Turkey — OSPAR full ban from Jul 2027
+  //   Middle East: Bahrain, Saudi Arabia, UAE (Fujairah, Abu Dhabi), Suez Canal
+  //   Asia: Singapore, Malaysia, China (all DECA ports + inland + Bohai Bay),
+  //         Pakistan (Karachi)
+  //   Americas: Panama Canal, California, Connecticut, Bermuda
+  //   Med ECA (0.10% S since May 2025) — scrubber technically OK but many
+  //           coastal states ban discharge (France, Spain, Portugal)
+  //
+  // Typical time breakdown for a global trading bulk carrier:
+  //   ~45% high seas (scrubber OK, burn HSFO)
+  //   ~20% in ECA/SECA waters (need 0.10% S → MGO unless closed-loop)
+  //   ~20% in scrubber-ban ports/territorial waters (must burn VLSFO/MGO)
+  //   ~15% transiting restricted zones (Panama, Suez, Singapore, China coast)
+  //
+  // Net: open-loop scrubber usable ~45% of time
+  // Closed-loop/hybrid: usable ~65% (OK in most ban zones, not Panama/some ECAs)
   const hasScrubberFlag = hasScrubber || false;
-  const fuelPriceEffective = hasScrubberFlag
-    ? Math.round(rates.bunkerHSFO * scrubberUsagePct + rates.bunkerVLSFO * (1 - scrubberUsagePct))
-    : rates.bunkerVLSFO;
+  let fuelPriceEffective = rates.bunkerVLSFO;
+  let scrubberSavings = 0;
+  if (hasScrubberFlag) {
+    const hsfoTime = 0.45;   // high seas, scrubber running
+    const vlsfoTime = 0.35;  // ban zones, must use VLSFO
+    const mgoTime = 0.20;    // ECA/SECA, must use MGO (0.10% S)
+    fuelPriceEffective = Math.round(
+      rates.bunkerHSFO * hsfoTime +
+      rates.bunkerVLSFO * vlsfoTime +
+      rates.bunkerMGO * mgoTime
+    );
+    scrubberSavings = Math.round(fuelAtSea * 0.65 * (rates.bunkerVLSFO - fuelPriceEffective));
+  }
   const fuelCostPerDay = Math.round(fuelAtSea * 0.65 * fuelPriceEffective);
   const portCostsPerDay = Math.round(dwt < 10000 ? 300 : dwt < 60000 ? 550 : dwt < 100000 ? 850 : 1200);
   const totalVoyexPerDay = fuelCostPerDay + portCostsPerDay;
@@ -286,7 +313,7 @@ export function calculateOpex(
     totalCostPerDay,
     charterRatePerDay, netEarningsPerDay,
     annualOpex, annualNetEarnings,
-    scrubberSavingsPerDay: hasScrubberFlag ? Math.round(fuelAtSea * 0.65 * (rates.bunkerVLSFO - fuelPriceEffective)) : 0,
+    scrubberSavingsPerDay: scrubberSavings,
     fuelPriceEffective,
     breakEvenCharterRate: totalFixedOpex,
     paybackYears, roiPercent,
