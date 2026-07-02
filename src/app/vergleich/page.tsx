@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { estimatePrice } from "@/lib/priceEstimator";
 
 interface Ship {
   imo: string; name: string; type: string; dwt: number; length: number; beam: number;
