@@ -103,7 +103,7 @@ export default function SettingsPage() {
     [next[index], next[swapWith]] = [next[swapWith], next[index]];
     setNavItems(next);
     localStorage.setItem("nav-order", JSON.stringify(next.map(n => n[1])));
-    setNavMsg("Order saved");
+    setNavMsg("");
     setTimeout(() => setNavMsg(null), 2000);
   }
 
