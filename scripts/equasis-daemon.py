@@ -7,7 +7,7 @@ import sqlite3, urllib.request, urllib.parse, http.cookiejar, re, time, sys, sig
 from datetime import datetime, timedelta
 
 DB = "/opt/bulkwatch/db/ships.db"
-DELAY_PER_CYCLE = 10  # seconds between each 3-request cycle
+DELAY_PER_CYCLE = 20  # seconds between each 3-request cycle
 RESCRAPE_DAYS = 14
 LOG_EVERY = 10  # print progress every N ships
 
@@ -16,6 +16,7 @@ ACCOUNTS = [
     ("kayconrad81@googlemail.com", "!nfinitY!981"),
     ("kpoffen@proton.me", "!nfinitY!981"),
     ("apmoeller1@proton.me", "!nfinitY!981"),
+    ("aandresen1@proton.me", "!nfinitY!981"),
 ]
 
 STATUS_MAP = {
