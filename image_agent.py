@@ -87,7 +87,7 @@ def sparql_query(q, retries=2):
             with urllib.request.urlopen(req, timeout=60) as r:
                 return json.loads(r.read())
         except Exception as e:
-            if "429" in str(e):
+            if "429" in str(e) or "403" in str(e):
                 return "rate_limited"
             if attempt < retries - 1:
                 time.sleep(5)
@@ -308,7 +308,7 @@ def run_commons_search(existing, state, new_so_far):
         log(f"  Search: '{query}'")
         sroffset = 0
         query_new = 0
-        while sroffset < 500:
+        while sroffset < 6000:
             d = api_get(COMMONS_API, {
                 "action": "query", "list": "search", "srsearch": query,
                 "srnamespace": "6", "srlimit": "50", "sroffset": str(sroffset),

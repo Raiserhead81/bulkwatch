@@ -5,7 +5,7 @@ import Link from "next/link";
 const DEFAULT_NAV_LINKS: [string,string,string][] = [
   ["Ships","/","⚓"],["Map","/karte","🗺️"],["Top Picks","/top-picks","🏆"],
   ["Compare","/vergleich","⚖️"],["Watchlist","/watchlist","⭐"],["Newbuilds","/newbuilds","🚢"],
-  ["Voyage Calc","/voyage-calc","🚀"],["Valuation","/valuation","💰"],["OPEX Calc","/opex-calc","📋"],["AI Chat","/chat","🤖"],
+  ["Voyage Calc","/voyage-calc","🚀"],["Valuation","/valuation","💰"],["OPEX Calc","/opex-calc","📋"],["Bunker Calc","/bunker-calc","⛽"],["AI Chat","/chat","🤖"],
 ];
 
 export default function GlobalNav() {

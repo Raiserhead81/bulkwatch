@@ -27,7 +27,7 @@ NEWBUILD_PRICES = {
     # Tanker
     "VLCC":                  {"dwt": 300000, "nb": 125_000_000},
     "Suezmax":               {"dwt": 157000, "nb": 85_000_000},
-    "Aframax":               {"dwt": 115000, "nb": 65_000_000},
+    "Aframax":               {"dwt": 115000, "nb": 78_000_000},
     "Product Tanker":        {"dwt": 50000,  "nb": 44_000_000},
     "Chemical Tanker":       {"dwt": 25000,  "nb": 42_000_000},
     "Crude Oil Tanker":      {"dwt": 105000, "nb": 60_000_000},
@@ -59,7 +59,7 @@ FALLBACK_TYPE_MULT = {
 # ═══════════════════════════════════════════════════════════════
 # Segment type groupings for market factor
 # ═══════════════════════════════════════════════════════════════
-CAPESIZE_TYPES  = {"Capesize", "Newcastlemax", "Valemax", "VLOC", "Post-Panamax"}
+CAPESIZE_TYPES  = {"Capesize", "Newcastlemax", "Valemax", "VLOC"}
 PANAMAX_TYPES   = {"Panamax", "Kamsarmax", "Gearless"}
 SUPRAMAX_TYPES  = {"Supramax", "Ultramax", "Geared"}
 HANDYSIZE_TYPES = {"Handysize", "Handymax", "Mini-Bulker"}
@@ -258,6 +258,10 @@ def load_market_data():
 def estimate(ship_row, market):
     imo, name, stype, dwt, year_built, builder, flag, status = ship_row[:8]
     has_scrubber = ship_row[8] if len(ship_row) > 8 else None
+    fuel_consumption = ship_row[9] if len(ship_row) > 9 else None
+    classification = ship_row[10] if len(ship_row) > 10 else None
+    length = ship_row[11] if len(ship_row) > 11 else None
+    beam = ship_row[12] if len(ship_row) > 12 else None
     stype    = stype or ""
     dwt      = dwt or 0
     builder  = builder or ""
@@ -273,7 +277,7 @@ def estimate(ship_row, market):
     dep = depreciation(age)
     mf  = market_factor(stype, market["bdi"], market["charter_rates"])
     bf  = builder_factor(builder)
-    eco = eco_premium(None, dwt, stype, age, market["fuel_vlsfo"])
+    eco = eco_premium(fuel_consumption, dwt, stype, age, market["fuel_vlsfo"])
     scrap = scrap_value(dwt, stype, market["scrap_ldt"])
 
     status_mult = {"scrapped": 0.20, "laid_up": 0.75,
@@ -284,8 +288,8 @@ def estimate(ship_row, market):
 
     conf = confidence_score(
         dwt, year_built, stype,
-        fuel_consumption=None, classification=None,
-        bdi_fresh=True, builder=builder, length=None, beam=None
+        fuel_consumption=fuel_consumption, classification=classification,
+        bdi_fresh=True, builder=builder, length=length, beam=beam
     )
     return round(value), conf
 
@@ -335,7 +339,8 @@ def main():
         con.commit()
 
     ships = con.execute("""
-        SELECT imo, name, type, dwt, year_built, builder, flag, status, has_scrubber
+        SELECT imo, name, type, dwt, year_built, builder, flag, status, has_scrubber,
+               fuel_consumption_tons_day, class_society, length, beam
         FROM ships
         WHERE type IS NOT NULL AND type != '' AND dwt > 0
           AND NOT (dwt IN (0,5000,10000,12000,15000,18000,20000,

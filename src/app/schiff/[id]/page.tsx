@@ -513,7 +513,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
           <div className="p-4">
             <div className="flex items-center gap-2 mb-3">
               <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-white/30 font-semibold">
-                {ship.position ? "Current Voyage" : "Estimated Voyage"}
+                Estimated Voyage
               </p>
               <Badge className={`${getStatusColor(voyage.currentStatus)} border text-[10px] ml-auto`}>{getStatusLabel(voyage.currentStatus)}</Badge>
             </div>
