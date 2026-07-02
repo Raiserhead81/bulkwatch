@@ -14,6 +14,7 @@ RESCRAPE_DAYS = 14
 ACCOUNTS = [
     ("kayconrad@posteo.de", "!nfinitY!981"),
     ("kayconrad81@googlemail.com", "!nfinitY!981"),
+    ("kpoffen@proton.me", "!nfinitY!981"),
 ]
 account_idx = 0
 
