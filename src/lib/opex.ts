@@ -128,6 +128,8 @@ export interface OpexBreakdown {
   totalCostPerDay: number;
   charterRatePerDay: number; netEarningsPerDay: number;
   annualOpex: number; annualNetEarnings: number;
+  scrubberSavingsPerDay: number;
+  fuelPriceEffective: number;
   breakEvenCharterRate: number;
   paybackYears: number|null; roiPercent: number|null;
   sizeClass: string; ratesDate: string; sources: string[];
@@ -163,6 +165,7 @@ export function calculateOpex(
   flag?: string, fuelConsumptionTonsDay?: number,
   crewSizeOverride?: number, grossTonnage?: number,
   managementType?: "own" | "third-party",
+  hasScrubber?: boolean,
 ): OpexBreakdown {
   const rates = getLiveRates();
   const year = new Date().getFullYear();
@@ -245,7 +248,16 @@ export function calculateOpex(
     maintenancePerDay + storesSpares + lubeOilPerDay + managementPerDay + drydockPerDay + euEtsPerDay;
 
   // VOYAGE COSTS (variable)
-  const fuelCostPerDay = Math.round(fuelAtSea * 0.65 * rates.bunkerVLSFO); // uses capped fuel
+  // Scrubber fuel savings: HSFO vs VLSFO, reduced by port/region restrictions
+  // Open-loop scrubber bans: Singapore, China coast, Belgium, Germany ports,
+  // Norway fjords, California, Panama Canal, most EU ports
+  // Estimated: scrubber can only be used ~70% of sailing time (30% in restricted zones)
+  const scrubberUsagePct = 0.70; // 70% of time scrubber can run
+  const hasScrubberFlag = hasScrubber || false;
+  const fuelPriceEffective = hasScrubberFlag
+    ? Math.round(rates.bunkerHSFO * scrubberUsagePct + rates.bunkerVLSFO * (1 - scrubberUsagePct))
+    : rates.bunkerVLSFO;
+  const fuelCostPerDay = Math.round(fuelAtSea * 0.65 * fuelPriceEffective);
   const portCostsPerDay = Math.round(dwt < 10000 ? 300 : dwt < 60000 ? 550 : dwt < 100000 ? 850 : 1200);
   const totalVoyexPerDay = fuelCostPerDay + portCostsPerDay;
 
@@ -274,6 +286,8 @@ export function calculateOpex(
     totalCostPerDay,
     charterRatePerDay, netEarningsPerDay,
     annualOpex, annualNetEarnings,
+    scrubberSavingsPerDay: hasScrubberFlag ? Math.round(fuelAtSea * 0.65 * (rates.bunkerVLSFO - fuelPriceEffective)) : 0,
+    fuelPriceEffective,
     breakEvenCharterRate: totalFixedOpex,
     paybackYears, roiPercent,
     sizeClass: sc, ratesDate: rates.date, sources: rates.sources,
