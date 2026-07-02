@@ -15,7 +15,7 @@ import { calculateFreightRates, getRateForDwt } from "@/lib/freightRates";
 import { generateMockVoyage, getStatusColor, getStatusLabel } from "@/lib/mockVoyages";
 import { getNearbySurveyPorts, formatSurveyCost } from "@/lib/surveyPorts";
 import { useWatchlist, toggleWatch } from "@/lib/useWatchlist";
-import { calculateOpex, formatUSD } from "@/lib/opex";
+import { calculateOpex, formatUSD, fetchLiveRates } from "@/lib/opex";
 import dynamic from "next/dynamic";
 const RouteMap = dynamic(() => import("@/components/route-map"), { ssr: false, loading: () => <div className="bg-slate-900 rounded-lg animate-pulse" style={{ height: 280 }} /> });
 import { Card, CardContent } from "@/components/ui/card";
@@ -100,12 +100,17 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
   const [priceHistory, setPriceHistory] = useState<any>(null);
   const [weather, setWeather] = useState<any>(null);
   const [realDistanceNm, setRealDistanceNm] = useState<number>(0);
+  const [liveRates, setLiveRates] = useState<any>(null);
 
   useEffect(() => {
     if (ship?.imo) {
       fetch(`/api/ships/${ship.imo}/history`).then(r => r.ok ? r.json() : null).then(data => setPriceHistory(data)).catch(() => {});
     }
   }, [ship?.imo]);
+
+  useEffect(() => {
+    fetchLiveRates().then(r => setLiveRates(r)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch(`/api/ships/${id}`).then(r => r.ok ? r.json() : null).then(data => { setShip(data); setLoading(false); }).catch(() => setLoading(false));

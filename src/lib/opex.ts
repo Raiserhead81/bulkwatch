@@ -110,8 +110,31 @@ let _cache: LiveOpexRates|null = null;
 let _cacheTs = 0;
 
 export function getLiveRates(): LiveOpexRates {
-  // Always return defaults — works on both client and server
-  // Live rates from opex_update.py are baked into DEFAULTS at build time
+  return _cache || DEFAULTS;
+}
+
+export async function fetchLiveRates(): Promise<LiveOpexRates> {
+  // Cache for 5 minutes
+  if (_cache && Date.now() - _cacheTs < 300000) return _cache;
+  try {
+    const r = await fetch("/api/market", { cache: "no-store" });
+    if (r.ok) {
+      const d = await r.json();
+      _cache = {
+        ...DEFAULTS,
+        date: d.date || DEFAULTS.date,
+        bunkerVLSFO: d.bunkerVLSFO || DEFAULTS.bunkerVLSFO,
+        bunkerHSFO: d.bunkerHSFO || DEFAULTS.bunkerHSFO,
+        bunkerMGO: d.bunkerMGO || DEFAULTS.bunkerMGO,
+        bdiIndex: d.bdi || DEFAULTS.bdiIndex,
+        scrapPriceLDT: d.scrapLDT || DEFAULTS.scrapPriceLDT,
+        charterRates: d.charterRates || DEFAULTS.charterRates,
+        sources: ["Live from /api/market"],
+      };
+      _cacheTs = Date.now();
+      return _cache;
+    }
+  } catch {}
   return DEFAULTS;
 }
 
