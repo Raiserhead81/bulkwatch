@@ -303,6 +303,7 @@ def main():
     
     enriched = 0
     errors = 0
+    consecutive_errors = 0
     cycle = 0
     account_idx = 0
     start_time = time.time()
@@ -328,12 +329,16 @@ def main():
                 break
         
         if not session:
-            # All locked — wait and retry
-            print("All accounts locked. Waiting 30min...", flush=True)
-            time.sleep(1800)
+            # All locked — wait 2 hours for unlock
+            print("All accounts locked. Sleeping 2h...", flush=True)
+            time.sleep(7200)
             for s in sessions:
                 s.locked = False
                 s.opener = None
+            # Re-login all
+            for s in sessions:
+                if s.login():
+                    print(f"  Back online: {s.email}", flush=True)
             continue
         
         # Scrape
@@ -342,6 +347,7 @@ def main():
         if data and "_error" not in data and len(data) > 0:
             fields = update_ship(con, imo, dwt, data)
             enriched += 1
+            consecutive_errors = 0
             
             # Quality monitor every 50 ships
             if enriched % 50 == 0 and enriched > 0:
@@ -380,11 +386,29 @@ def main():
                 print(f"  [{enriched:4d}] {name[:22]:22} [{fields:2d}] {' | '.join(parts[:4])}  ({rate:.0f}/h via {session.email.split('@')[0]})", flush=True)
         else:
             errors += 1
-            # Force re-login on the session that failed
+            consecutive_errors += 1
             session.consecutive_fails += 1
-            if session.consecutive_fails >= 3:
+            if session.consecutive_fails >= 2:
                 session.opener = None
                 session.consecutive_fails = 0
+            # If 10+ errors in a row, all accounts are probably dead
+            if consecutive_errors >= 10:
+                available = [s for s in sessions if s.is_available()]
+                if len(available) == 0:
+                    print(f"  10+ consecutive errors, all accounts dead. Sleeping 2h...", flush=True)
+                    time.sleep(7200)
+                    for s in sessions:
+                        s.locked = False
+                        s.opener = None
+                    for s in sessions:
+                        if s.login():
+                            print(f"  Back online: {s.email}", flush=True)
+                    consecutive_errors = 0
+                else:
+                    # Force re-login available sessions
+                    for s in available:
+                        s.opener = None
+                    consecutive_errors = 0
         
         # Pause after every 3rd request (one full rotation)
         cycle += 1
