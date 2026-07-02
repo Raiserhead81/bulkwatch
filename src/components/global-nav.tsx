@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 
 const NAV_LINKS: [string,string,string][] = [
-  ["Ships","/","⚓"],["Map","/karte","🗺️"],["Live","/live","📡"],["Top Picks","/top-picks","🏆"],
+  ["Ships","/","⚓"],["Map","/karte","🗺️"],,["Top Picks","/top-picks","🏆"],
   ["Compare","/vergleich","⚖️"],["Watchlist","/watchlist","⭐"],["Newbuilds","/newbuilds","🚢"],
   ["Voyage Calc","/voyage-calc","🧮"],["Valuation","/valuation","💰"],["OPEX Calc","/opex-calc","⚙️"],["AI Chat","/chat","🤖"],
 ];
