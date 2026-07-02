@@ -18,6 +18,8 @@ export async function GET() {
       bunkerMGO: opex.bunkerMGO || 746,
       scrapLDT: opex.scrapPriceLDT || 478,
       charterRates: opex.charterRates || {},
+      bunkerByPort: opex.bunkerByPort || {},
+      provisionsByRegion: opex.provisionsByRegion || {},
       commodities: comm,
     });
   } catch {

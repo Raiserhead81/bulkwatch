@@ -44,18 +44,28 @@ def scrape_bunkerindex():
         return {}
     result = {}
     rows = re.findall(r"<tr[^>]*>(.*?)</tr>", html, re.DOTALL)
+    ports = ["Singapore", "Rotterdam", "Fujairah", "Hong Kong", "Busan"]
     for row in rows:
-        if "Singapore" in row:
-            cells = re.findall(r"<td[^>]*>(.*?)</td>", row, re.DOTALL)
-            clean = [re.sub(r"<[^>]+>", "", c).strip() for c in cells]
-            if len(clean) >= 7:
+        cells = re.findall(r"<td[^>]*>(.*?)</td>", row, re.DOTALL)
+        clean = [re.sub(r"<[^>]+>", "", c).strip() for c in cells]
+        if len(clean) >= 7:
+            port = clean[0]
+            if port in ports:
                 try:
-                    result["hsfo"] = float(clean[2].replace(",", ""))
-                    result["vlsfo"] = float(clean[4].replace(",", ""))
-                    result["mgo"] = float(clean[6].replace(",", ""))
+                    hsfo = float(clean[2].replace(",", ""))
+                    vlsfo = float(clean[4].replace(",", ""))
+                    mgo = float(clean[6].replace(",", ""))
+                    if hsfo > 100 and vlsfo > 100:
+                        key = port.lower().replace(" ", "_")
+                        result[f"hsfo_{key}"] = hsfo
+                        result[f"vlsfo_{key}"] = vlsfo
+                        result[f"mgo_{key}"] = mgo
+                        if port == "Singapore":
+                            result["hsfo"] = hsfo
+                            result["vlsfo"] = vlsfo
+                            result["mgo"] = mgo
                 except (ValueError, IndexError):
                     pass
-            break
     return result
 
 def scrape_eia_brent():
@@ -148,8 +158,19 @@ def main():
         updated["bunkerVLSFO"] = int(bunker["vlsfo"])
         updated["bunkerHSFO"] = int(bunker["hsfo"])
         updated["bunkerMGO"] = int(bunker["mgo"])
-        sources.append("BunkerIndex.com (Singapore)")
-        print(f"  Bunker: VLSFO ${bunker['vlsfo']}, HSFO ${bunker['hsfo']}, MGO ${bunker['mgo']}")
+        # Regional bunker prices
+        regional = {}
+        for key in bunker:
+            if key.startswith("vlsfo_") or key.startswith("hsfo_") or key.startswith("mgo_"):
+                regional[key] = bunker[key]
+        if regional:
+            updated["bunkerByPort"] = regional
+        sources.append("BunkerIndex.com (5 ports)")
+        v1=bunker.get("vlsfo",0); h1=bunker.get("hsfo",0); m1=bunker.get("mgo",0)
+        print(f"  Bunker SG: VLSFO {v1} HSFO {h1} MGO {m1}")
+        for port in ["rotterdam", "fujairah", "hong_kong", "busan"]:
+            vp=bunker.get("vlsfo_"+port); hp=bunker.get("hsfo_"+port,0); mp=bunker.get("mgo_"+port,0)
+            if vp: print(f"  Bunker {port}: VLSFO {vp} HSFO {hp} MGO {mp}")
     else:
         # Derive from Brent
         derived = derive_bunker_from_brent(brent)
@@ -198,6 +219,7 @@ def main():
     updated["insuranceRatePnI"] = current.get("insuranceRatePnI", 4.5)
     updated["lubeOilPrice"] = current.get("lubeOilPrice", 4.2)
     updated["provisionsCostPerPersonDay"] = current.get("provisionsCostPerPersonDay", 12)
+    updated["provisionsByRegion"] = current.get("provisionsByRegion", {"asia":8,"europe":15,"americas":14,"middle_east":10,"africa":9,"global_avg":12})
     
     # Finalize
     updated["date"] = today

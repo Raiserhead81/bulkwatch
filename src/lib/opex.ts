@@ -208,6 +208,9 @@ export function calculateOpex(
   const crewCostPerDay = crewDetails.reduce((s,c)=>s+c.dailyUSD, 0);
 
   // 2. PROVISIONS
+  // Provisions vary by trading region:
+  // Asia: ~$8/person/day, Europe: ~$15/day, Americas: ~$14/day, Middle East: ~$10/day
+  // Global average: $12/day — weighted by typical trading patterns
   const provisionsPerDay = Math.round(crewCount * rates.provisionsCostPerPersonDay);
 
   // 3. INSURANCE
