@@ -150,7 +150,7 @@ function depreciation(age: number): number {
   if (age <= 2) return 1.08;
   if (age <= 5) return 1.0 - (age - 2) * 0.02;
   if (age <= 9) return 0.94 - (age - 5) * 0.04;
-  if (age <= 14) return 0.78 - (age - 9) * 0.052;
+  if (age <= 14) return 0.78 - (age - 9) * 0.058;
   if (age <= 20) return 0.52 - (age - 14) * 0.037;
   if (age <= 25) return 0.30 - (age - 20) * 0.03;
   return Math.max(0.08, 0.15 - (age - 25) * 0.015);

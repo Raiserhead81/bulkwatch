@@ -159,7 +159,7 @@ def market_factor(ship_type, bdi, charter_rates):
     tanker_types = {"VLCC", "Suezmax", "Aframax", "Product Tanker", "Chemical Tanker",
                     "Crude Oil Tanker", "Tanker", "Oil/Chemical Tanker"}
     if ship_type in tanker_types:
-        base *= 1.20  # +20% tanker asset premium (fleet tightness + sanctions)
+        base *= 1.15  # +15% tanker asset premium (fleet tightness + sanctions)
     return base
 
 
