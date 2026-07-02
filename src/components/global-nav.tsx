@@ -99,7 +99,7 @@ export default function GlobalNav() {
             <button onClick={toggleTheme} className="ml-2 px-2 py-1 rounded border border-slate-700 text-sm cursor-pointer" title="Toggle theme">
               {theme === "dark" ? "☀️" : "🌙"}
             </button>
-            {currentUser?.role === "admin" && <a href="/users" className="ml-2 text-xs text-slate-500 hover:text-slate-200">👤 Users</a>}
+            
             {currentUser?.role === "admin" && <a href="/admin/dashboard" className="ml-2 text-xs text-slate-500 hover:text-blue-400">📊 Dashboard</a>}
             <a href="/api/auth/logout" className="ml-2 text-xs text-slate-600 hover:text-red-400">Logout</a>
             {/* Settings gear icon — always at the end */}

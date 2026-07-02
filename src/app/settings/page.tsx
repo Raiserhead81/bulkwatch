@@ -271,6 +271,12 @@ export default function SettingsPage() {
           {navMsg && (
             <p className="text-xs text-emerald-400 mt-3">{navMsg}</p>
           )}
+
+          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+            <a href="/users" className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-sm font-medium">
+              👤 User Management
+            </a>
+          </div>
         </div>
 
       </div>
