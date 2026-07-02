@@ -39,26 +39,23 @@ def scrape_tradingeconomics(commodity):
     return None
 
 def scrape_bunkerindex():
-    """Scrape Singapore bunker prices from bunkerindex.com."""
     html = fetch("https://www.bunkerindex.com/")
     if not html:
         return {}
-    
     result = {}
-    # Look for Singapore row in the table
-    # Pattern: port name ... IFO380 price ... VLSFO price ... MGO price
-    # The table has structured data we can parse
-    
-    # Find all price-like numbers near "Singapore"
-    sg_idx = html.lower().find("singapore")
-    if sg_idx > 0:
-        chunk = html[sg_idx:sg_idx+500]
-        prices = re.findall(r'>([\d,]+\.[\d]{2})<', chunk)
-        if len(prices) >= 3:
-            result["hsfo"] = float(prices[0].replace(",", ""))
-            result["vlsfo"] = float(prices[1].replace(",", ""))
-            result["mgo"] = float(prices[2].replace(",", ""))
-    
+    rows = re.findall(r"<tr[^>]*>(.*?)</tr>", html, re.DOTALL)
+    for row in rows:
+        if "Singapore" in row:
+            cells = re.findall(r"<td[^>]*>(.*?)</td>", row, re.DOTALL)
+            clean = [re.sub(r"<[^>]+>", "", c).strip() for c in cells]
+            if len(clean) >= 7:
+                try:
+                    result["hsfo"] = float(clean[2].replace(",", ""))
+                    result["vlsfo"] = float(clean[4].replace(",", ""))
+                    result["mgo"] = float(clean[6].replace(",", ""))
+                except (ValueError, IndexError):
+                    pass
+            break
     return result
 
 def scrape_eia_brent():
