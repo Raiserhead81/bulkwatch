@@ -127,14 +127,14 @@ export default function Home() {
   const fmtDwt = (d: number) => d > 0 ? `${(d/1000).toFixed(0)}k DWT` : "";
   const fmtM = (n: number) => (n/1e6).toFixed(1);
 
-  const bg = theme === "light" ? "#f8fafc" : "#0f172a";
+  const bg = theme === "light" ? "#f8fafc" : "#1e293b";
   const cardBg = theme === "light" ? "#ffffff" : "#1e293b";
   const border = theme === "light" ? "#e2e8f0" : "#334155";
   const text = theme === "light" ? "#1e293b" : "#e2e8f0";
   const textMuted = theme === "light" ? "#64748b" : "#94a3b8";
   const textDim = theme === "light" ? "#94a3b8" : "#64748b";
   const accent = "#38bdf8";
-  const tagBg = theme === "light" ? "#f1f5f9" : "#0f172a";
+  const tagBg = theme === "light" ? "#f1f5f9" : "#1e293b";
 
   const inp = { padding: "10px 14px", background: cardBg, border: `1px solid ${border}`, borderRadius: 8, color: text, fontSize: 14 } as const;
 

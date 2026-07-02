@@ -89,9 +89,9 @@ export default function KartePage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950 text-slate-900 dark:text-white overflow-hidden">
+    <div className="flex flex-col h-screen bg-background text-slate-900 dark:text-white overflow-hidden">
       {/* Compact header */}
-      <header className="flex-shrink-0 z-20 border-b border-blue-500/10 backdrop-blur-md bg-slate-950/90">
+      <header className="flex-shrink-0 z-20 border-b border-blue-500/10 backdrop-blur-md bg-background/90">
         <div className="px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2 text-sm text-slate-400 hover:text-blue-400 transition-colors">
             <ArrowLeft className="h-4 w-4" /> {t("common.back")}

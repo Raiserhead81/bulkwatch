@@ -312,9 +312,9 @@ export default function ValuationPage() {
   const result = calculate(dwt, yearBuilt, shipType, builder, fuelType, surveyStatus, bdiOverride);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-background text-slate-900 dark:text-white">
       {/* Header */}
-      <header className="border-b border-blue-500/10 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md sticky top-0 z-10">
+      <header className="border-b border-blue-500/10 bg-white/90 dark:bg-background/90 backdrop-blur-md sticky top-0 z-10">
         <div className="max-w-[95%] mx-auto px-6 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-sm text-slate-400 hover:text-blue-400">
             <ArrowLeft className="h-4 w-4" /> Back
@@ -548,7 +548,7 @@ export default function ValuationPage() {
                     if (sy === 5) dep = 1.0 - (5 - 2) * 0.015 - 0.03;
                     return (
                       <circle key={sy} cx={40 + sy * 15} cy={10 + (1 - dep) * 120}
-                        r={3} fill="#f59e0b" stroke="#0f172a" strokeWidth={1} />
+                        r={3} fill="#f59e0b" stroke="#1e293b" strokeWidth={1} />
                     );
                   })}
                   {/* Current position dot */}
@@ -559,7 +559,7 @@ export default function ValuationPage() {
                     const y = 10 + (1 - dep) * 120;
                     return (
                       <>
-                        <circle cx={x} cy={y} r={5} fill="#3b82f6" stroke="#0f172a" strokeWidth={2} />
+                        <circle cx={x} cy={y} r={5} fill="#3b82f6" stroke="#1e293b" strokeWidth={2} />
                         <text x={x} y={y - 10} textAnchor="middle" fill="#3b82f6" fontSize={10} fontWeight="bold">
                           {fmt(result.final)}
                         </text>

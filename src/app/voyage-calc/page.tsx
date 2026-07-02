@@ -179,7 +179,7 @@ export default function VoyageCalcPage() {
   const [toCode, setToCode] = useState("");
   const [dwt, setDwt] = useState(80000);
   const [speed, setSpeed] = useState(13);
-  const [fuelPrice, setFuelPrice] = useState(598);
+  const [fuelPrice, setFuelPrice] = useState(585);
   const [fuelConsumption, setFuelConsumption] = useState(35);
 
   // Auto-calculate fuel consumption from DWT
@@ -294,7 +294,7 @@ export default function VoyageCalcPage() {
   const bigNum: React.CSSProperties = { fontSize: 28, fontWeight: 700, color: "#38bdf8" };
 
   return (
-    <div style={{ minHeight: "100vh", background: isLight ? "#f8fafc" : "#0f172a", color: isLight ? "#1e293b" : "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: isLight ? "#f8fafc" : "#1e293b", color: isLight ? "#1e293b" : "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
       {/* Mobile menu */}
       <div className={`mobile-nav-overlay${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
       <div className={`mobile-nav-panel${menuOpen ? " open" : ""}`}>
@@ -432,21 +432,21 @@ export default function VoyageCalcPage() {
                     ) : weather?.current ? (
                       <div>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
-                          <div style={{ background: isLight ? "#f1f5f9" : "#0f172a", borderRadius: 8, padding: 12, textAlign: "center" }}>
+                          <div style={{ background: isLight ? "#f1f5f9" : "#1e293b", borderRadius: 8, padding: 12, textAlign: "center" }}>
                             <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>Condition</div>
                             <div style={{ fontSize: 16, fontWeight: 700, color: weather.current.condition === "excellent" ? "#4ade80" : weather.current.condition === "good" ? "#38bdf8" : weather.current.condition === "moderate" ? "#fbbf24" : "#f87171" }}>
                               {weather.current.condition.charAt(0).toUpperCase() + weather.current.condition.slice(1)}
                             </div>
                           </div>
-                          <div style={{ background: isLight ? "#f1f5f9" : "#0f172a", borderRadius: 8, padding: 12, textAlign: "center" }}>
+                          <div style={{ background: isLight ? "#f1f5f9" : "#1e293b", borderRadius: 8, padding: 12, textAlign: "center" }}>
                             <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>Waves (avg/max)</div>
                             <div style={{ fontSize: 16, fontWeight: 700, color: "#e2e8f0" }}>{weather.current.avgWaveHeight}m / {weather.current.maxWaveHeight}m</div>
                           </div>
-                          <div style={{ background: isLight ? "#f1f5f9" : "#0f172a", borderRadius: 8, padding: 12, textAlign: "center" }}>
+                          <div style={{ background: isLight ? "#f1f5f9" : "#1e293b", borderRadius: 8, padding: 12, textAlign: "center" }}>
                             <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>Wind (Beaufort)</div>
                             <div style={{ fontSize: 16, fontWeight: 700, color: "#e2e8f0" }}>Bft {weather.current.avgBeaufort.scale} — {weather.current.avgBeaufort.description}</div>
                           </div>
-                          <div style={{ background: isLight ? "#f1f5f9" : "#0f172a", borderRadius: 8, padding: 12, textAlign: "center" }}>
+                          <div style={{ background: isLight ? "#f1f5f9" : "#1e293b", borderRadius: 8, padding: 12, textAlign: "center" }}>
                             <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>Speed Loss</div>
                             <div style={{ fontSize: 16, fontWeight: 700, color: weather.current.estimatedSpeedLoss > 10 ? "#f87171" : "#4ade80" }}>-{weather.current.estimatedSpeedLoss}%</div>
                           </div>
@@ -457,7 +457,7 @@ export default function VoyageCalcPage() {
                             <div style={{ fontSize: 13, fontWeight: 600, color: "#94a3b8", marginBottom: 8 }}>7-Day Forecast</div>
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
                               {weather.forecast.days.map((d: any) => (
-                                <div key={d.date} style={{ background: isLight ? "#f1f5f9" : "#0f172a", borderRadius: 6, padding: "8px 4px", textAlign: "center", borderTop: d.condition === "good" ? "2px solid #4ade80" : d.condition === "moderate" ? "2px solid #fbbf24" : "2px solid #f87171" }}>
+                                <div key={d.date} style={{ background: isLight ? "#f1f5f9" : "#1e293b", borderRadius: 6, padding: "8px 4px", textAlign: "center", borderTop: d.condition === "good" ? "2px solid #4ade80" : d.condition === "moderate" ? "2px solid #fbbf24" : "2px solid #f87171" }}>
                                   <div style={{ fontSize: 10, color: "#64748b" }}>{new Date(d.date).toLocaleDateString("en-GB", { weekday: "short" })}</div>
                                   <div style={{ fontSize: 13, fontWeight: 700, color: "#e2e8f0", margin: "2px 0" }}>{d.waveHeightMax.toFixed(1)}m</div>
                                   <div style={{ fontSize: 10, color: "#64748b" }}>Bft {d.beaufort}</div>
@@ -548,7 +548,7 @@ export default function VoyageCalcPage() {
                       ["RGT", "SHA", "Richards Bay - Shanghai"],
                     ].map(([f, t, lbl]) => (
                       <button key={f + t} onClick={() => { setFromCode(f); setToCode(t); }}
-                        style={{ padding: "6px 12px", background: fromCode === f && toCode === t ? "#2563eb" : "#0f172a",
+                        style={{ padding: "6px 12px", background: fromCode === f && toCode === t ? "#2563eb" : "#1e293b",
                           border: "1px solid #334155", borderRadius: 20, color: fromCode === f && toCode === t ? "#fff" : "#94a3b8",
                           fontSize: 11, cursor: "pointer" }}>
                         {lbl}

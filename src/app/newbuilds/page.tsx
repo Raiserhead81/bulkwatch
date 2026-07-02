@@ -87,7 +87,7 @@ export default function NewbuildsPage() {
   const isLight = theme === "light";
 
   return (
-    <div style={{ minHeight: "100vh", background: isLight ? "#f8fafc" : "#0f172a", color: isLight ? "#1e293b" : "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: isLight ? "#f8fafc" : "#1e293b", color: isLight ? "#1e293b" : "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
       {/* Mobile menu */}
       <div className={`mobile-nav-overlay${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
       <div className={`mobile-nav-panel${menuOpen ? " open" : ""}`}>

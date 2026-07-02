@@ -77,7 +77,7 @@ export default function FleetPage() {
   const isLight = theme === "light";
 
   return (
-    <div style={{ minHeight: "100vh", background: isLight ? "#f8fafc" : "#0f172a", color: isLight ? "#1e293b" : "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: isLight ? "#f8fafc" : "#1e293b", color: isLight ? "#1e293b" : "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
       <div style={{ background: isLight ? "#ffffff" : "#1e293b", borderBottom: `1px solid ${isLight ? "#e2e8f0" : "#1e3a5f"}`, padding: "16px 24px" }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
@@ -166,7 +166,7 @@ export default function FleetPage() {
                   <img src={ship.imageUrl} alt={ship.name} style={{ width: "100%", height: 140, objectFit: "cover" }}
                     onError={e => (e.currentTarget.style.display = "none")} />
                 ) : (
-                  <div style={{ width: "100%", height: 80, background: "#0f172a", display: "flex", alignItems: "center",
+                  <div style={{ width: "100%", height: 80, background: "#1e293b", display: "flex", alignItems: "center",
                     justifyContent: "center", fontSize: 32 }}>&#x1F6A2;</div>
                 )}
                 <div style={{ padding: "14px 16px" }}>

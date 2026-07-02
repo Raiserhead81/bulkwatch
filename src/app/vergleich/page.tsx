@@ -122,7 +122,7 @@ export default function ComparePage() {
 
 
   return (
-    <div style={{ minHeight: "100vh", background: isLight ? "#f8fafc" : "#0f172a", color: isLight ? "#1e293b" : "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: isLight ? "#f8fafc" : "#1e293b", color: isLight ? "#1e293b" : "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
       <div className={`mobile-nav-overlay${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
       <div className={`mobile-nav-panel${menuOpen ? " open" : ""}`}>
         <button className="mobile-nav-close" onClick={() => setMenuOpen(false)}>&#x2715;</button>
@@ -167,7 +167,7 @@ export default function ComparePage() {
               {searchResults.map(ship => (
                 <button key={ship.imo} onClick={() => addShip(ship)}
                   style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px",
-                    background: isLight ? "#f1f5f9" : "#0f172a", border: `1px solid ${isLight ? "#e2e8f0" : "#1e3a5f"}`, borderRadius: 8, color: isLight ? "#1e293b" : "#e2e8f0",
+                    background: isLight ? "#f1f5f9" : "#1e293b", border: `1px solid ${isLight ? "#e2e8f0" : "#1e3a5f"}`, borderRadius: 8, color: isLight ? "#1e293b" : "#e2e8f0",
                     cursor: "pointer", textAlign: "left", width: "100%" }}>
                   <div>
                     <span style={{ fontWeight: 600, fontSize: 14 }}>{ship.name}</span>

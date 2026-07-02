@@ -3,7 +3,7 @@ import { useEffect } from "react";
 export default function Error({ error, reset }: { error: Error; reset: () => void }) {
   useEffect(() => { console.error("Top Picks error:", error); }, [error]);
   return (
-    <div style={{ minHeight: "100vh", background: "#0f172a", color: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+    <div style={{ minHeight: "100vh", background: "#1e293b", color: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <div style={{ maxWidth: 500, textAlign: "center" }}>
         <h2 style={{ fontSize: 20, marginBottom: 12 }}>Top Picks Error</h2>
         <pre style={{ background: "#1e293b", padding: 16, borderRadius: 8, fontSize: 12, textAlign: "left", overflow: "auto", maxHeight: 300, color: "#f87171" }}>{error.message}{"\n\n"}{error.stack}</pre>

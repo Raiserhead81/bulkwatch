@@ -29,7 +29,7 @@ export default function WatchlistPage() {
   }, [watchlist]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-background text-slate-900 dark:text-white">
       
 
       <main className="max-w-[95%] mx-auto px-4 sm:px-6 py-6">

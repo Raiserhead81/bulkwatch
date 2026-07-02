@@ -8,7 +8,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
   }, [error]);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0f172a", color: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "system-ui", padding: 24 }}>
+    <div style={{ minHeight: "100vh", background: "#1e293b", color: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "system-ui", padding: 24 }}>
       <div style={{ maxWidth: 500, textAlign: "center" }}>
         <h2 style={{ fontSize: 20, marginBottom: 12 }}>Error loading ship details</h2>
         <pre style={{ background: "#1e293b", padding: 16, borderRadius: 8, fontSize: 12, textAlign: "left", overflow: "auto", maxHeight: 300, color: "#f87171" }}>
