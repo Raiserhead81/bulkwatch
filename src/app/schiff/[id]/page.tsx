@@ -77,12 +77,12 @@ function fmtDate(dateStr: string | undefined | null) {
   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-const SECTION_LABEL = "text-[10px] uppercase tracking-widest text-slate-500 dark:text-white/30 font-semibold mb-2";
+const SECTION_LABEL = "text-[10px] uppercase tracking-widest text-slate-600 dark:text-white/30 font-semibold mb-2";
 
 function KV({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex justify-between items-baseline py-0.5 border-b border-slate-100 dark:border-white/5 last:border-0">
-      <span className="text-[11px] text-slate-500 dark:text-white/40 shrink-0 mr-2">{label}</span>
+      <span className="text-[11px] text-slate-600 dark:text-white/40 shrink-0 mr-2">{label}</span>
       <span className="text-[12px] font-semibold text-right truncate max-w-[60%]">{value}</span>
     </div>
   );
@@ -186,11 +186,11 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
       <main className="max-w-[95%] mx-auto px-4 sm:px-6 py-4 space-y-3">
 
         {/* === SECTION 1: HERO STRIP === */}
-        <Card className="border-slate-300 dark:border-slate-800 overflow-hidden">
+        <Card className="border-slate-400 dark:border-slate-800 overflow-hidden">
           <div className="flex flex-col sm:flex-row items-start gap-4 p-4">
             {/* Thumbnail */}
             <div className="w-full sm:w-auto flex-shrink-0">
-              <div className="rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-800" style={{ height: 120, width: 180 }}>
+              <div className="rounded-lg overflow-hidden bg-slate-300 dark:bg-slate-800" style={{ height: 120, width: 180 }}>
                 {ship.imageUrl ? (
                   <img src={ship.imageUrl} alt={ship.name} className="w-full h-full object-cover"
                     onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
@@ -214,10 +214,10 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                 <Badge className="bg-blue-600 hover:bg-blue-600 text-white border-0 text-[10px]">{ship.type}</Badge>
                 {age != null && getAgeBadge(age)}
               </div>
-              <p className="text-xs text-slate-500 dark:text-white/50 mb-1">
+              <p className="text-xs text-slate-600 dark:text-white/50 mb-1">
                 {ship.operator || "Unknown Operator"} &middot; {s.flagEmoji} {ship.flag}
               </p>
-              <p className="text-[11px] text-slate-400 dark:text-white/30 mb-2">
+              <p className="text-[11px] text-slate-500 dark:text-white/30 mb-2">
                 IMO {ship.imo}{ship.mmsi ? ` \u00b7 MMSI ${ship.mmsi}` : ""}
                 {ship.homePort ? ` \u00b7 ${ship.homePort}` : ""}
               </p>
@@ -227,13 +227,13 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                   <Button variant="outline" size="sm" className="h-7 px-2 text-xs border-blue-500/30">Compare</Button>
                 </Link>
                 <a href={`/api/ships/${ship.imo}/pdf`} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" size="sm" className="h-7 px-2 text-xs border-slate-300 dark:border-slate-700">
+                  <Button variant="outline" size="sm" className="h-7 px-2 text-xs border-slate-400 dark:border-slate-700">
                     <Download className="h-3 w-3 mr-1" />PDF
                   </Button>
                 </a>
                 {ship.position && (
                   <Link href={`/karte?lat=${ship.position.lat}&lon=${ship.position.lon}&zoom=8&imo=${ship.imo}`}>
-                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs border-slate-300 dark:border-slate-700 text-emerald-600 dark:text-emerald-400">
+                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs border-slate-400 dark:border-slate-700 text-emerald-600 dark:text-emerald-400">
                       <MapPin className="h-3 w-3 mr-1" />Map
                     </Button>
                   </Link>
@@ -251,8 +251,8 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                     ["$/DWT", `$${(price.estimatedValueUSD/ship.dwt).toFixed(0)}`],
                     ["Built", ship.yearBuilt > 0 ? `${ship.yearBuilt}` : "\u2014"],
                   ].map(([l, v]) => (
-                    <div key={l} className="text-center px-2.5 py-1.5 rounded bg-slate-200 dark:bg-slate-800/80">
-                      <p className="text-[9px] text-slate-500 dark:text-white/30 uppercase tracking-wide">{l}</p>
+                    <div key={l} className="text-center px-2.5 py-1.5 rounded bg-slate-300 dark:bg-slate-800/80">
+                      <p className="text-[9px] text-slate-600 dark:text-white/30 uppercase tracking-wide">{l}</p>
                       <p className="text-sm font-bold tabular-nums">{v}</p>
                     </div>
                   ))}
@@ -284,7 +284,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
         </Card>
 
         {/* === SECTION 2: OVERVIEW GRID (one card, 4 columns) === */}
-        <Card className="border-slate-300 dark:border-slate-800">
+        <Card className="border-slate-400 dark:border-slate-800">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-white/5">
 
             {/* Col 1: Financial */}
@@ -329,7 +329,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                   {s.pAndI && <KV label="P&amp;I" value={s.pAndI} />}
                   {(s.flagParisMou || s.flagTokyoMou) && (
                     <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-white/5">
-                      <span className="text-[11px] text-slate-500 dark:text-white/40">MOU</span>
+                      <span className="text-[11px] text-slate-600 dark:text-white/40">MOU</span>
                       <div className="flex gap-1">
                         {s.flagParisMou && getMouBadge(s.flagParisMou)}
                         {s.flagTokyoMou && getMouBadge(s.flagTokyoMou)}
@@ -338,7 +338,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                   )}
                   {s.detentionPct != null && (
                     <div className="flex justify-between items-baseline py-0.5 border-b border-slate-100 dark:border-white/5">
-                      <span className="text-[11px] text-slate-500 dark:text-white/40">Detention</span>
+                      <span className="text-[11px] text-slate-600 dark:text-white/40">Detention</span>
                       <span className={`text-[12px] font-bold ${getDetentionColor(s.detentionPct)}`}>{s.detentionPct}%</span>
                     </div>
                   )}
@@ -346,7 +346,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                   {s.lastSurvey && <KV label="Last Survey" value={fmtDate(s.lastSurvey)} />}
                   {s.nextSurvey && (
                     <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-white/5 last:border-0">
-                      <span className="text-[11px] text-slate-500 dark:text-white/40 shrink-0 mr-2">Next Survey</span>
+                      <span className="text-[11px] text-slate-600 dark:text-white/40 shrink-0 mr-2">Next Survey</span>
                       <div className="flex items-center gap-1">
                         {nextSurveyAlert && (
                           <Badge className={`text-[9px] border-0 ${nextSurveyAlert.color === "text-red-400" ? "bg-red-600/80 text-white" : "bg-amber-500/80 text-white"}`}>
@@ -368,7 +368,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
               <p className={SECTION_LABEL}>Management</p>
               {s.owner && (
                 <div className="mb-2">
-                  <p className="text-[9px] text-slate-500 dark:text-white/30 uppercase tracking-wide">Owner</p>
+                  <p className="text-[9px] text-slate-600 dark:text-white/30 uppercase tracking-wide">Owner</p>
                   <p className="text-sm font-bold truncate">{s.owner}</p>
                 </div>
               )}
@@ -396,7 +396,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* === SECTION 3: VALUATION === */}
         {ship.dwt > 0 && (
-          <Card className="border-slate-300 dark:border-slate-800">
+          <Card className="border-slate-400 dark:border-slate-800">
             <div className="p-5">
               <p className={SECTION_LABEL}>Valuation</p>
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -428,7 +428,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                     const vals = h.map((p: any) => p.value);
                     const uniqueVals = new Set(vals).size;
                     if (uniqueVals <= 1) return (
-                      <div className="h-20 flex items-center justify-center text-xs text-slate-500 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg">
+                      <div className="h-20 flex items-center justify-center text-xs text-slate-500 border border-dashed border-slate-400 dark:border-slate-800 rounded-lg">
                         No price variation in {h.length} data points — stable at {formatPrice(vals[0])}
                       </div>
                     );
@@ -480,7 +480,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                       ...(priceHistory?.history?.length > 0 ? [["Range", `${formatPrice(priceHistory.min)} \u2013 ${formatPrice(priceHistory.max)}`]] : []),
                     ].map(([label, value]) => (
                       <div key={label}>
-                        <span className="text-slate-500 dark:text-white/40">{label}: </span>
+                        <span className="text-slate-600 dark:text-white/40">{label}: </span>
                         <span className="font-mono font-medium">{value}</span>
                       </div>
                     ))}
@@ -489,18 +489,18 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
 
                 {/* Right: Value Factors (2 cols) */}
                 <div className="lg:col-span-2 lg:border-l lg:border-slate-100 lg:dark:border-white/5 lg:pl-6">
-                  <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-white/30 font-semibold mb-2">Value Factors</p>
+                  <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-white/30 font-semibold mb-2">Value Factors</p>
                   <div className="space-y-0">
                     {price.factors.map((f, i) => (
                       <div key={i} className="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-white/5">
-                        <span className="text-xs text-slate-500 dark:text-white/50">{f.label}</span>
+                        <span className="text-xs text-slate-600 dark:text-white/50">{f.label}</span>
                         <span className={`text-xs font-mono font-medium ${f.impact === "positive" ? "text-emerald-400" : f.impact === "negative" ? "text-rose-400" : "text-slate-400"}`}>
                           {f.value}
                         </span>
                       </div>
                     ))}
                   </div>
-                  <p className="text-[10px] text-slate-500 dark:text-white/30 mt-2 leading-relaxed">{price.reasoning}</p>
+                  <p className="text-[10px] text-slate-600 dark:text-white/30 mt-2 leading-relaxed">{price.reasoning}</p>
                 </div>
 
               </div>
@@ -509,10 +509,10 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
         )}
 
         {/* === SECTION 4: VOYAGE + WEATHER === */}
-        <Card className="border-slate-300 dark:border-slate-800">
+        <Card className="border-slate-400 dark:border-slate-800">
           <div className="p-4">
             <div className="flex items-center gap-2 mb-3">
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-white/30 font-semibold">
+              <p className="text-[10px] uppercase tracking-widest text-slate-600 dark:text-white/30 font-semibold">
                 Estimated Voyage
               </p>
               <Badge className={`${getStatusColor(voyage.currentStatus)} border text-[10px] ml-auto`}>{getStatusLabel(voyage.currentStatus)}</Badge>
@@ -551,7 +551,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                     ["Speed", voyage.speedKnots + " kn"],
                     ["Distance", (realDistanceNm || voyage.distanceNm) + " nm"],
                   ].map(([l, v]) => (
-                    <span key={l} className="text-[11px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                    <span key={l} className="text-[11px] px-2 py-0.5 rounded-full bg-slate-300 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                       <span className="text-slate-400">{l}: </span>{v}
                     </span>
                   ))}
@@ -562,7 +562,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                     <span className="text-slate-500">Progress</span>
                     <span className="font-semibold">{voyage.progressPercent}%</span>
                   </div>
-                  <div className="h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-slate-300 dark:bg-slate-800 rounded-full overflow-hidden">
                     <div className="h-full bg-blue-500 rounded-full" style={{ width: `${voyage.progressPercent}%` }} />
                   </div>
                   <div className="flex justify-between text-[10px] text-slate-500 mt-1">
@@ -575,7 +575,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                 {/* Weather strip */}
                 {weather?.current && (
                   <div className="pt-1 border-t border-slate-100 dark:border-white/5">
-                    <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-white/30 font-semibold mb-1.5">Weather</p>
+                    <p className="text-[10px] uppercase tracking-widest text-slate-600 dark:text-white/30 font-semibold mb-1.5">Weather</p>
                     <div className="flex flex-wrap gap-1.5 mb-2">
                       {[
                         ["Cond.", weather.current.condition],
@@ -583,7 +583,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                         ["Wind", `Bft ${weather.current.avgBeaufort.scale}`],
                         ["Loss", `-${weather.current.estimatedSpeedLoss}%`],
                       ].map(([l, v]) => (
-                        <span key={l} className="text-[11px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        <span key={l} className="text-[11px] px-2 py-0.5 rounded-full bg-slate-300 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                           <span className="text-slate-400">{l}: </span>{v as string}
                         </span>
                       ))}

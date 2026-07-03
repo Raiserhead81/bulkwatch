@@ -332,7 +332,7 @@ export default function ValuationPage() {
 
           {/* Input Panel */}
           <div className="space-y-6">
-            <div className="bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl p-6">
+            <div className="bg-slate-200 dark:bg-slate-900 border border-slate-400 dark:border-slate-800 rounded-2xl p-6">
               <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
                 <Ship className="h-5 w-5 text-blue-400" /> Vessel Specifications
               </h2>
@@ -388,7 +388,7 @@ export default function ValuationPage() {
             </div>
 
             {/* Eco & Market Adjustments */}
-            <div className="bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl p-6">
+            <div className="bg-slate-200 dark:bg-slate-900 border border-slate-400 dark:border-slate-800 rounded-2xl p-6">
               <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
                 <Fuel className="h-5 w-5 text-emerald-400" /> Eco & Market
               </h2>
@@ -430,7 +430,7 @@ export default function ValuationPage() {
             </div>
 
             {/* Model Info */}
-            <div className="bg-slate-200/50 dark:bg-slate-900/50 border border-slate-300/50 dark:border-slate-800/50 rounded-2xl p-5 text-xs text-slate-500">
+            <div className="bg-slate-400/30 dark:bg-slate-900/50 border border-slate-400/40 dark:border-slate-800/50 rounded-2xl p-5 text-xs text-slate-500">
               <p className="font-semibold text-slate-400 mb-2">Model: Hedonic Pricing v4 — 27 Segments × Survey-Cycle Depreciation</p>
               <p>Calibrated against 86 real S&P transactions (Q2 2026). Sources: NautiSNP, Xclusiv Shipbrokers, Clarksons, Hellenic Shipping News.</p>
               <p className="mt-2">Segment: <span className="text-blue-400 font-mono">{result.sizeClass}</span> — Market data: 01 Jul 2026</p>
@@ -450,7 +450,7 @@ export default function ValuationPage() {
             </div>
 
             {/* Factor Breakdown */}
-            <div className="bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl p-6">
+            <div className="bg-slate-200 dark:bg-slate-900 border border-slate-400 dark:border-slate-800 rounded-2xl p-6">
               <h3 className="text-sm font-bold mb-4 flex items-center gap-2">
                 <TrendingDown className="h-4 w-4 text-slate-400" /> Valuation Breakdown
               </h3>
@@ -501,7 +501,7 @@ export default function ValuationPage() {
             </div>
 
             {/* Depreciation Curve */}
-            <div className="bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl p-6">
+            <div className="bg-slate-200 dark:bg-slate-900 border border-slate-400 dark:border-slate-800 rounded-2xl p-6">
               <h3 className="text-sm font-bold mb-4">Depreciation Curve (this vessel)</h3>
               <div className="h-56">
                 <svg viewBox="0 0 500 140" className="w-full h-full">

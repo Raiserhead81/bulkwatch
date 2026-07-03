@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 const WorldMap = dynamic(() => import("@/components/world-map"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[600px] rounded-2xl bg-slate-200 dark:bg-slate-800 border border-blue-500/20 flex items-center justify-center">
+    <div className="w-full h-[600px] rounded-2xl bg-slate-300 dark:bg-slate-800 border border-blue-500/20 flex items-center justify-center">
       <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
     </div>
   ),

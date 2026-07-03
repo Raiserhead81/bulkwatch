@@ -136,13 +136,13 @@ export default function Home() {
   const fmtDwt = (d: number) => d > 0 ? `${(d/1000).toFixed(0)}k` : "";
   const fmtVal = (v?: number) => v && v > 0 ? `$${(v/1e6).toFixed(1)}M` : null;
 
-  const inputCls = "px-3 py-2.5 text-sm bg-slate-100 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700/50 rounded-lg focus:ring-2 focus:ring-sky-500/40 outline-none backdrop-blur-sm transition-colors";
+  const inputCls = "px-3 py-2.5 text-sm bg-slate-200 dark:bg-slate-900/80 border border-slate-400 dark:border-slate-700/50 rounded-lg focus:ring-2 focus:ring-sky-500/40 outline-none backdrop-blur-sm transition-colors";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-200 via-slate-200 to-slate-100 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] text-slate-900 dark:text-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-300 via-slate-300 to-slate-200 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] text-slate-900 dark:text-white">
 
       {/* ═══ HERO ═══ */}
-      <div className="relative border-b border-slate-300/80 dark:border-white/[0.04] overflow-hidden">
+      <div className="relative border-b border-slate-400/50 dark:border-white/[0.04] overflow-hidden">
         {/* Animated gradient background */}
         <div className="absolute inset-0 bg-gradient-to-r from-sky-500/[0.03] via-violet-500/[0.03] to-emerald-500/[0.03] dark:from-sky-500/[0.06] dark:via-violet-500/[0.04] dark:to-emerald-500/[0.06] animate-gradient-shift" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-sky-400/[0.05] via-transparent to-transparent" />
@@ -160,14 +160,14 @@ export default function Home() {
                   <h1 className="text-2xl font-bold tracking-tight">
                     <span className="bg-gradient-to-r from-sky-400 via-blue-400 to-violet-400 bg-clip-text text-transparent">Global Fleet Intelligence</span>
                   </h1>
-                  <p className="text-[11px] text-slate-400 dark:text-white/20 mt-0.5 tracking-wide">Real-time vessel tracking, valuation & market data</p>
+                  <p className="text-[11px] text-slate-500 dark:text-white/20 mt-0.5 tracking-wide">Real-time vessel tracking, valuation & market data</p>
                 </div>
               )}
             </div>
             {market && (
               <div className="hidden md:flex items-center gap-2">
                 <Badge className="bg-sky-500/10 text-sky-500 dark:text-sky-400 border-sky-500/20 text-[10px] font-mono">BDI {market.bdi.toLocaleString()}</Badge>
-                <Badge className="bg-slate-200 dark:bg-white/[0.04] text-slate-500 dark:text-white/30 border-slate-300 dark:border-white/[0.04] text-[10px]">{market.date}</Badge>
+                <Badge className="bg-slate-300 dark:bg-white/[0.04] text-slate-600 dark:text-white/30 border-slate-400 dark:border-white/[0.04] text-[10px]">{market.date}</Badge>
               </div>
             )}
           </div>
@@ -180,14 +180,14 @@ export default function Home() {
               { label: "AIS Tracking", value: animGps.toLocaleString(), sub: "live positions", icon: "A", gradient: "from-emerald-500 to-teal-600", glow: "shadow-emerald-500/20" },
               { label: "Total Deadweight", value: `${animDwt}M`, sub: "metric tonnes", icon: "T", gradient: "from-amber-500 to-orange-600", glow: "shadow-amber-500/20" },
             ].map(s => (
-              <div key={s.label} className="group relative overflow-hidden rounded-xl bg-slate-200/60 dark:bg-white/[0.03] border border-slate-300/80 dark:border-white/[0.05] p-4 backdrop-blur-sm hover:border-slate-300 dark:hover:border-white/[0.08] transition-all duration-300">
+              <div key={s.label} className="group relative overflow-hidden rounded-xl bg-slate-300/60 dark:bg-white/[0.03] border border-slate-400/50 dark:border-white/[0.05] p-4 backdrop-blur-sm hover:border-slate-400 dark:hover:border-white/[0.08] transition-all duration-300">
                 {/* Subtle corner glow */}
                 <div className={`absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br ${s.gradient} rounded-full opacity-[0.07] group-hover:opacity-[0.12] blur-2xl transition-opacity duration-500`} />
 
                 <div className="relative">
-                  <p className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium">{s.label}</p>
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-white/25 font-medium">{s.label}</p>
                   <p className={`text-3xl font-bold tracking-tight mt-1.5 bg-gradient-to-r ${s.gradient} bg-clip-text text-transparent`}>{s.value}</p>
-                  <p className="text-[10px] text-slate-400 dark:text-white/15 mt-1">{s.sub}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-white/15 mt-1">{s.sub}</p>
                 </div>
               </div>
             ))}
@@ -202,9 +202,9 @@ export default function Home() {
                 { label: "Supramax", rate: market.charterRates.supramax },
                 { label: "Handysize", rate: market.charterRates.handysize },
               ].map(c => (
-                <div key={c.label} className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-200/40 dark:bg-white/[0.02] border border-slate-300/60 dark:border-white/[0.03]">
-                  <span className="text-[10px] text-slate-400 dark:text-white/20 uppercase tracking-wider">{c.label}</span>
-                  <span className="text-xs font-mono font-semibold text-slate-600 dark:text-white/50">${c.rate?.toLocaleString()}<span className="text-[9px] text-slate-400 dark:text-white/15">/day</span></span>
+                <div key={c.label} className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-300/40 dark:bg-white/[0.02] border border-slate-400/40 dark:border-white/[0.03]">
+                  <span className="text-[10px] text-slate-500 dark:text-white/20 uppercase tracking-wider">{c.label}</span>
+                  <span className="text-xs font-mono font-semibold text-slate-600 dark:text-white/50">${c.rate?.toLocaleString()}<span className="text-[9px] text-slate-500 dark:text-white/15">/day</span></span>
                 </div>
               ))}
             </div>
@@ -216,7 +216,7 @@ export default function Home() {
       <div className="max-w-[95%] mx-auto px-4 pt-5">
         <div className="flex gap-2 flex-wrap mb-2">
           <div className="relative flex-1 min-w-[240px]">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 dark:text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input type="text" placeholder="Search ships, IMO, operator..." value={search} onChange={e => setSearch(e.target.value)} autoComplete="off"
@@ -244,7 +244,7 @@ export default function Home() {
         </div>
 
         {showFilters && (
-          <div className="flex gap-2 flex-wrap mb-3 p-3 rounded-xl bg-slate-300/50 dark:bg-white/[0.03] border border-slate-300/80 dark:border-white/[0.04] backdrop-blur-sm">
+          <div className="flex gap-2 flex-wrap mb-3 p-3 rounded-xl bg-slate-400/30 dark:bg-white/[0.03] border border-slate-400/50 dark:border-white/[0.04] backdrop-blur-sm">
             <select value={ageRange} onChange={e => setAgeRange(Number(e.target.value))} className={inputCls}>
               {AGE_RANGES.map((a, i) => <option key={i} value={i}>{a.label}</option>)}
             </select>
@@ -269,13 +269,13 @@ export default function Home() {
 
         {/* Quick operator chips */}
         <div className="flex gap-1.5 flex-wrap items-center mb-4">
-          <span className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-white/20 font-medium mr-1">Quick</span>
+          <span className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-white/20 font-medium mr-1">Quick</span>
           {[["Arklow","Arklow Shipping"],["Oldendorff","Oldendorff Carriers"],["Maersk","Maersk"],["MSC","MSC"],["CMA CGM","CMA CGM"],["Hapag-Lloyd","Hapag-Lloyd"],["Evergreen","Evergreen"]].map(([label, q]) => (
             <button key={q} onClick={() => { setOperatorFilter(operatorFilter === q ? "" : q); setSearch(""); setPage(1); }}
               className={`px-3 py-1 text-xs rounded-full border transition-all cursor-pointer ${
                 operatorFilter === q
                   ? "bg-sky-500 border-sky-500 text-white shadow-lg shadow-sky-500/20"
-                  : "bg-slate-200/50 dark:bg-white/[0.03] border-slate-300 dark:border-white/[0.06] text-slate-500 dark:text-white/40 hover:border-sky-500/30 hover:text-sky-500"
+                  : "bg-slate-400/30 dark:bg-white/[0.03] border-slate-400 dark:border-white/[0.06] text-slate-600 dark:text-white/40 hover:border-sky-500/30 hover:text-sky-500"
               }`}>
               {label}
             </button>
@@ -283,7 +283,7 @@ export default function Home() {
         </div>
 
         <div className="flex items-center justify-between mb-4">
-          <p className="text-xs text-slate-400 dark:text-white/30">
+          <p className="text-xs text-slate-500 dark:text-white/30">
             {loading ? <span className="animate-pulse">Loading...</span> : <>{total.toLocaleString()} vessels &middot; Page {page} of {totalPages.toLocaleString()}</>}
           </p>
         </div>
@@ -292,14 +292,14 @@ export default function Home() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="rounded-xl border border-slate-300 dark:border-white/[0.04] overflow-hidden">
-                <div className="h-44 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 dark:from-white/[0.03] dark:via-white/[0.06] dark:to-white/[0.03] animate-shimmer bg-[length:200%_100%]" />
+              <div key={i} className="rounded-xl border border-slate-400 dark:border-white/[0.04] overflow-hidden">
+                <div className="h-44 bg-gradient-to-r from-slate-300 via-slate-100 to-slate-200 dark:from-white/[0.03] dark:via-white/[0.06] dark:to-white/[0.03] animate-shimmer bg-[length:200%_100%]" />
                 <div className="p-4 space-y-3">
-                  <div className="h-4 bg-slate-200 dark:bg-white/[0.06] rounded-full w-3/4" />
-                  <div className="h-3 bg-slate-200 dark:bg-white/[0.04] rounded-full w-1/2" />
+                  <div className="h-4 bg-slate-300 dark:bg-white/[0.06] rounded-full w-3/4" />
+                  <div className="h-3 bg-slate-300 dark:bg-white/[0.04] rounded-full w-1/2" />
                   <div className="flex gap-2">
-                    <div className="h-5 bg-slate-200 dark:bg-white/[0.04] rounded-full w-16" />
-                    <div className="h-5 bg-slate-200 dark:bg-white/[0.04] rounded-full w-12" />
+                    <div className="h-5 bg-slate-300 dark:bg-white/[0.04] rounded-full w-16" />
+                    <div className="h-5 bg-slate-300 dark:bg-white/[0.04] rounded-full w-12" />
                   </div>
                 </div>
               </div>
@@ -307,10 +307,10 @@ export default function Home() {
           </div>
         ) : ships.length === 0 ? (
           <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-200 dark:bg-white/[0.03] mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-300 dark:bg-white/[0.03] mb-4">
               <span className="text-3xl opacity-40">&#9875;</span>
             </div>
-            <p className="text-sm text-slate-400 dark:text-white/30">No vessels found</p>
+            <p className="text-sm text-slate-500 dark:text-white/30">No vessels found</p>
             <p className="text-xs text-slate-300 dark:text-white/15 mt-1">Try adjusting your filters</p>
           </div>
         ) : (
@@ -319,10 +319,10 @@ export default function Home() {
               const val = fmtVal(ship.estimatedValue);
               return (
                 <a key={ship.imo} href={`/schiff/${ship.imo}`}
-                  className="group block rounded-xl border border-slate-300/80 dark:border-white/[0.04] overflow-hidden bg-slate-200/60 dark:bg-white/[0.02] backdrop-blur-sm hover:border-sky-500/30 dark:hover:border-sky-400/20 hover:shadow-2xl hover:shadow-sky-500/[0.08] hover:-translate-y-0.5 transition-all duration-300">
+                  className="group block rounded-xl border border-slate-400/50 dark:border-white/[0.04] overflow-hidden bg-slate-300/60 dark:bg-white/[0.02] backdrop-blur-sm hover:border-sky-500/30 dark:hover:border-sky-400/20 hover:shadow-2xl hover:shadow-sky-500/[0.08] hover:-translate-y-0.5 transition-all duration-300">
 
                   {ship.imageUrl ? (
-                    <div className="relative h-44 overflow-hidden bg-slate-200 dark:bg-white/[0.02]">
+                    <div className="relative h-44 overflow-hidden bg-slate-300 dark:bg-white/[0.02]">
                       <img src={ship.imageUrl} alt={ship.name}
                         className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-700 ease-out" loading="lazy" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
@@ -363,7 +363,7 @@ export default function Home() {
                       )}
                       {val && (
                         <div className="absolute top-3 left-3">
-                          <span className="px-2 py-0.5 bg-slate-200 dark:bg-white/[0.06] rounded-full text-[10px] text-slate-500 dark:text-white/30 font-mono">{val}</span>
+                          <span className="px-2 py-0.5 bg-slate-300 dark:bg-white/[0.06] rounded-full text-[10px] text-slate-600 dark:text-white/30 font-mono">{val}</span>
                         </div>
                       )}
                     </div>
@@ -373,19 +373,19 @@ export default function Home() {
                     {!ship.imageUrl && (
                       <>
                         <p className="font-bold text-sm truncate mb-0.5">{ship.name}</p>
-                        <p className="text-[10px] text-slate-400 dark:text-white/20 font-mono mb-2">IMO {ship.imo}</p>
+                        <p className="text-[10px] text-slate-500 dark:text-white/20 font-mono mb-2">IMO {ship.imo}</p>
                       </>
                     )}
 
                     <div className="flex gap-1.5 flex-wrap">
                       <Badge className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/15 text-[10px] font-medium">{ship.type}</Badge>
-                      {ship.dwt > 0 && <Badge className="bg-slate-200 dark:bg-white/[0.04] text-slate-500 dark:text-white/30 border-slate-300 dark:border-white/[0.04] text-[10px]">{fmtDwt(ship.dwt)} DWT</Badge>}
-                      {ship.yearBuilt > 0 && <Badge className="bg-slate-200 dark:bg-white/[0.04] text-slate-500 dark:text-white/30 border-slate-300 dark:border-white/[0.04] text-[10px]">{ship.yearBuilt}</Badge>}
-                      {ship.flag && <Badge className="bg-slate-200 dark:bg-white/[0.04] text-slate-500 dark:text-white/30 border-slate-300 dark:border-white/[0.04] text-[10px]">{ship.flag}</Badge>}
+                      {ship.dwt > 0 && <Badge className="bg-slate-300 dark:bg-white/[0.04] text-slate-600 dark:text-white/30 border-slate-400 dark:border-white/[0.04] text-[10px]">{fmtDwt(ship.dwt)} DWT</Badge>}
+                      {ship.yearBuilt > 0 && <Badge className="bg-slate-300 dark:bg-white/[0.04] text-slate-600 dark:text-white/30 border-slate-400 dark:border-white/[0.04] text-[10px]">{ship.yearBuilt}</Badge>}
+                      {ship.flag && <Badge className="bg-slate-300 dark:bg-white/[0.04] text-slate-600 dark:text-white/30 border-slate-400 dark:border-white/[0.04] text-[10px]">{ship.flag}</Badge>}
                     </div>
 
                     {ship.operator && (
-                      <p className="text-[10px] text-slate-400 dark:text-white/15 mt-2 truncate">{ship.operator}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-white/15 mt-2 truncate">{ship.operator}</p>
                     )}
                   </div>
                 </a>
@@ -398,14 +398,14 @@ export default function Home() {
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-1.5 mt-8 mb-8">
             <button onClick={() => setPage(1)} disabled={page===1}
-              className="px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-white/[0.06] bg-slate-200/50 dark:bg-white/[0.02] text-slate-500 dark:text-white/40 hover:border-sky-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer">&laquo;</button>
+              className="px-3 py-2 text-sm rounded-lg border border-slate-400 dark:border-white/[0.06] bg-slate-400/30 dark:bg-white/[0.02] text-slate-600 dark:text-white/40 hover:border-sky-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer">&laquo;</button>
             <button onClick={() => setPage(p => Math.max(1,p-1))} disabled={page===1}
-              className="px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-white/[0.06] bg-slate-200/50 dark:bg-white/[0.02] text-slate-500 dark:text-white/40 hover:border-sky-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer">&lsaquo; Prev</button>
+              className="px-3 py-2 text-sm rounded-lg border border-slate-400 dark:border-white/[0.06] bg-slate-400/30 dark:bg-white/[0.02] text-slate-600 dark:text-white/40 hover:border-sky-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer">&lsaquo; Prev</button>
             <span className="px-4 py-2 text-sm font-semibold rounded-lg bg-gradient-to-r from-sky-500 to-blue-500 text-white shadow-lg shadow-sky-500/25">{page}</span>
             <button onClick={() => setPage(p => Math.min(totalPages,p+1))} disabled={page===totalPages}
-              className="px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-white/[0.06] bg-slate-200/50 dark:bg-white/[0.02] text-slate-500 dark:text-white/40 hover:border-sky-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer">Next &rsaquo;</button>
+              className="px-3 py-2 text-sm rounded-lg border border-slate-400 dark:border-white/[0.06] bg-slate-400/30 dark:bg-white/[0.02] text-slate-600 dark:text-white/40 hover:border-sky-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer">Next &rsaquo;</button>
             <button onClick={() => setPage(totalPages)} disabled={page===totalPages}
-              className="px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-white/[0.06] bg-slate-200/50 dark:bg-white/[0.02] text-slate-500 dark:text-white/40 hover:border-sky-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer">&raquo;</button>
+              className="px-3 py-2 text-sm rounded-lg border border-slate-400 dark:border-white/[0.06] bg-slate-400/30 dark:bg-white/[0.02] text-slate-600 dark:text-white/40 hover:border-sky-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer">&raquo;</button>
           </div>
         )}
       </div>

@@ -125,7 +125,7 @@ function StatCard({
     <div
       className={`rounded-xl border bg-gradient-to-br p-4 ${gradients[color]}`}
     >
-      <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">
+      <p className="text-[10px] uppercase tracking-widest text-slate-600 dark:text-slate-400 mb-1">
         {label}
       </p>
       <p
@@ -134,7 +134,7 @@ function StatCard({
         {typeof value === "number" ? <AnimatedCount value={value} /> : value}
       </p>
       {sub && (
-        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{sub}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">{sub}</p>
       )}
     </div>
   );
@@ -145,7 +145,7 @@ function ShipCard({ ship }: { ship: NewbuildShip }) {
 
   return (
     <Card
-      className="group cursor-pointer border border-slate-300/60 dark:border-slate-700/40 bg-slate-100 dark:bg-slate-900/60 hover:border-sky-500/30 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300"
+      className="group cursor-pointer border border-slate-400/40 dark:border-slate-700/40 bg-slate-200 dark:bg-slate-900/60 hover:border-sky-500/30 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300"
       onClick={() => setExpanded((v) => !v)}
     >
       <CardHeader className="pb-2">
@@ -154,7 +154,7 @@ function ShipCard({ ship }: { ship: NewbuildShip }) {
             <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
               {ship.name || "Unnamed"}
             </h3>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">
               IMO {ship.imo}
             </p>
           </div>
@@ -168,7 +168,7 @@ function ShipCard({ ship }: { ship: NewbuildShip }) {
             </Badge>
             <Badge
               variant="outline"
-              className="text-[10px] uppercase tracking-widest border-slate-300/50 dark:border-slate-600/50 text-slate-500 dark:text-slate-400"
+              className="text-[10px] uppercase tracking-widest border-slate-400/40 dark:border-slate-600/50 text-slate-600 dark:text-slate-400"
             >
               {ship.type}
             </Badge>
@@ -179,7 +179,7 @@ function ShipCard({ ship }: { ship: NewbuildShip }) {
       <CardContent className="space-y-3">
         <div className="grid grid-cols-3 gap-2">
           <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-2">
-            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500">
+            <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-500">
               DWT
             </p>
             <p className="text-sm font-medium text-slate-800 dark:text-slate-200 mt-0.5">
@@ -187,7 +187,7 @@ function ShipCard({ ship }: { ship: NewbuildShip }) {
             </p>
           </div>
           <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-2">
-            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500">
+            <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-500">
               LOA
             </p>
             <p className="text-sm font-medium text-slate-800 dark:text-slate-200 mt-0.5">
@@ -195,7 +195,7 @@ function ShipCard({ ship }: { ship: NewbuildShip }) {
             </p>
           </div>
           <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-2">
-            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500">
+            <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-500">
               Beam
             </p>
             <p className="text-sm font-medium text-slate-800 dark:text-slate-200 mt-0.5">
@@ -204,7 +204,7 @@ function ShipCard({ ship }: { ship: NewbuildShip }) {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
+        <div className="flex flex-wrap gap-3 text-xs text-slate-600 dark:text-slate-400">
           {ship.builder && (
             <span className="flex items-center gap-1">
               <Building2 className="w-3 h-3 text-slate-400" />
@@ -226,15 +226,15 @@ function ShipCard({ ship }: { ship: NewbuildShip }) {
         </div>
 
         {expanded && ship.operator && (
-          <div className="mt-3 rounded-xl border border-slate-300/60 dark:border-slate-700/40 bg-slate-50 dark:bg-slate-800/40 p-3 space-y-1.5">
-            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">
+          <div className="mt-3 rounded-xl border border-slate-400/40 dark:border-slate-700/40 bg-slate-50 dark:bg-slate-800/40 p-3 space-y-1.5">
+            <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">
               Operator
             </p>
             <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
               {ship.operator}
             </p>
             {(ship.operatorCity || ship.operatorCountry) && (
-              <p className="text-xs text-slate-400 dark:text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-500">
                 {[ship.operatorCity, ship.operatorCountry]
                   .filter(Boolean)
                   .join(", ")}
@@ -322,18 +322,18 @@ export default function NewbuildsPage() {
   const nearestYear = Object.keys(grouped).filter((k) => k !== "TBD")[0];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-200 via-slate-200 to-slate-100 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a]">
+    <div className="min-h-screen bg-gradient-to-b from-slate-300 via-slate-300 to-slate-200 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
 
         {/* Page header */}
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">
+          <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-1">
             BulkWatch / Orderbook
           </p>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
             Newbuilds
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
             Vessels under construction, grouped by delivery year
           </p>
         </div>
@@ -382,7 +382,7 @@ export default function NewbuildsPage() {
                     ${
                       isActive
                         ? "bg-sky-500 text-white shadow-md shadow-sky-500/25"
-                        : "bg-white dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border border-slate-300/60 dark:border-slate-700/40 hover:border-sky-500/30 hover:text-sky-600 dark:hover:text-sky-400"
+                        : "bg-white dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border border-slate-400/40 dark:border-slate-700/40 hover:border-sky-500/30 hover:text-sky-600 dark:hover:text-sky-400"
                     }
                   `}
                 >
@@ -407,7 +407,7 @@ export default function NewbuildsPage() {
           <div className="flex items-center justify-center py-24">
             <div className="flex flex-col items-center gap-3">
               <div className="w-8 h-8 rounded-full border-2 border-sky-500/20 border-t-sky-500 animate-spin" />
-              <p className="text-sm text-slate-400 dark:text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-500">
                 Loading orderbook…
               </p>
             </div>
@@ -428,7 +428,7 @@ export default function NewbuildsPage() {
         {!loading && !error && filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 gap-3">
             <Hammer className="w-10 h-10 text-slate-300 dark:text-slate-600" />
-            <p className="text-slate-400 dark:text-slate-500 text-sm">
+            <p className="text-slate-500 dark:text-slate-500 text-sm">
               No newbuilds found
               {activeType !== "All" ? ` for type "${activeType}"` : ""}.
             </p>
@@ -443,11 +443,11 @@ export default function NewbuildsPage() {
               {/* Section header */}
               <div className="flex items-center gap-3">
                 <Calendar className="w-4 h-4 text-sky-500" />
-                <h2 className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-semibold">
+                <h2 className="text-[10px] uppercase tracking-widest text-slate-600 dark:text-slate-400 font-semibold">
                   Delivery {year}
                 </h2>
-                <div className="flex-1 h-px bg-slate-200/60 dark:bg-slate-700/40" />
-                <span className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                <div className="flex-1 h-px bg-slate-300/60 dark:bg-slate-700/40" />
+                <span className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-500">
                   {yearShips.length} vessel{yearShips.length !== 1 ? "s" : ""}
                 </span>
               </div>

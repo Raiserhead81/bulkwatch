@@ -156,13 +156,13 @@ export default function OpexCalcPage() {
             <h1 className="text-2xl font-bold flex items-center gap-2">
               ⚙️ OPEX Calculator
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
               Broker-level daily operating cost breakdown — Drewry/Baltic calibrated
             </p>
           </div>
           <button
             onClick={reset}
-            className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+            className="px-4 py-2 rounded-lg border border-slate-400 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
           >
             ↺ Reset to Defaults
           </button>
@@ -174,9 +174,9 @@ export default function OpexCalcPage() {
           <div className="space-y-4">
 
             {/* Ship identity */}
-            <Card className="border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+            <Card className="border-slate-400 dark:border-slate-800 bg-slate-200 dark:bg-slate-900">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Ship Parameters</CardTitle>
+                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Ship Parameters</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
 
@@ -186,7 +186,7 @@ export default function OpexCalcPage() {
                   <select
                     value={inp.shipType}
                     onChange={e => update({ shipType: e.target.value, fuelManual: false, valueManual: false })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-400 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {SHIP_TYPES.map(t => <option key={t}>{t}</option>)}
                   </select>
@@ -201,7 +201,7 @@ export default function OpexCalcPage() {
                     type="number" min={1000} max={400000} step={1000}
                     value={inp.dwt}
                     onChange={e => update({ dwt: Math.max(1000, Math.min(400000, +e.target.value)) })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-400 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
                   />
                   <input
                     type="range" min={1000} max={400000} step={1000}
@@ -221,7 +221,7 @@ export default function OpexCalcPage() {
                     type="number" min={1990} max={2026}
                     value={inp.yearBuilt}
                     onChange={e => update({ yearBuilt: Math.max(1990, Math.min(2026, +e.target.value)) })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-400 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <p className="text-xs text-slate-400 mt-1">Age: {age} years</p>
                 </div>
@@ -236,7 +236,7 @@ export default function OpexCalcPage() {
                     type="number" min={10} max={30}
                     value={inp.crewSize}
                     onChange={e => update({ crewSize: Math.max(10, Math.min(30, +e.target.value)), crewManual: true })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-400 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -246,7 +246,7 @@ export default function OpexCalcPage() {
                   <select
                     value={inp.flag}
                     onChange={e => update({ flag: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-400 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {FLAGS.map(f => <option key={f}>{f}</option>)}
                   </select>
@@ -261,16 +261,16 @@ export default function OpexCalcPage() {
             </Card>
 
             {/* Operations */}
-            <Card className="border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+            <Card className="border-slate-400 dark:border-slate-800 bg-slate-200 dark:bg-slate-900">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Operations</CardTitle>
+                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Operations</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
 
                 {/* Management */}
                 <div>
                   <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-2">Management</label>
-                  <div className="flex rounded-lg overflow-hidden border border-slate-300 dark:border-slate-700">
+                  <div className="flex rounded-lg overflow-hidden border border-slate-400 dark:border-slate-700">
                     {(["third-party","own"] as const).map(m => (
                       <button
                         key={m}
@@ -293,7 +293,7 @@ export default function OpexCalcPage() {
                 {/* Scrubber */}
                 <div>
                   <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-2">Scrubber</label>
-                  <div className="flex rounded-lg overflow-hidden border border-slate-300 dark:border-slate-700">
+                  <div className="flex rounded-lg overflow-hidden border border-slate-400 dark:border-slate-700">
                     {([false, true] as const).map(v => (
                       <button
                         key={String(v)}
@@ -325,7 +325,7 @@ export default function OpexCalcPage() {
                     type="number" min={1} max={200} step={0.5}
                     value={inp.fuelConsumption}
                     onChange={e => update({ fuelConsumption: Math.max(1, +e.target.value), fuelManual: true })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-400 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -339,7 +339,7 @@ export default function OpexCalcPage() {
                     type="number" min={0.5} max={1000} step={0.5}
                     value={inp.estimatedValueM}
                     onChange={e => update({ estimatedValueM: Math.max(0.5, +e.target.value), valueManual: true })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-400 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -347,9 +347,9 @@ export default function OpexCalcPage() {
             </Card>
 
             {/* Bunker prices */}
-            <Card className="border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+            <Card className="border-slate-400 dark:border-slate-800 bg-slate-200 dark:bg-slate-900">
               <CardContent className="pt-4">
-                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">Live Bunker Prices</p>
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-3">Live Bunker Prices</p>
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-2">
                     <div className="text-xs text-slate-400 mb-0.5">VLSFO</div>
@@ -399,7 +399,7 @@ export default function OpexCalcPage() {
             </div>
 
             {/* Daily cost breakdown */}
-            <Card className="border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+            <Card className="border-slate-400 dark:border-slate-800 bg-slate-200 dark:bg-slate-900">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base font-semibold">Daily Fixed OPEX Breakdown</CardTitle>
               </CardHeader>
@@ -479,7 +479,7 @@ export default function OpexCalcPage() {
             </Card>
 
             {/* Fuel costs */}
-            <Card className="border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+            <Card className="border-slate-400 dark:border-slate-800 bg-slate-200 dark:bg-slate-900">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base font-semibold">Fuel Costs</CardTitle>
               </CardHeader>
@@ -543,7 +543,7 @@ export default function OpexCalcPage() {
             </Card>
 
             {/* Earnings */}
-            <Card className="border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+            <Card className="border-slate-400 dark:border-slate-800 bg-slate-200 dark:bg-slate-900">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base font-semibold">Earnings (TC Basis)</CardTitle>
               </CardHeader>

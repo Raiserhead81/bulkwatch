@@ -69,7 +69,7 @@ export default function TopPicksPage() {
   }, [allTopPicks, typeFilter]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-200 via-blue-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-300 via-blue-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-white">
       
 
       <main className="max-w-[95%] mx-auto px-4 sm:px-6 py-6 sm:py-10">
@@ -117,32 +117,32 @@ export default function TopPicksPage() {
                       {overallTop.ship.name}
                     </h2>
                   </Link>
-                  <p className="text-xs text-slate-500 dark:text-white/40 mt-1 mb-3">
+                  <p className="text-xs text-slate-600 dark:text-white/40 mt-1 mb-3">
                     {overallTop.ship.type} · IMO: {overallTop.ship.imo} · {overallTop.ship.flag}
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
                     <div>
-                      <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Est. Value</p>
+                      <p className="text-[10px] text-slate-600 dark:text-white/40 uppercase">Est. Value</p>
                       <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
                         {formatPrice(overallTop.price.estimatedValueUSD)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Tonnage</p>
+                      <p className="text-[10px] text-slate-600 dark:text-white/40 uppercase">Tonnage</p>
                       <p className="text-lg font-bold">{(overallTop.ship.dwt / 1000).toFixed(0)}K DWT</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Year Built</p>
+                      <p className="text-[10px] text-slate-600 dark:text-white/40 uppercase">Year Built</p>
                       <p className="text-lg font-bold">{overallTop.ship.yearBuilt}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">$ pro DWT</p>
+                      <p className="text-[10px] text-slate-600 dark:text-white/40 uppercase">$ pro DWT</p>
                       <p className="text-lg font-bold">
                         ${(overallTop.price.estimatedValueUSD / overallTop.ship.dwt).toFixed(0)}
                       </p>
                     </div>
                   </div>
-                  <p className="text-sm text-slate-700 dark:text-white/70 leading-relaxed bg-slate-200/50 dark:bg-slate-900/50 p-3 rounded-lg">
+                  <p className="text-sm text-slate-700 dark:text-white/70 leading-relaxed bg-slate-400/30 dark:bg-slate-900/50 p-3 rounded-lg">
                     💡 {overallTop.reason}
                   </p>
                   <div className="mt-3 flex gap-2">
@@ -174,7 +174,7 @@ export default function TopPicksPage() {
         <Card className="mb-6 border-blue-500/20">
           <CardContent className="p-4">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="bg-slate-100 dark:bg-slate-900 max-w-md">
+              <SelectTrigger className="bg-slate-200 dark:bg-slate-900 max-w-md">
                 <SelectValue placeholder="Ship Size" />
               </SelectTrigger>
               <SelectContent>
@@ -197,7 +197,7 @@ export default function TopPicksPage() {
                     <ShipIcon className="h-5 w-5 text-blue-600 dark:text-cyan-400" />
                     {type}
                   </h2>
-                  <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">{marketSummary}</p>
+                  <p className="text-xs text-slate-600 dark:text-white/40 mt-0.5">{marketSummary}</p>
                 </div>
                 <Badge variant="outline" className="border-blue-500/20 text-blue-700 dark:text-cyan-400">
                   {picks.length} Top Picks
@@ -254,7 +254,7 @@ function TopPickCard({ pick, rank, isWatched }: { pick: TopPick; rank: number; i
   return (
     <Card className="overflow-hidden border-blue-500/10 dark:border-white/10 hover:shadow-lg transition-shadow">
       {/* Image */}
-      <div className="relative aspect-video bg-slate-200 dark:bg-slate-800">
+      <div className="relative aspect-video bg-slate-300 dark:bg-slate-800">
         {/* Ship photo */}
         {ship.imageUrl ? (
           <img
@@ -294,23 +294,23 @@ function TopPickCard({ pick, rank, isWatched }: { pick: TopPick; rank: number; i
               {ship.name}
             </h3>
           </Link>
-          <p className="text-[10px] text-slate-500 dark:text-white/40 font-mono mt-0.5">
+          <p className="text-[10px] text-slate-600 dark:text-white/40 font-mono mt-0.5">
             IMO: {ship.imo} · {ship.flag}
           </p>
         </div>
 
         {/* Specs */}
-        <div className="grid grid-cols-3 gap-2 text-center py-2 border-y border-slate-300 dark:border-white/10">
+        <div className="grid grid-cols-3 gap-2 text-center py-2 border-y border-slate-400 dark:border-white/10">
           <div>
-            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">DWT</p>
+            <p className="text-[10px] text-slate-600 dark:text-white/40 uppercase">DWT</p>
             <p className="text-sm font-bold tabular-nums">{(ship.dwt / 1000).toFixed(0)}K</p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Year Built</p>
+            <p className="text-[10px] text-slate-600 dark:text-white/40 uppercase">Year Built</p>
             <p className="text-sm font-bold tabular-nums">{ship.yearBuilt}</p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Value</p>
+            <p className="text-[10px] text-slate-600 dark:text-white/40 uppercase">Value</p>
             <p className="text-sm font-bold text-blue-600 dark:text-cyan-400 tabular-nums">
               {formatPrice(price.estimatedValueUSD)}
             </p>

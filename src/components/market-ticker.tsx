@@ -24,19 +24,19 @@ export default function MarketTicker() {
   if (!market) return null;
 
   return (
-    <div className="border-b border-slate-300/50 dark:border-white/[0.03] bg-slate-300/50 dark:bg-white/[0.015] overflow-hidden">
+    <div className="border-b border-slate-400/40 dark:border-white/[0.03] bg-slate-400/30 dark:bg-white/[0.015] overflow-hidden">
       <div className="animate-marquee whitespace-nowrap py-1.5 text-[11px] font-mono">
         {Array.from({ length: 2 }).map((_, rep) => (
           <span key={rep} className="inline-flex gap-8 mr-8">
-            <span className="text-slate-400 dark:text-white/25">BDI <span className="text-sky-500 font-semibold">{market.bdi.toLocaleString()}</span></span>
-            <span className="text-slate-400 dark:text-white/25">VLSFO <span className="text-emerald-500 font-semibold">${market.bunkerVLSFO}</span>/t</span>
-            <span className="text-slate-400 dark:text-white/25">HSFO <span className="text-amber-500 font-semibold">${market.bunkerHSFO}</span>/t</span>
-            <span className="text-slate-400 dark:text-white/25">MGO <span className="text-red-400 font-semibold">${market.bunkerMGO}</span>/t</span>
-            <span className="text-slate-400 dark:text-white/25">Scrap <span className="text-orange-400 font-semibold">${market.scrapLDT}</span>/LDT</span>
-            <span className="text-slate-400 dark:text-white/25">Cape TCE <span className="text-sky-400 font-semibold">${market.charterRates.capesize?.toLocaleString()}</span>/d</span>
-            <span className="text-slate-400 dark:text-white/25">Panamax <span className="text-sky-400 font-semibold">${market.charterRates.panamax?.toLocaleString()}</span>/d</span>
-            <span className="text-slate-400 dark:text-white/25">Supra <span className="text-sky-400 font-semibold">${market.charterRates.supramax?.toLocaleString()}</span>/d</span>
-            <span className="text-slate-400 dark:text-white/25">Handy <span className="text-sky-400 font-semibold">${market.charterRates.handysize?.toLocaleString()}</span>/d</span>
+            <span className="text-slate-500 dark:text-white/25">BDI <span className="text-sky-500 font-semibold">{market.bdi.toLocaleString()}</span></span>
+            <span className="text-slate-500 dark:text-white/25">VLSFO <span className="text-emerald-500 font-semibold">${market.bunkerVLSFO}</span>/t</span>
+            <span className="text-slate-500 dark:text-white/25">HSFO <span className="text-amber-500 font-semibold">${market.bunkerHSFO}</span>/t</span>
+            <span className="text-slate-500 dark:text-white/25">MGO <span className="text-red-400 font-semibold">${market.bunkerMGO}</span>/t</span>
+            <span className="text-slate-500 dark:text-white/25">Scrap <span className="text-orange-400 font-semibold">${market.scrapLDT}</span>/LDT</span>
+            <span className="text-slate-500 dark:text-white/25">Cape TCE <span className="text-sky-400 font-semibold">${market.charterRates.capesize?.toLocaleString()}</span>/d</span>
+            <span className="text-slate-500 dark:text-white/25">Panamax <span className="text-sky-400 font-semibold">${market.charterRates.panamax?.toLocaleString()}</span>/d</span>
+            <span className="text-slate-500 dark:text-white/25">Supra <span className="text-sky-400 font-semibold">${market.charterRates.supramax?.toLocaleString()}</span>/d</span>
+            <span className="text-slate-500 dark:text-white/25">Handy <span className="text-sky-400 font-semibold">${market.charterRates.handysize?.toLocaleString()}</span>/d</span>
           </span>
         ))}
       </div>

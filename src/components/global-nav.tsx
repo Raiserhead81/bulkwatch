@@ -80,7 +80,7 @@ export default function GlobalNav() {
         </div>
       </div>
       {/* Fixed top bar for sub-pages */}
-      <nav className="sticky top-0 z-30 border-b border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-950">
+      <nav className="sticky top-0 z-30 border-b border-slate-400 dark:border-slate-800 bg-white dark:bg-slate-950">
         <div className="max-w-[95%] mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2">

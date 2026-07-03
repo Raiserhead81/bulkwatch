@@ -158,7 +158,7 @@ function haversine(lat1: number, lon1: number, lat2: number, lon2: number): numb
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-const inp = "w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
+const inp = "w-full px-3 py-2 rounded-lg border border-slate-400 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
 const lbl = "block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1";
 
 export default function VoyageCalcPage() {
@@ -281,7 +281,7 @@ export default function VoyageCalcPage() {
         {/* Page header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Voyage Calculator</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
             Estimate costs, duration and TCE for any bulk voyage
           </p>
         </div>
@@ -292,9 +292,9 @@ export default function VoyageCalcPage() {
           <div className="space-y-4">
 
             {/* Route */}
-            <Card className="border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+            <Card className="border-slate-400 dark:border-slate-800 bg-slate-200 dark:bg-slate-900">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Route</CardTitle>
+                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Route</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -314,7 +314,7 @@ export default function VoyageCalcPage() {
 
                 {/* Quick Routes */}
                 <div>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mb-2">Quick Routes</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-500 mb-2">Quick Routes</p>
                   <div className="flex flex-wrap gap-2">
                     {[
                       ["PDA", "QIN", "Port Hedland – Qingdao"],
@@ -329,7 +329,7 @@ export default function VoyageCalcPage() {
                         className={`px-3 py-1 rounded-full text-xs border transition-colors ${
                           fromCode === f && toCode === t
                             ? "bg-blue-500 border-blue-500 text-white"
-                            : "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-blue-400 hover:text-blue-500"
+                            : "bg-white dark:bg-slate-800 border-slate-400 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-blue-400 hover:text-blue-500"
                         }`}
                       >
                         {label}
@@ -341,9 +341,9 @@ export default function VoyageCalcPage() {
             </Card>
 
             {/* Vessel Parameters */}
-            <Card className="border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+            <Card className="border-slate-400 dark:border-slate-800 bg-slate-200 dark:bg-slate-900">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Vessel Parameters</CardTitle>
+                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Vessel Parameters</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
@@ -368,9 +368,9 @@ export default function VoyageCalcPage() {
             </Card>
 
             {/* Market Parameters */}
-            <Card className="border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+            <Card className="border-slate-400 dark:border-slate-800 bg-slate-200 dark:bg-slate-900">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Market Parameters</CardTitle>
+                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Market Parameters</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
@@ -392,9 +392,9 @@ export default function VoyageCalcPage() {
           <div className="space-y-4">
 
             {!result ? (
-              <Card className="border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+              <Card className="border-slate-400 dark:border-slate-800 bg-slate-200 dark:bg-slate-900">
                 <CardContent className="flex items-center justify-center min-h-[300px]">
-                  <p className="text-slate-400 dark:text-slate-500 text-sm">Select loading and discharge ports to calculate</p>
+                  <p className="text-slate-500 dark:text-slate-500 text-sm">Select loading and discharge ports to calculate</p>
                 </CardContent>
               </Card>
             ) : (
@@ -424,7 +424,7 @@ export default function VoyageCalcPage() {
                 </div>
 
                 {/* Route detail + Map */}
-                <Card className="border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+                <Card className="border-slate-400 dark:border-slate-800 bg-slate-200 dark:bg-slate-900">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base font-semibold">
                       {result.from.name} &rarr; {result.to.name}
@@ -432,7 +432,7 @@ export default function VoyageCalcPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {/* Map */}
-                    <div className="rounded-lg overflow-hidden border border-slate-300 dark:border-slate-700">
+                    <div className="rounded-lg overflow-hidden border border-slate-400 dark:border-slate-700">
                       <RouteMap
                         fromLat={result.from.lat} fromLon={result.from.lon} fromName={result.from.name}
                         toLat={result.to.lat} toLon={result.to.lon} toName={result.to.name}
@@ -447,24 +447,24 @@ export default function VoyageCalcPage() {
                     {/* Route stats */}
                     <div className="grid grid-cols-3 gap-4 pt-1">
                       <div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Sea Days</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-0.5">Sea Days</p>
                         <p className="text-lg font-bold">{result.seaDays}</p>
                         <p className="text-xs text-slate-400">at {speed} kn</p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Port Days</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-0.5">Port Days</p>
                         <p className="text-lg font-bold">{portDays}</p>
                         <p className="text-xs text-slate-400">load + discharge</p>
                       </div>
                       {result.canalDays > 0 && (
                         <div>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Canal Transit</p>
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mb-0.5">Canal Transit</p>
                           <p className="text-lg font-bold">{result.canalDays}</p>
                           <p className="text-xs text-slate-400">days</p>
                         </div>
                       )}
                       <div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Eff. Speed</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-0.5">Eff. Speed</p>
                         <p className="text-lg font-bold">{result.effectiveSpeed} kn</p>
                         <p className="text-xs text-slate-400">after weather</p>
                       </div>
@@ -473,7 +473,7 @@ export default function VoyageCalcPage() {
                 </Card>
 
                 {/* Weather Conditions */}
-                <Card className="border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+                <Card className="border-slate-400 dark:border-slate-800 bg-slate-200 dark:bg-slate-900">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base font-semibold">Weather Conditions</CardTitle>
                   </CardHeader>
@@ -537,7 +537,7 @@ export default function VoyageCalcPage() {
                 </Card>
 
                 {/* Fuel & Costs */}
-                <Card className="border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+                <Card className="border-slate-400 dark:border-slate-800 bg-slate-200 dark:bg-slate-900">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base font-semibold">Fuel &amp; Costs</CardTitle>
                   </CardHeader>
@@ -589,7 +589,7 @@ export default function VoyageCalcPage() {
                 </Card>
 
                 {/* Economics */}
-                <Card className="border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+                <Card className="border-slate-400 dark:border-slate-800 bg-slate-200 dark:bg-slate-900">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base font-semibold">Economics</CardTitle>
                   </CardHeader>

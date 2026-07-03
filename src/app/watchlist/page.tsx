@@ -41,7 +41,7 @@ export default function WatchlistPage() {
         {loading ? (
           <div className="text-center py-20 text-slate-500">Loading watchlist...</div>
         ) : ships.length === 0 ? (
-          <Card className="border-slate-300 dark:border-slate-800">
+          <Card className="border-slate-400 dark:border-slate-800">
             <CardContent className="p-12 text-center">
               <Star className="h-12 w-12 mx-auto text-slate-300 dark:text-white/20 mb-4" />
               <p className="text-slate-600 dark:text-white/60 mb-2">No ships on your watchlist</p>
@@ -62,8 +62,8 @@ export default function WatchlistPage() {
               {ships.map(ship => {
                 const price = estimatePrice(ship);
                 return (
-                  <Card key={ship.imo} className="overflow-hidden border-slate-300 dark:border-slate-800 group">
-                    <div className="relative aspect-video bg-slate-200 dark:bg-slate-800">
+                  <Card key={ship.imo} className="overflow-hidden border-slate-400 dark:border-slate-800 group">
+                    <div className="relative aspect-video bg-slate-300 dark:bg-slate-800">
                       {ship.imageUrl ? (
                         <img src={ship.imageUrl} alt={ship.name} className="w-full h-full object-cover" loading="lazy" />
                       ) : (

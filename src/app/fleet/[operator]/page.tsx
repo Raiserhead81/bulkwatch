@@ -152,19 +152,19 @@ export default function FleetPage() {
     });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-200 via-slate-200 to-slate-100 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a]">
+    <div className="min-h-screen bg-gradient-to-b from-slate-300 via-slate-300 to-slate-200 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
 
         {/* ── Operator Header ── */}
         {operatorInfo && !loading && (
           <div className="space-y-1">
-            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500">
+            <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-500">
               Fleet Overview
             </p>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
               {operatorInfo.name}
             </h1>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500 dark:text-slate-400 pt-1">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 dark:text-slate-400 pt-1">
               <span>
                 {operatorInfo.city}, {operatorInfo.country}
               </span>
@@ -238,10 +238,10 @@ export default function FleetPage() {
               ].map(({ label, value, gradient }) => (
                 <Card
                   key={label}
-                  className="relative overflow-hidden border-0 bg-slate-200/60 dark:bg-white/[0.03] backdrop-blur-sm shadow-sm dark:shadow-none ring-1 ring-black/5 dark:ring-white/[0.06]"
+                  className="relative overflow-hidden border-0 bg-slate-300/60 dark:bg-white/[0.03] backdrop-blur-sm shadow-sm dark:shadow-none ring-1 ring-black/5 dark:ring-white/[0.06]"
                 >
                   <div className="p-5 space-y-1">
-                    <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                    <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-500">
                       {label}
                     </p>
                     <p
@@ -273,7 +273,7 @@ export default function FleetPage() {
                             ? "bg-slate-800 text-white border-slate-700 dark:bg-white dark:text-slate-900 dark:border-white"
                             : `${getTypeColor(t)} border`
                           : t === "All"
-                          ? "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200 dark:bg-white/5 dark:text-slate-400 dark:border-white/10 dark:hover:bg-white/10"
+                          ? "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-300 dark:bg-white/5 dark:text-slate-500 dark:border-white/10 dark:hover:bg-white/10"
                           : `bg-transparent ${getTypeColor(t)} border opacity-60 hover:opacity-100`
                       }
                     `}
@@ -293,7 +293,7 @@ export default function FleetPage() {
                   onChange={(e) =>
                     setSortBy(e.target.value as "dwt" | "name" | "year")
                   }
-                  className="text-xs rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 text-slate-700 dark:text-slate-300 px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer appearance-none"
+                  className="text-xs rounded-lg border border-slate-400 dark:border-white/10 bg-white dark:bg-white/5 text-slate-700 dark:text-slate-300 px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer appearance-none"
                   style={{ backgroundImage: "none" }}
                 >
                   <option value="dwt">Sort: DWT ↓</option>
@@ -314,9 +314,9 @@ export default function FleetPage() {
 
                 return (
                   <a key={ship.imo} href={`/ships/${ship.imo}`} className="group block">
-                    <Card className="overflow-hidden border-0 bg-slate-200/70 dark:bg-white/[0.03] backdrop-blur-sm ring-1 ring-black/5 dark:ring-white/[0.06] shadow-sm dark:shadow-none transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-xl dark:group-hover:ring-white/10">
+                    <Card className="overflow-hidden border-0 bg-slate-300/70 dark:bg-white/[0.03] backdrop-blur-sm ring-1 ring-black/5 dark:ring-white/[0.06] shadow-sm dark:shadow-none transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-xl dark:group-hover:ring-white/10">
                       {/* Image */}
-                      <div className="relative h-44 bg-slate-200 dark:bg-white/[0.04] overflow-hidden">
+                      <div className="relative h-44 bg-slate-300 dark:bg-white/[0.04] overflow-hidden">
                         {ship.imageUrl ? (
                           <img
                             src={ship.imageUrl}
@@ -379,7 +379,7 @@ export default function FleetPage() {
                             { label: "Flag", value: ship.flag },
                           ].map(({ label, value }) => (
                             <div key={label} className="text-center">
-                              <p className="text-[9px] uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                              <p className="text-[9px] uppercase tracking-widest text-slate-500 dark:text-slate-500">
                                 {label}
                               </p>
                               <p className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">
@@ -394,12 +394,12 @@ export default function FleetPage() {
 
                         {/* Footer row */}
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                          <span className="text-[10px] text-slate-500 dark:text-slate-500">
                             {age} yrs · {ship.speedKnots} kn
                           </span>
                           <Badge
                             variant="outline"
-                            className="text-[9px] uppercase tracking-widest border-slate-300 dark:border-white/10 text-slate-500 dark:text-slate-400 px-1.5 py-0"
+                            className="text-[9px] uppercase tracking-widest border-slate-400 dark:border-white/10 text-slate-600 dark:text-slate-400 px-1.5 py-0"
                           >
                             IMO {ship.imo}
                           </Badge>
@@ -412,7 +412,7 @@ export default function FleetPage() {
             </div>
 
             {filtered.length === 0 && (
-              <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-sm">
+              <div className="text-center py-20 text-slate-500 dark:text-slate-500 text-sm">
                 No ships match this filter.
               </div>
             )}
@@ -420,7 +420,7 @@ export default function FleetPage() {
         )}
 
         {!loading && !error && ships.length === 0 && (
-          <div className="text-center py-32 text-slate-400 dark:text-slate-500 text-sm">
+          <div className="text-center py-32 text-slate-500 dark:text-slate-500 text-sm">
             No fleet data found for this operator.
           </div>
         )}

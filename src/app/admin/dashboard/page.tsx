@@ -92,7 +92,7 @@ function useCountUp(target: number, duration = 1200): number {
 function ProgressBar({ pct, className }: { pct: number; className?: string }) {
   const color = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-red-500";
   return (
-    <div className={`h-1.5 rounded-full bg-slate-200 dark:bg-white/[0.06] overflow-hidden ${className}`}>
+    <div className={`h-1.5 rounded-full bg-slate-300 dark:bg-white/[0.06] overflow-hidden ${className}`}>
       <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${Math.min(pct, 100)}%` }} />
     </div>
   );
@@ -180,16 +180,16 @@ function OverviewCard({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="relative overflow-hidden bg-slate-200/60 dark:bg-white/[0.03] backdrop-blur-sm border border-slate-300/80 dark:border-white/[0.05] rounded-2xl p-5 space-y-3">
+    <div className="relative overflow-hidden bg-slate-300/60 dark:bg-white/[0.03] backdrop-blur-sm border border-slate-400/50 dark:border-white/[0.05] rounded-2xl p-5 space-y-3">
       {/* Corner glow */}
       <div className={`absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br ${glowColor} rounded-full opacity-[0.07] blur-2xl pointer-events-none`} />
-      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium">
+      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-white/25 font-medium">
         {icon} {label}
       </div>
       <div className={`text-2xl font-bold bg-gradient-to-r ${textGradient} bg-clip-text text-transparent tabular-nums`}>
         {value}
       </div>
-      <div className="text-xs text-slate-500 dark:text-white/30">{sub}</div>
+      <div className="text-xs text-slate-600 dark:text-white/30">{sub}</div>
       {children}
     </div>
   );
@@ -198,7 +198,7 @@ function OverviewCard({
 // ── Section Header ─────────────────────────────────────────────────────────
 function SectionHeader({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <h2 className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium mb-3">
+    <h2 className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-white/25 font-medium mb-3">
       {icon} {children}
     </h2>
   );
@@ -207,7 +207,7 @@ function SectionHeader({ icon, children }: { icon: React.ReactNode; children: Re
 // ── Premium card wrapper ───────────────────────────────────────────────────
 function Card({ className = "", children }: { className?: string; children: React.ReactNode }) {
   return (
-    <div className={`bg-slate-200/60 dark:bg-white/[0.03] backdrop-blur-sm border border-slate-300/80 dark:border-white/[0.05] rounded-2xl ${className}`}>
+    <div className={`bg-slate-300/60 dark:bg-white/[0.03] backdrop-blur-sm border border-slate-400/50 dark:border-white/[0.05] rounded-2xl ${className}`}>
       {children}
     </div>
   );
@@ -269,8 +269,8 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-200 via-slate-200 to-slate-100 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] flex items-center justify-center">
-        <div className="flex items-center gap-3 text-slate-400 dark:text-white/30">
+      <div className="min-h-screen bg-gradient-to-b from-slate-300 via-slate-300 to-slate-200 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] flex items-center justify-center">
+        <div className="flex items-center gap-3 text-slate-500 dark:text-white/30">
           <RefreshCw className="h-5 w-5 animate-spin" />
           <span className="text-sm">Loading intelligence dashboard…</span>
         </div>
@@ -280,7 +280,7 @@ export default function AdminDashboard() {
 
   if (error || !stats) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-200 via-slate-200 to-slate-100 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-slate-300 via-slate-300 to-slate-200 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] flex items-center justify-center">
         <div className="text-center space-y-3">
           <AlertTriangle className="h-10 w-10 text-red-400 mx-auto" />
           <p className="text-red-400 font-medium text-sm">{error || "Failed to load"}</p>
@@ -293,7 +293,7 @@ export default function AdminDashboard() {
   const { enrichment, valuation, marketData, pipelines } = stats;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-200 via-slate-200 to-slate-100 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] text-slate-900 dark:text-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-300 via-slate-300 to-slate-200 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] text-slate-900 dark:text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
 
         {/* ── Page Title ──────────────────────────────────────────────────── */}
@@ -303,19 +303,19 @@ export default function AdminDashboard() {
               <BarChart2 className="h-5 w-5 text-sky-500" />
               <h1 className="text-xl font-bold tracking-tight">Data Intelligence</h1>
             </div>
-            <p className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium">
+            <p className="text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-white/25 font-medium">
               Admin Dashboard · Auto-refreshes every 60 s
             </p>
           </div>
           <div className="flex items-center gap-3">
             {lastRefresh && (
-              <span className="text-xs text-slate-400 dark:text-white/30 hidden sm:block">
+              <span className="text-xs text-slate-500 dark:text-white/30 hidden sm:block">
                 {lastRefresh.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
               </span>
             )}
             <button
               onClick={() => { setLoading(true); load(); }}
-              className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-white/30 hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
+              className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-white/30 hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
             >
               <RefreshCw className="h-3.5 w-3.5" /> Refresh
             </button>
@@ -328,7 +328,7 @@ export default function AdminDashboard() {
           <OverviewCard
             icon={<Database className="h-3.5 w-3.5" />}
             label="Ships Enriched"
-            value={<>{equasisScraped.toLocaleString()} <span className="text-base font-normal text-slate-400 dark:text-white/25">/ {enrichment.total.toLocaleString()}</span></>}
+            value={<>{equasisScraped.toLocaleString()} <span className="text-base font-normal text-slate-500 dark:text-white/25">/ {enrichment.total.toLocaleString()}</span></>}
             sub={<>Equasis coverage <span className={enrichment.equasisPct >= 80 ? "text-emerald-500" : enrichment.equasisPct >= 50 ? "text-amber-500" : "text-red-400"}>{enrichment.equasisPct}%</span></>}
             glowColor="from-sky-400 to-blue-600"
             textGradient="from-sky-500 to-blue-600"
@@ -353,7 +353,7 @@ export default function AdminDashboard() {
             value={
               valuation.modelAccuracy
                 ? <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">±{valuation.modelAccuracy.medianAbsError}%</span>
-                : <span className="text-slate-400 dark:text-white/25 text-xl">—</span>
+                : <span className="text-slate-500 dark:text-white/25 text-xl">—</span>
             }
             sub={valuation.modelAccuracy ? "median error vs real deals" : "Not enough S&P data yet"}
             glowColor="from-amber-400 to-orange-500"
@@ -380,7 +380,7 @@ export default function AdminDashboard() {
             {/* Field completeness */}
             <Card>
               <CardInner>
-                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium mb-4">
+                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-white/25 font-medium mb-4">
                   Field Completeness
                 </h3>
                 <div className="space-y-3.5">
@@ -388,7 +388,7 @@ export default function AdminDashboard() {
                     <div key={key}>
                       <div className="flex justify-between text-xs mb-1.5">
                         <span className="text-slate-600 dark:text-white/50">{fieldLabels[key] || key}</span>
-                        <span className="text-slate-400 dark:text-white/30 tabular-nums">
+                        <span className="text-slate-500 dark:text-white/30 tabular-nums">
                           {val.filled.toLocaleString()} <span className="text-slate-300 dark:text-white/15">({val.pct}%)</span>
                         </span>
                       </div>
@@ -403,10 +403,10 @@ export default function AdminDashboard() {
             <Card>
               <CardInner>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium">
+                  <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-white/25 font-medium">
                     Daily Enrichment — last 14 days
                   </h3>
-                  <span className="text-xs text-slate-400 dark:text-white/30 tabular-nums">{enrichment.scrapedLast7d.toLocaleString()} in 7d</span>
+                  <span className="text-xs text-slate-500 dark:text-white/30 tabular-nums">{enrichment.scrapedLast7d.toLocaleString()} in 7d</span>
                 </div>
                 <DailyChart data={enrichment.daily} />
               </CardInner>
@@ -423,7 +423,7 @@ export default function AdminDashboard() {
             {/* Model accuracy metrics */}
             <Card>
               <CardInner>
-                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium mb-4">
+                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-white/25 font-medium mb-4">
                   Model Accuracy — {valuation.spTransactions} reference transactions
                 </h3>
                 {valuation.modelAccuracy ? (
@@ -438,14 +438,14 @@ export default function AdminDashboard() {
                         ["Valuation bias",        `${valuation.modelAccuracy.bias > 0 ? "+" : ""}${valuation.modelAccuracy.bias}%`],
                       ].map(([label, value], i, arr) => (
                         <tr key={label} className={i < arr.length - 1 ? "border-b border-slate-100 dark:border-white/[0.04]" : ""}>
-                          <td className="py-2.5 text-slate-500 dark:text-white/35">{label}</td>
+                          <td className="py-2.5 text-slate-600 dark:text-white/35">{label}</td>
                           <td className="py-2.5 text-right font-mono font-bold text-slate-800 dark:text-white/80">{value}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 ) : (
-                  <p className="text-slate-500 dark:text-white/30 text-sm leading-relaxed">
+                  <p className="text-slate-600 dark:text-white/30 text-sm leading-relaxed">
                     Need at least 3 S&amp;P transactions with ship_type, DWT and year_built to calculate accuracy.
                     Currently {valuation.spTransactions} deals collected.
                   </p>
@@ -456,7 +456,7 @@ export default function AdminDashboard() {
             {/* Benchmark comparison */}
             <Card>
               <CardInner>
-                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium mb-4">
+                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-white/25 font-medium mb-4">
                   Benchmark Comparison
                 </h3>
                 <div className="space-y-3">
@@ -464,13 +464,13 @@ export default function AdminDashboard() {
                   <div className="flex items-center justify-between rounded-xl bg-sky-50 dark:bg-white/[0.04] border border-sky-100/80 dark:border-white/[0.06] px-4 py-3">
                     <div>
                       <p className="text-sm font-semibold text-slate-800 dark:text-white/80">Our Model</p>
-                      <p className="text-xs text-slate-400 dark:text-white/30">Hedonic pricing v4</p>
+                      <p className="text-xs text-slate-500 dark:text-white/30">Hedonic pricing v4</p>
                     </div>
                     <div className="text-right">
                       {valuation.modelAccuracy ? (
                         <AccuracyIndicator pct={valuation.modelAccuracy.medianAbsError} />
                       ) : (
-                        <span className="text-slate-400 dark:text-white/25 text-sm">—</span>
+                        <span className="text-slate-500 dark:text-white/25 text-sm">—</span>
                       )}
                     </div>
                   </div>
@@ -478,7 +478,7 @@ export default function AdminDashboard() {
                   <div className="flex items-center justify-between rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100/80 dark:border-white/[0.04] px-4 py-3">
                     <div>
                       <p className="text-sm font-medium text-slate-700 dark:text-white/60">VesselsValue</p>
-                      <p className="text-xs text-slate-400 dark:text-white/25">Industry benchmark</p>
+                      <p className="text-xs text-slate-500 dark:text-white/25">Industry benchmark</p>
                     </div>
                     <span className="text-emerald-500 font-bold text-sm">±10%</span>
                   </div>
@@ -486,11 +486,11 @@ export default function AdminDashboard() {
                   <div className="flex items-center justify-between rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100/80 dark:border-white/[0.04] px-4 py-3">
                     <div>
                       <p className="text-sm font-medium text-slate-700 dark:text-white/60">Clarksons SIN</p>
-                      <p className="text-xs text-slate-400 dark:text-white/25">Broker quality</p>
+                      <p className="text-xs text-slate-500 dark:text-white/25">Broker quality</p>
                     </div>
                     <span className="text-emerald-500 font-bold text-sm">±5–8%</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 dark:text-white/20 pt-1 leading-relaxed">
+                  <p className="text-[10px] text-slate-500 dark:text-white/20 pt-1 leading-relaxed">
                     Target: within ±15% of VesselsValue. Green = achieved, amber = close, red = needs work.
                   </p>
                 </div>
@@ -508,10 +508,10 @@ export default function AdminDashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-white/[0.05]">
-                  <th className="text-left px-5 py-3 text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium">Pipeline</th>
-                  <th className="text-left px-5 py-3 text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium hidden sm:table-cell">Last Run</th>
-                  <th className="text-left px-5 py-3 text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium">Status</th>
-                  <th className="text-left px-5 py-3 text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium hidden md:table-cell">Detail</th>
+                  <th className="text-left px-5 py-3 text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-white/25 font-medium">Pipeline</th>
+                  <th className="text-left px-5 py-3 text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-white/25 font-medium hidden sm:table-cell">Last Run</th>
+                  <th className="text-left px-5 py-3 text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-white/25 font-medium">Status</th>
+                  <th className="text-left px-5 py-3 text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-white/25 font-medium hidden md:table-cell">Detail</th>
                 </tr>
               </thead>
               <tbody>
@@ -525,9 +525,9 @@ export default function AdminDashboard() {
                     ].join(" ")}
                   >
                     <td className="px-5 py-3 font-medium text-slate-800 dark:text-white/75">{p.name}</td>
-                    <td className="px-5 py-3 text-slate-400 dark:text-white/30 text-xs hidden sm:table-cell tabular-nums">{fmtDate(p.lastRun)}</td>
+                    <td className="px-5 py-3 text-slate-500 dark:text-white/30 text-xs hidden sm:table-cell tabular-nums">{fmtDate(p.lastRun)}</td>
                     <td className="px-5 py-3"><StatusBadge status={p.status} /></td>
-                    <td className="px-5 py-3 text-slate-400 dark:text-white/30 text-xs hidden md:table-cell">{p.detail}</td>
+                    <td className="px-5 py-3 text-slate-500 dark:text-white/30 text-xs hidden md:table-cell">{p.detail}</td>
                   </tr>
                 ))}
               </tbody>
@@ -540,7 +540,7 @@ export default function AdminDashboard() {
           <SectionHeader icon={<Ship className="h-3.5 w-3.5" />}>
             Market Data
             {marketData.lastUpdate && (
-              <span className="text-[10px] font-normal text-slate-400 dark:text-white/20 ml-1 normal-case tracking-normal">
+              <span className="text-[10px] font-normal text-slate-500 dark:text-white/20 ml-1 normal-case tracking-normal">
                 as of {marketData.lastUpdate}
               </span>
             )}
@@ -549,7 +549,7 @@ export default function AdminDashboard() {
             {/* Freight & Scrap */}
             <Card>
               <CardInner>
-                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium mb-4">
+                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-white/25 font-medium mb-4">
                   Freight &amp; Scrap
                 </h3>
                 <table className="w-full text-sm">
@@ -560,7 +560,7 @@ export default function AdminDashboard() {
                       ["Capesize T/C",      `$${marketData.charterCape.toLocaleString()}/d`],
                     ].map(([label, value], i, arr) => (
                       <tr key={label} className={i < arr.length - 1 ? "border-b border-slate-100 dark:border-white/[0.04]" : ""}>
-                        <td className="py-2.5 text-slate-500 dark:text-white/35">{label}</td>
+                        <td className="py-2.5 text-slate-600 dark:text-white/35">{label}</td>
                         <td className="py-2.5 text-right font-mono font-semibold text-slate-800 dark:text-white/75">{value}</td>
                       </tr>
                     ))}
@@ -572,7 +572,7 @@ export default function AdminDashboard() {
             {/* Bunker prices */}
             <Card>
               <CardInner>
-                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium mb-4">
+                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-white/25 font-medium mb-4">
                   Bunker Prices (Singapore) · {marketData.bunkerPorts} ports
                 </h3>
                 <table className="w-full text-sm">
@@ -583,7 +583,7 @@ export default function AdminDashboard() {
                       ["MGO",   `$${marketData.bunkerMGO}/t`],
                     ].map(([label, value], i, arr) => (
                       <tr key={label} className={i < arr.length - 1 ? "border-b border-slate-100 dark:border-white/[0.04]" : ""}>
-                        <td className="py-2.5 text-slate-500 dark:text-white/35">{label}</td>
+                        <td className="py-2.5 text-slate-600 dark:text-white/35">{label}</td>
                         <td className="py-2.5 text-right font-mono font-semibold text-slate-800 dark:text-white/75">{value}</td>
                       </tr>
                     ))}
@@ -595,7 +595,7 @@ export default function AdminDashboard() {
             {/* Data Sources */}
             <Card>
               <CardInner>
-                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium mb-4">
+                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-white/25 font-medium mb-4">
                   Data Sources
                 </h3>
                 {marketData.sources.length > 0 ? (
@@ -608,7 +608,7 @@ export default function AdminDashboard() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-slate-400 dark:text-white/25 text-xs">No sources listed in opex_rates.json</p>
+                  <p className="text-slate-500 dark:text-white/25 text-xs">No sources listed in opex_rates.json</p>
                 )}
               </CardInner>
             </Card>

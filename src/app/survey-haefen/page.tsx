@@ -74,7 +74,7 @@ export default function SurveyPortsPage() {
   }, [search, facilityFilter, sortBy]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-200 via-blue-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-300 via-blue-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-white">
       
 
       <main className="max-w-[95%] mx-auto px-4 sm:px-6 py-6 sm:py-10">
@@ -132,11 +132,11 @@ export default function SurveyPortsPage() {
                   placeholder="Port, country, keyword..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 bg-slate-100 dark:bg-slate-900"
+                  className="pl-9 bg-slate-200 dark:bg-slate-900"
                 />
               </div>
               <Select value={facilityFilter} onValueChange={setFacilityFilter}>
-                <SelectTrigger className="bg-slate-100 dark:bg-slate-900"><SelectValue placeholder="Facility" /></SelectTrigger>
+                <SelectTrigger className="bg-slate-200 dark:bg-slate-900"><SelectValue placeholder="Facility" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Facilities</SelectItem>
                   {allFacilities.map((f) => (
@@ -145,7 +145,7 @@ export default function SurveyPortsPage() {
                 </SelectContent>
               </Select>
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-                <SelectTrigger className="bg-slate-100 dark:bg-slate-900"><SelectValue placeholder="Sort By" /></SelectTrigger>
+                <SelectTrigger className="bg-slate-200 dark:bg-slate-900"><SelectValue placeholder="Sort By" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="rating">Rating (best first)</SelectItem>
                   <SelectItem value="cost_low">Cost (low first)</SelectItem>
@@ -154,7 +154,7 @@ export default function SurveyPortsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="mt-3 flex items-center gap-2 text-xs text-slate-500 dark:text-white/50">
+            <div className="mt-3 flex items-center gap-2 text-xs text-slate-600 dark:text-white/50">
               <Filter className="h-3.5 w-3.5" />
               <span>{filteredPorts.length} of {SURVEY_PORTS.length} ports</span>
             </div>
@@ -170,11 +170,11 @@ export default function SurveyPortsPage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {filteredPorts.slice(0, 3).map((port, i) => (
-                  <div key={port.id} className="flex items-center gap-2 p-2 rounded-lg bg-slate-200/50 dark:bg-slate-900/50">
+                  <div key={port.id} className="flex items-center gap-2 p-2 rounded-lg bg-slate-400/30 dark:bg-slate-900/50">
                     <span className="text-2xl">{["🥇", "🥈", "🥉"][i]}</span>
                     <div className="min-w-0">
                       <p className="font-semibold text-sm truncate">{port.name}</p>
-                      <p className="text-xs text-slate-500 dark:text-white/40">
+                      <p className="text-xs text-slate-600 dark:text-white/40">
                         {port.countryFlag} {port.country} · Rating {port.rating}/100
                       </p>
                     </div>
@@ -196,7 +196,7 @@ export default function SurveyPortsPage() {
             <CardContent className="p-12 text-center">
               <Anchor className="h-12 w-12 mx-auto text-slate-300 dark:text-white/20 mb-4" />
               <p className="text-slate-600 dark:text-white/60 mb-2">No ports found</p>
-              <p className="text-xs text-slate-500 dark:text-white/40">Try different search terms or filters</p>
+              <p className="text-xs text-slate-600 dark:text-white/40">Try different search terms or filters</p>
             </CardContent>
           </Card>
         )}
@@ -216,32 +216,32 @@ function SurveyPortCard({ port }: { port: SurveyPort }) {
               <span className="text-2xl">{port.countryFlag}</span>
               <h3 className="font-bold text-base sm:text-lg leading-tight">{port.name}</h3>
             </div>
-            <p className="text-xs text-slate-500 dark:text-white/40">{port.country}</p>
+            <p className="text-xs text-slate-600 dark:text-white/40">{port.country}</p>
           </div>
           <div className="text-right">
             <div className="flex items-center gap-1 justify-end">
               <Award className="h-4 w-4 text-amber-500" />
               <span className="text-2xl font-bold tabular-nums">{port.rating}</span>
             </div>
-            <p className="text-[10px] text-slate-500 dark:text-white/40">/ 100</p>
+            <p className="text-[10px] text-slate-600 dark:text-white/40">/ 100</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 text-center py-2 border-y border-slate-300 dark:border-white/10">
+        <div className="grid grid-cols-3 gap-2 text-center py-2 border-y border-slate-400 dark:border-white/10">
           <div>
-            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Cost</p>
+            <p className="text-[10px] text-slate-600 dark:text-white/40 uppercase">Cost</p>
             <p className="text-sm font-semibold text-purple-600 dark:text-purple-400">
               {formatSurveyCost(port.typicalSurveyCost)}
             </p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Duration</p>
+            <p className="text-[10px] text-slate-600 dark:text-white/40 uppercase">Duration</p>
             <p className="text-sm font-semibold flex items-center justify-center gap-1">
               <Clock className="h-3 w-3" />{port.typicalDuration} days
             </p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Airport</p>
+            <p className="text-[10px] text-slate-600 dark:text-white/40 uppercase">Airport</p>
             <p className="text-sm font-semibold flex items-center justify-center gap-1">
               <Plane className="h-3 w-3" />{port.airport}
             </p>
@@ -249,7 +249,7 @@ function SurveyPortCard({ port }: { port: SurveyPort }) {
         </div>
 
         <div>
-          <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase mb-1.5">Facilities</p>
+          <p className="text-[10px] text-slate-600 dark:text-white/40 uppercase mb-1.5">Facilities</p>
           <div className="flex flex-wrap gap-1.5">
             {port.facilities.map((f) => (
               <Badge key={f} variant="outline" className="text-[10px] py-0.5 border-blue-500/20 bg-blue-500/5">
@@ -260,7 +260,7 @@ function SurveyPortCard({ port }: { port: SurveyPort }) {
         </div>
 
         <div>
-          <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase mb-1.5">Class Societies</p>
+          <p className="text-[10px] text-slate-600 dark:text-white/40 uppercase mb-1.5">Class Societies</p>
           <div className="flex flex-wrap gap-1.5">
             {port.certifications.map((c) => (
               <Badge key={c} className="text-[10px] py-0.5 bg-stone-700 text-white border-0">{c}</Badge>
@@ -276,9 +276,9 @@ function SurveyPortCard({ port }: { port: SurveyPort }) {
         </button>
 
         {expanded && (
-          <div className="space-y-3 pt-2 border-t border-slate-300 dark:border-white/10">
+          <div className="space-y-3 pt-2 border-t border-slate-400 dark:border-white/10">
             <div>
-              <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase mb-1">Notes</p>
+              <p className="text-[10px] text-slate-600 dark:text-white/40 uppercase mb-1">Notes</p>
               <p className="text-xs text-slate-700 dark:text-white/70 leading-relaxed">{port.notes}</p>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-white/60">
@@ -290,7 +290,7 @@ function SurveyPortCard({ port }: { port: SurveyPort }) {
                 <Globe className="h-3 w-3" /> Website
               </a>
             )}
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-white/40">
+            <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-white/40">
               <DollarSign className="h-3 w-3" />
               <span>Estimated cost: {formatSurveyCost(port.typicalSurveyCost)} USD</span>
             </div>
