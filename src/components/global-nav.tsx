@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 const DEFAULT_NAV_LINKS: [string,string,string][] = [
@@ -8,12 +8,16 @@ const DEFAULT_NAV_LINKS: [string,string,string][] = [
   ["Voyage Calc","/voyage-calc","🚀"],["Valuation","/valuation","💰"],["OPEX Calc","/opex-calc","📋"],["Bunker Calc","/bunker-calc","⛽"],["AI Chat","/chat","🤖"],
 ];
 
+const TOOLS_HREFS = new Set(["/voyage-calc","/valuation","/opex-calc","/bunker-calc"]);
+
 export default function GlobalNav() {
   const [theme, setTheme] = useState<"dark"|"light">("dark");
   const [currentUser, setCurrentUser] = useState<{username:string;role:string}|null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [path, setPath] = useState("/");
   const [navLinks, setNavLinks] = useState<[string,string,string][]>(DEFAULT_NAV_LINKS);
+  const toolsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setPath(window.location.pathname);
@@ -22,7 +26,6 @@ export default function GlobalNav() {
     const saved = localStorage.getItem("vessel-theme") || "dark";
     setTheme(saved as "dark"|"light");
 
-    // Apply saved nav order
     const savedOrder = localStorage.getItem("nav-order");
     if (savedOrder) {
       try {
@@ -36,8 +39,14 @@ export default function GlobalNav() {
     }
   }, []);
 
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (toolsRef.current && !toolsRef.current.contains(e.target as Node)) setToolsOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
-  // Lock background scroll while the slide-in menu is open
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -50,6 +59,10 @@ export default function GlobalNav() {
     document.documentElement.classList.toggle("light", next === "light");
     document.documentElement.classList.toggle("dark", next !== "light");
   };
+
+  const mainLinks = navLinks.filter(n => !TOOLS_HREFS.has(n[1]));
+  const toolLinks = navLinks.filter(n => TOOLS_HREFS.has(n[1]));
+  const toolsActive = TOOLS_HREFS.has(path);
 
   return (
     <>
@@ -79,7 +92,7 @@ export default function GlobalNav() {
           <a href="/api/auth/logout" className="block px-3 py-2 text-sm text-slate-500 hover:text-red-400 mt-2">Logout</a>
         </div>
       </div>
-      {/* Fixed top bar for sub-pages */}
+      {/* Fixed top bar */}
       <nav className="sticky top-0 z-30 border-b border-slate-400 dark:border-slate-800 bg-white dark:bg-slate-950">
         <div className="max-w-[95%] mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -89,22 +102,38 @@ export default function GlobalNav() {
             </Link>
           </div>
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map(([label, href, icon]) => (
+          <div className="hidden md:flex items-center gap-0.5">
+            {mainLinks.map(([label, href, icon]) => (
               <a key={href} href={href}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded text-xs ${path === href ? "text-blue-400 font-semibold" : "text-slate-500 hover:text-slate-200"}`}>
+                className={`flex items-center gap-1 px-2 py-1.5 rounded text-xs whitespace-nowrap ${path === href ? "text-blue-400 font-semibold" : "text-slate-500 hover:text-slate-200"}`}>
                 <span className="text-sm">{icon}</span> {label}
               </a>
             ))}
-            <button onClick={toggleTheme} className="ml-2 px-2 py-1 rounded border border-slate-700 text-sm cursor-pointer" title="Toggle theme">
+            {/* Tools dropdown */}
+            <div className="relative" ref={toolsRef}>
+              <button
+                onClick={() => setToolsOpen(!toolsOpen)}
+                className={`flex items-center gap-1 px-2 py-1.5 rounded text-xs whitespace-nowrap ${toolsActive ? "text-blue-400 font-semibold" : "text-slate-500 hover:text-slate-200"}`}>
+                <span className="text-sm">🧮</span> Calcs <span className="text-[10px]">▾</span>
+              </button>
+              {toolsOpen && (
+                <div className="absolute top-full right-0 mt-1 w-40 bg-slate-900 border border-slate-700 rounded-lg shadow-xl py-1 z-50">
+                  {toolLinks.map(([label, href, icon]) => (
+                    <a key={href} href={href}
+                      className={`flex items-center gap-2 px-3 py-2 text-xs ${path === href ? "text-blue-400 font-semibold" : "text-slate-300 hover:text-white hover:bg-slate-800"}`}>
+                      <span>{icon}</span> {label}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button onClick={toggleTheme} className="ml-1 px-1.5 py-1 rounded border border-slate-700 text-sm cursor-pointer" title="Toggle theme">
               {theme === "dark" ? "☀️" : "🌙"}
             </button>
-            
-            {currentUser?.role === "admin" && <a href="/admin/dashboard" className="ml-2 text-xs text-slate-500 hover:text-blue-400">📊 Dashboard</a>}
-            <a href="/api/auth/logout" className="ml-2 text-xs text-slate-600 hover:text-red-400">Logout</a>
-            {/* Settings gear icon — always at the end */}
+            {currentUser?.role === "admin" && <a href="/admin/dashboard" className="ml-1 text-xs text-slate-500 hover:text-blue-400">📊</a>}
+            <a href="/api/auth/logout" className="ml-1 text-xs text-slate-600 hover:text-red-400">Logout</a>
             <a href="/settings" title="Settings"
-              className={`ml-2 text-base leading-none ${path === "/settings" ? "text-blue-400" : "text-slate-500 hover:text-slate-200"}`}>
+              className={`ml-1 text-base leading-none ${path === "/settings" ? "text-blue-400" : "text-slate-500 hover:text-slate-200"}`}>
               ⚙️
             </a>
           </div>
