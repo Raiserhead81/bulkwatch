@@ -24,7 +24,7 @@ export default function MarketTicker() {
   if (!market) return null;
 
   return (
-    <div className="border-b border-slate-200/50 dark:border-white/[0.03] bg-slate-100/80 dark:bg-white/[0.015] overflow-hidden">
+    <div className="border-b border-slate-300/50 dark:border-white/[0.03] bg-slate-300/50 dark:bg-white/[0.015] overflow-hidden">
       <div className="animate-marquee whitespace-nowrap py-1.5 text-[11px] font-mono">
         {Array.from({ length: 2 }).map((_, rep) => (
           <span key={rep} className="inline-flex gap-8 mr-8">

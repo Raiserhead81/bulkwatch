@@ -69,7 +69,7 @@ export default function TopPicksPage() {
   }, [allTopPicks, typeFilter]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-blue-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-200 via-blue-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-white">
       
 
       <main className="max-w-[95%] mx-auto px-4 sm:px-6 py-6 sm:py-10">
@@ -142,7 +142,7 @@ export default function TopPicksPage() {
                       </p>
                     </div>
                   </div>
-                  <p className="text-sm text-slate-700 dark:text-white/70 leading-relaxed bg-white/50 dark:bg-slate-900/50 p-3 rounded-lg">
+                  <p className="text-sm text-slate-700 dark:text-white/70 leading-relaxed bg-slate-200/50 dark:bg-slate-900/50 p-3 rounded-lg">
                     💡 {overallTop.reason}
                   </p>
                   <div className="mt-3 flex gap-2">
@@ -174,7 +174,7 @@ export default function TopPicksPage() {
         <Card className="mb-6 border-blue-500/20">
           <CardContent className="p-4">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="bg-white dark:bg-slate-900 max-w-md">
+              <SelectTrigger className="bg-slate-100 dark:bg-slate-900 max-w-md">
                 <SelectValue placeholder="Ship Size" />
               </SelectTrigger>
               <SelectContent>
@@ -300,7 +300,7 @@ function TopPickCard({ pick, rank, isWatched }: { pick: TopPick; rank: number; i
         </div>
 
         {/* Specs */}
-        <div className="grid grid-cols-3 gap-2 text-center py-2 border-y border-slate-200 dark:border-white/10">
+        <div className="grid grid-cols-3 gap-2 text-center py-2 border-y border-slate-300 dark:border-white/10">
           <div>
             <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">DWT</p>
             <p className="text-sm font-bold tabular-nums">{(ship.dwt / 1000).toFixed(0)}K</p>

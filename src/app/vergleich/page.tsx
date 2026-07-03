@@ -166,7 +166,7 @@ export default function BulkwatchVergleich() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-white dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a]">
+    <div className="min-h-screen bg-gradient-to-b from-slate-200 via-slate-200 to-slate-100 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a]">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
         {/* Page Header */}
@@ -186,7 +186,7 @@ export default function BulkwatchVergleich() {
             {ships.length > 0 && (
               <button
                 onClick={clearAll}
-                className="text-xs text-slate-400 hover:text-red-400 dark:hover:text-red-400 transition-colors border border-slate-200 dark:border-white/10 hover:border-red-200 dark:hover:border-red-400/20 rounded-lg px-3 py-1.5"
+                className="text-xs text-slate-400 hover:text-red-400 dark:hover:text-red-400 transition-colors border border-slate-300 dark:border-white/10 hover:border-red-200 dark:hover:border-red-400/20 rounded-lg px-3 py-1.5"
               >
                 Clear All
               </button>
@@ -215,7 +215,7 @@ export default function BulkwatchVergleich() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder={ships.length >= 5 ? "Maximum 5 ships reached" : "Search by name or IMO…"}
               disabled={ships.length >= 5}
-              className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.04] pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 dark:focus:border-blue-500/50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-white/[0.04] pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 dark:focus:border-blue-500/50 transition disabled:opacity-40 disabled:cursor-not-allowed"
             />
             {query && (
               <button
@@ -231,7 +231,7 @@ export default function BulkwatchVergleich() {
 
           {/* Dropdown */}
           {dropdownOpen && results.length > 0 && (
-            <div className="absolute z-50 mt-1.5 w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111126] shadow-xl shadow-black/10 dark:shadow-black/40 overflow-hidden">
+            <div className="absolute z-50 mt-1.5 w-full rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-[#111126] shadow-xl shadow-black/10 dark:shadow-black/40 overflow-hidden">
               {results.map((ship) => {
                 const already = !!ships.find((s) => s.imo === ship.imo);
                 return (
@@ -246,7 +246,7 @@ export default function BulkwatchVergleich() {
                         : "hover:bg-slate-50 dark:hover:bg-white/[0.04] cursor-pointer",
                     ].join(" ")}
                   >
-                    <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-200 dark:bg-white/[0.06] flex items-center justify-center">
                       <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 17l2-8h14l2 8M5 17h14M12 3v6m-4-3h8" />
                       </svg>
@@ -265,7 +265,7 @@ export default function BulkwatchVergleich() {
           )}
 
           {dropdownOpen && results.length === 0 && !loadingSearch && query.trim() && (
-            <div className="absolute z-50 mt-1.5 w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111126] shadow-xl shadow-black/10 dark:shadow-black/40 px-4 py-3 text-sm text-slate-400 text-center">
+            <div className="absolute z-50 mt-1.5 w-full rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-[#111126] shadow-xl shadow-black/10 dark:shadow-black/40 px-4 py-3 text-sm text-slate-400 text-center">
               No vessels found for &ldquo;{query}&rdquo;
             </div>
           )}
@@ -274,7 +274,7 @@ export default function BulkwatchVergleich() {
         {/* Empty State */}
         {ships.length === 0 && (
           <div className="flex flex-col items-center justify-center py-28 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-slate-200 dark:bg-white/[0.04] border border-slate-300 dark:border-white/[0.06] flex items-center justify-center mb-4">
               <svg className="w-8 h-8 text-slate-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 17l2-8h14l2 8M5 17h14M12 3v6m-4-3h8" />
               </svg>
@@ -295,7 +295,7 @@ export default function BulkwatchVergleich() {
               <div className="sticky left-0 z-10 bg-slate-50/80 dark:bg-[#060610]/80 backdrop-blur-md" />
               {ships.map((ship) => (
                 <div key={ship.imo} className="px-2 pb-4">
-                  <Card className="relative overflow-hidden bg-white/70 dark:bg-white/[0.03] backdrop-blur-xl border border-slate-200/60 dark:border-white/[0.07] shadow-sm">
+                  <Card className="relative overflow-hidden bg-slate-200/70 dark:bg-white/[0.03] backdrop-blur-xl border border-slate-300/60 dark:border-white/[0.07] shadow-sm">
                     {/* Ship image */}
                     <div className="h-28 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-white/[0.04] dark:to-white/[0.02] overflow-hidden">
                       {ship.imageUrl ? (
@@ -355,7 +355,7 @@ export default function BulkwatchVergleich() {
                       className={[
                         "sticky left-0 z-10 flex items-center px-4 py-2.5 border-r",
                         isEven
-                          ? "bg-white/50 dark:bg-white/[0.02] border-slate-100 dark:border-white/[0.04]"
+                          ? "bg-slate-200/50 dark:bg-white/[0.02] border-slate-100 dark:border-white/[0.04]"
                           : "bg-slate-50 dark:bg-white/[0.01] border-slate-100/60 dark:border-white/[0.03]",
                       ].join(" ")}
                     >
@@ -373,7 +373,7 @@ export default function BulkwatchVergleich() {
                           className={[
                             "flex items-center px-4 py-2.5",
                             isEven
-                              ? "bg-white/50 dark:bg-white/[0.02]"
+                              ? "bg-slate-200/50 dark:bg-white/[0.02]"
                               : "bg-slate-50 dark:bg-white/[0.01]",
                           ].join(" ")}
                         >

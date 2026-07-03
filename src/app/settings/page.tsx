@@ -54,7 +54,7 @@ export default function SettingsPage() {
     }
   }, []);
 
-  const inp = "w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500";
+  const inp = "w-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500";
 
   async function handlePasswordSave(e: React.FormEvent) {
     e.preventDefault();
@@ -131,7 +131,7 @@ export default function SettingsPage() {
       <div className="max-w-2xl mx-auto px-6 py-8 space-y-8">
 
         {/* Section 1: Change Password */}
-        <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <div className="bg-card border border-slate-300 dark:border-slate-800 rounded-2xl p-6">
           <h2 className="text-sm font-bold mb-5 flex items-center gap-2">
             <KeyRound className="h-4 w-4 text-amber-400" /> Change Password
           </h2>
@@ -217,7 +217,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Section 2: Navigation Order */}
-        <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <div className="bg-card border border-slate-300 dark:border-slate-800 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-sm font-bold flex items-center gap-2">
               <LayoutList className="h-4 w-4 text-blue-400" /> Navigation Order
@@ -240,7 +240,7 @@ export default function SettingsPage() {
             {navItems.map(([label, href, icon], idx) => (
               <div
                 key={href}
-                className="flex items-center justify-between bg-slate-100 dark:bg-slate-800/60 rounded-xl px-4 py-2.5"
+                className="flex items-center justify-between bg-slate-200 dark:bg-slate-800/60 rounded-xl px-4 py-2.5"
               >
                 <div className="flex items-center gap-3">
                   <span className="text-lg w-7 text-center">{icon}</span>
@@ -272,8 +272,8 @@ export default function SettingsPage() {
             <p className="text-xs text-emerald-400 mt-3">{navMsg}</p>
           )}
 
-          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
-            <a href="/users" className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-sm font-medium">
+          <div className="mt-6 pt-4 border-t border-slate-300 dark:border-slate-700">
+            <a href="/users" className="inline-flex items-center gap-2 px-4 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-sm font-medium">
               👤 User Management
             </a>
           </div>

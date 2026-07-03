@@ -145,7 +145,7 @@ function ShipCard({ ship }: { ship: NewbuildShip }) {
 
   return (
     <Card
-      className="group cursor-pointer border border-slate-200/60 dark:border-slate-700/40 bg-white dark:bg-slate-900/60 hover:border-sky-500/30 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300"
+      className="group cursor-pointer border border-slate-300/60 dark:border-slate-700/40 bg-slate-100 dark:bg-slate-900/60 hover:border-sky-500/30 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300"
       onClick={() => setExpanded((v) => !v)}
     >
       <CardHeader className="pb-2">
@@ -226,7 +226,7 @@ function ShipCard({ ship }: { ship: NewbuildShip }) {
         </div>
 
         {expanded && ship.operator && (
-          <div className="mt-3 rounded-xl border border-slate-200/60 dark:border-slate-700/40 bg-slate-50 dark:bg-slate-800/40 p-3 space-y-1.5">
+          <div className="mt-3 rounded-xl border border-slate-300/60 dark:border-slate-700/40 bg-slate-50 dark:bg-slate-800/40 p-3 space-y-1.5">
             <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">
               Operator
             </p>
@@ -322,7 +322,7 @@ export default function NewbuildsPage() {
   const nearestYear = Object.keys(grouped).filter((k) => k !== "TBD")[0];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-white dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a]">
+    <div className="min-h-screen bg-gradient-to-b from-slate-200 via-slate-200 to-slate-100 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
 
         {/* Page header */}
@@ -382,7 +382,7 @@ export default function NewbuildsPage() {
                     ${
                       isActive
                         ? "bg-sky-500 text-white shadow-md shadow-sky-500/25"
-                        : "bg-white dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/40 hover:border-sky-500/30 hover:text-sky-600 dark:hover:text-sky-400"
+                        : "bg-white dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border border-slate-300/60 dark:border-slate-700/40 hover:border-sky-500/30 hover:text-sky-600 dark:hover:text-sky-400"
                     }
                   `}
                 >

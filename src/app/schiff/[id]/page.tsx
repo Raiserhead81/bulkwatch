@@ -186,7 +186,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
       <main className="max-w-[95%] mx-auto px-4 sm:px-6 py-4 space-y-3">
 
         {/* === SECTION 1: HERO STRIP === */}
-        <Card className="border-slate-200 dark:border-slate-800 overflow-hidden">
+        <Card className="border-slate-300 dark:border-slate-800 overflow-hidden">
           <div className="flex flex-col sm:flex-row items-start gap-4 p-4">
             {/* Thumbnail */}
             <div className="w-full sm:w-auto flex-shrink-0">
@@ -227,13 +227,13 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                   <Button variant="outline" size="sm" className="h-7 px-2 text-xs border-blue-500/30">Compare</Button>
                 </Link>
                 <a href={`/api/ships/${ship.imo}/pdf`} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" size="sm" className="h-7 px-2 text-xs border-slate-200 dark:border-slate-700">
+                  <Button variant="outline" size="sm" className="h-7 px-2 text-xs border-slate-300 dark:border-slate-700">
                     <Download className="h-3 w-3 mr-1" />PDF
                   </Button>
                 </a>
                 {ship.position && (
                   <Link href={`/karte?lat=${ship.position.lat}&lon=${ship.position.lon}&zoom=8&imo=${ship.imo}`}>
-                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs border-slate-200 dark:border-slate-700 text-emerald-600 dark:text-emerald-400">
+                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs border-slate-300 dark:border-slate-700 text-emerald-600 dark:text-emerald-400">
                       <MapPin className="h-3 w-3 mr-1" />Map
                     </Button>
                   </Link>
@@ -251,7 +251,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                     ["$/DWT", `$${(price.estimatedValueUSD/ship.dwt).toFixed(0)}`],
                     ["Built", ship.yearBuilt > 0 ? `${ship.yearBuilt}` : "\u2014"],
                   ].map(([l, v]) => (
-                    <div key={l} className="text-center px-2.5 py-1.5 rounded bg-slate-100 dark:bg-slate-800/80">
+                    <div key={l} className="text-center px-2.5 py-1.5 rounded bg-slate-200 dark:bg-slate-800/80">
                       <p className="text-[9px] text-slate-500 dark:text-white/30 uppercase tracking-wide">{l}</p>
                       <p className="text-sm font-bold tabular-nums">{v}</p>
                     </div>
@@ -284,7 +284,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
         </Card>
 
         {/* === SECTION 2: OVERVIEW GRID (one card, 4 columns) === */}
-        <Card className="border-slate-200 dark:border-slate-800">
+        <Card className="border-slate-300 dark:border-slate-800">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-white/5">
 
             {/* Col 1: Financial */}
@@ -396,7 +396,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* === SECTION 3: VALUATION === */}
         {ship.dwt > 0 && (
-          <Card className="border-slate-200 dark:border-slate-800">
+          <Card className="border-slate-300 dark:border-slate-800">
             <div className="p-5">
               <p className={SECTION_LABEL}>Valuation</p>
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -428,7 +428,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                     const vals = h.map((p: any) => p.value);
                     const uniqueVals = new Set(vals).size;
                     if (uniqueVals <= 1) return (
-                      <div className="h-20 flex items-center justify-center text-xs text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-lg">
+                      <div className="h-20 flex items-center justify-center text-xs text-slate-500 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg">
                         No price variation in {h.length} data points — stable at {formatPrice(vals[0])}
                       </div>
                     );
@@ -509,7 +509,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
         )}
 
         {/* === SECTION 4: VOYAGE + WEATHER === */}
-        <Card className="border-slate-200 dark:border-slate-800">
+        <Card className="border-slate-300 dark:border-slate-800">
           <div className="p-4">
             <div className="flex items-center gap-2 mb-3">
               <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-white/30 font-semibold">
@@ -551,7 +551,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                     ["Speed", voyage.speedKnots + " kn"],
                     ["Distance", (realDistanceNm || voyage.distanceNm) + " nm"],
                   ].map(([l, v]) => (
-                    <span key={l} className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                    <span key={l} className="text-[11px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                       <span className="text-slate-400">{l}: </span>{v}
                     </span>
                   ))}
@@ -583,7 +583,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
                         ["Wind", `Bft ${weather.current.avgBeaufort.scale}`],
                         ["Loss", `-${weather.current.estimatedSpeedLoss}%`],
                       ].map(([l, v]) => (
-                        <span key={l} className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        <span key={l} className="text-[11px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                           <span className="text-slate-400">{l}: </span>{v as string}
                         </span>
                       ))}

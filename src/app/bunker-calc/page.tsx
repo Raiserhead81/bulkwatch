@@ -160,12 +160,12 @@ export default function BunkerCalcPage() {
     };
   }, [routeData, fuelConsumption, speed, tankCapacity, currentBunker, hasScrubber, vlsfoPrice, hsfoPrice, mgoPrice, maxDetour]);
 
-  const inputCls = "w-full px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none";
+  const inputCls = "w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none";
   const labelCls = "block text-[10px] uppercase tracking-wider text-slate-500 dark:text-white/40 font-semibold mb-1";
   const selectCls = inputCls;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-[#0a0a0f] dark:to-[#0f0f1a] text-slate-900 dark:text-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-200 to-slate-100 dark:from-[#0a0a0f] dark:to-[#0f0f1a] text-slate-900 dark:text-white">
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="mb-6">
@@ -179,7 +179,7 @@ export default function BunkerCalcPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* === LEFT: Ship + Route Inputs === */}
           <div className="space-y-4">
-            <Card className="border-slate-200 dark:border-slate-800 p-4">
+            <Card className="border-slate-300 dark:border-slate-800 p-4">
               <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-white/30 font-semibold mb-3">Vessel</p>
               <div className="space-y-3">
                 <div>
@@ -225,7 +225,7 @@ export default function BunkerCalcPage() {
               </div>
             </Card>
 
-            <Card className="border-slate-200 dark:border-slate-800 p-4">
+            <Card className="border-slate-300 dark:border-slate-800 p-4">
               <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-white/30 font-semibold mb-3">Route</p>
               <div className="space-y-3">
                 <div>
@@ -250,7 +250,7 @@ export default function BunkerCalcPage() {
 
           {/* === CENTER: Range + Fuel Analysis === */}
           <div className="space-y-4">
-            <Card className="border-slate-200 dark:border-slate-800 p-4">
+            <Card className="border-slate-300 dark:border-slate-800 p-4">
               <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-white/30 font-semibold mb-3">Range Analysis</p>
               {loading ? (
                 <p className="text-sm text-slate-400 animate-pulse">Calculating sea route...</p>
@@ -304,7 +304,7 @@ export default function BunkerCalcPage() {
                   </div>
 
                   {/* Live Prices */}
-                  <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <div className="pt-2 border-t border-slate-300 dark:border-slate-800">
                     <p className="text-[10px] text-slate-400 uppercase mb-2">Singapore Benchmark</p>
                     <div className="flex gap-3">
                       <div className="text-center">
@@ -330,7 +330,7 @@ export default function BunkerCalcPage() {
 
           {/* === RIGHT: Bunker Port Suggestions === */}
           <div className="space-y-4">
-            <Card className="border-slate-200 dark:border-slate-800 p-4">
+            <Card className="border-slate-300 dark:border-slate-800 p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-white/30 font-semibold">Bunker Ports Along Route</p>
                 {calc && <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-[10px]">{calc.bunkerPorts.length} found</Badge>}
@@ -339,7 +339,7 @@ export default function BunkerCalcPage() {
                 <div className="space-y-2 max-h-[600px] overflow-y-auto">
                   {calc.bunkerPorts.map((port, i) => (
                     <div key={port.name} className={`p-3 rounded-lg border transition-colors ${
-                      i === 0 ? "border-emerald-500/30 bg-emerald-500/5" : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                      i === 0 ? "border-emerald-500/30 bg-emerald-500/5" : "border-slate-300 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
                     }`}>
                       <div className="flex items-start justify-between">
                         <div>
@@ -363,7 +363,7 @@ export default function BunkerCalcPage() {
                       {port.notes && <p className="text-[9px] text-slate-500 mt-1">{port.notes}</p>}
                       {port.minStem > 0 && <p className="text-[9px] text-slate-500">Min stem: {port.minStem} t</p>}
                       {!calc.canMakeIt && calc.deficit > 0 && (
-                        <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                        <div className="mt-2 pt-2 border-t border-slate-300 dark:border-slate-800">
                           <div className="flex justify-between text-[10px]">
                             <span className="text-slate-400">Bunker cost ({calc.deficit}t)</span>
                             <span className="font-mono">${(port.bunkCost / 1000).toFixed(0)}k</span>

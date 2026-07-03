@@ -63,7 +63,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem("vessel-theme");if(t==="light"){document.documentElement.classList.remove("dark");document.documentElement.classList.add("light")}var s=document.createElement("style");s.textContent=".dark{--background:oklch(0.22 0 0)!important;--card:oklch(0.27 0 0)!important;--popover:oklch(0.27 0 0)!important;--secondary:oklch(0.32 0 0)!important;--muted:oklch(0.32 0 0)!important;--accent:oklch(0.32 0 0)!important}html:not(.dark){--background:oklch(0.975 0.003 80)!important;--card:oklch(0.99 0.002 80)!important}";document.head.appendChild(s)})();` }} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem("vessel-theme");if(t==="light"){document.documentElement.classList.remove("dark");document.documentElement.classList.add("light")}var s=document.createElement("style");s.textContent=".dark{--background:oklch(0.22 0 0)!important;--card:oklch(0.27 0 0)!important;--popover:oklch(0.27 0 0)!important;--secondary:oklch(0.32 0 0)!important;--muted:oklch(0.32 0 0)!important;--accent:oklch(0.32 0 0)!important}html:not(.dark){--background:oklch(0.925 0.005 260)!important;--card:oklch(0.955 0.005 260)!important}";document.head.appendChild(s)})();` }} />
               <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta httpEquiv="Pragma" content="no-cache" />
         <meta httpEquiv="Expires" content="0" />

@@ -97,8 +97,8 @@ export default function UsersPage() {
     }
   }
 
-  const inp = "bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500";
-  const inpSm = "bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500 w-full";
+  const inp = "bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500";
+  const inpSm = "bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500 w-full";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -116,7 +116,7 @@ export default function UsersPage() {
 
       <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
         {/* Add User Form */}
-        <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <div className="bg-card border border-slate-300 dark:border-slate-800 rounded-2xl p-6">
           <h2 className="text-sm font-bold mb-4 flex items-center gap-2">
             <Plus className="h-4 w-4 text-emerald-400" /> Add New User
           </h2>
@@ -165,13 +165,13 @@ export default function UsersPage() {
         </div>
 
         {/* User List */}
-        <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <div className="bg-card border border-slate-300 dark:border-slate-800 rounded-2xl p-6">
           <h2 className="text-sm font-bold mb-4 flex items-center gap-2">
             <Users className="h-4 w-4 text-blue-400" /> Active Users ({users.length})
           </h2>
           <div className="space-y-3">
             {users.map(u => (
-              <div key={u.id} className="rounded-xl bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+              <div key={u.id} className="rounded-xl bg-slate-200 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
                 {/* Main row */}
                 <div className="flex items-center justify-between py-3 px-4">
                   <div className="flex items-center gap-3">
@@ -230,7 +230,7 @@ export default function UsersPage() {
 
                 {/* Inline: Change Password */}
                 {changePwUser === u.username && (
-                  <div className="px-4 pb-3 pt-1 border-t border-slate-200 dark:border-slate-700">
+                  <div className="px-4 pb-3 pt-1 border-t border-slate-300 dark:border-slate-700">
                     <p className="text-xs text-slate-400 mb-2">New password for <strong>{u.username}</strong></p>
                     <div className="flex items-center gap-2">
                       <div className="relative flex-1 max-w-xs">
@@ -274,7 +274,7 @@ export default function UsersPage() {
 
                 {/* Inline: Edit User */}
                 {editUser === u.username && (
-                  <div className="px-4 pb-3 pt-1 border-t border-slate-200 dark:border-slate-700">
+                  <div className="px-4 pb-3 pt-1 border-t border-slate-300 dark:border-slate-700">
                     <p className="text-xs text-slate-400 mb-2">Edit <strong>{u.username}</strong></p>
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="flex flex-col gap-0.5">

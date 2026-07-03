@@ -180,7 +180,7 @@ function OverviewCard({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="relative overflow-hidden bg-white/60 dark:bg-white/[0.03] backdrop-blur-sm border border-slate-200/80 dark:border-white/[0.05] rounded-2xl p-5 space-y-3">
+    <div className="relative overflow-hidden bg-slate-200/60 dark:bg-white/[0.03] backdrop-blur-sm border border-slate-300/80 dark:border-white/[0.05] rounded-2xl p-5 space-y-3">
       {/* Corner glow */}
       <div className={`absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br ${glowColor} rounded-full opacity-[0.07] blur-2xl pointer-events-none`} />
       <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium">
@@ -207,7 +207,7 @@ function SectionHeader({ icon, children }: { icon: React.ReactNode; children: Re
 // ── Premium card wrapper ───────────────────────────────────────────────────
 function Card({ className = "", children }: { className?: string; children: React.ReactNode }) {
   return (
-    <div className={`bg-white/60 dark:bg-white/[0.03] backdrop-blur-sm border border-slate-200/80 dark:border-white/[0.05] rounded-2xl ${className}`}>
+    <div className={`bg-slate-200/60 dark:bg-white/[0.03] backdrop-blur-sm border border-slate-300/80 dark:border-white/[0.05] rounded-2xl ${className}`}>
       {children}
     </div>
   );
@@ -269,7 +269,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-white dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-slate-200 via-slate-200 to-slate-100 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] flex items-center justify-center">
         <div className="flex items-center gap-3 text-slate-400 dark:text-white/30">
           <RefreshCw className="h-5 w-5 animate-spin" />
           <span className="text-sm">Loading intelligence dashboard…</span>
@@ -280,7 +280,7 @@ export default function AdminDashboard() {
 
   if (error || !stats) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-white dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-slate-200 via-slate-200 to-slate-100 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] flex items-center justify-center">
         <div className="text-center space-y-3">
           <AlertTriangle className="h-10 w-10 text-red-400 mx-auto" />
           <p className="text-red-400 font-medium text-sm">{error || "Failed to load"}</p>
@@ -293,7 +293,7 @@ export default function AdminDashboard() {
   const { enrichment, valuation, marketData, pipelines } = stats;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-white dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] text-slate-900 dark:text-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-200 via-slate-200 to-slate-100 dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] text-slate-900 dark:text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
 
         {/* ── Page Title ──────────────────────────────────────────────────── */}

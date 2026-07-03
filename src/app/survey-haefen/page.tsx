@@ -74,7 +74,7 @@ export default function SurveyPortsPage() {
   }, [search, facilityFilter, sortBy]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-blue-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-200 via-blue-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-white">
       
 
       <main className="max-w-[95%] mx-auto px-4 sm:px-6 py-6 sm:py-10">
@@ -132,11 +132,11 @@ export default function SurveyPortsPage() {
                   placeholder="Port, country, keyword..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 bg-white dark:bg-slate-900"
+                  className="pl-9 bg-slate-100 dark:bg-slate-900"
                 />
               </div>
               <Select value={facilityFilter} onValueChange={setFacilityFilter}>
-                <SelectTrigger className="bg-white dark:bg-slate-900"><SelectValue placeholder="Facility" /></SelectTrigger>
+                <SelectTrigger className="bg-slate-100 dark:bg-slate-900"><SelectValue placeholder="Facility" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Facilities</SelectItem>
                   {allFacilities.map((f) => (
@@ -145,7 +145,7 @@ export default function SurveyPortsPage() {
                 </SelectContent>
               </Select>
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-                <SelectTrigger className="bg-white dark:bg-slate-900"><SelectValue placeholder="Sort By" /></SelectTrigger>
+                <SelectTrigger className="bg-slate-100 dark:bg-slate-900"><SelectValue placeholder="Sort By" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="rating">Rating (best first)</SelectItem>
                   <SelectItem value="cost_low">Cost (low first)</SelectItem>
@@ -170,7 +170,7 @@ export default function SurveyPortsPage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {filteredPorts.slice(0, 3).map((port, i) => (
-                  <div key={port.id} className="flex items-center gap-2 p-2 rounded-lg bg-white/50 dark:bg-slate-900/50">
+                  <div key={port.id} className="flex items-center gap-2 p-2 rounded-lg bg-slate-200/50 dark:bg-slate-900/50">
                     <span className="text-2xl">{["🥇", "🥈", "🥉"][i]}</span>
                     <div className="min-w-0">
                       <p className="font-semibold text-sm truncate">{port.name}</p>
@@ -227,7 +227,7 @@ function SurveyPortCard({ port }: { port: SurveyPort }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 text-center py-2 border-y border-slate-200 dark:border-white/10">
+        <div className="grid grid-cols-3 gap-2 text-center py-2 border-y border-slate-300 dark:border-white/10">
           <div>
             <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase">Cost</p>
             <p className="text-sm font-semibold text-purple-600 dark:text-purple-400">
@@ -276,7 +276,7 @@ function SurveyPortCard({ port }: { port: SurveyPort }) {
         </button>
 
         {expanded && (
-          <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-white/10">
+          <div className="space-y-3 pt-2 border-t border-slate-300 dark:border-white/10">
             <div>
               <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase mb-1">Notes</p>
               <p className="text-xs text-slate-700 dark:text-white/70 leading-relaxed">{port.notes}</p>
