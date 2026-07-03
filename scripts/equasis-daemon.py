@@ -1,22 +1,28 @@
 #!/usr/bin/env python3
-"""Equasis Enrichment Daemon v7 — continuous round-robin scraping.
-Rotates through 3 accounts: 1 request per account, 10s pause per cycle.
-Each account gets ~1 request every 30 seconds. Runs 24/7 as systemd service.
+"""Equasis Enrichment Daemon v8 — robust round-robin scraping with monitoring.
+Each account: 1 request per 30s, daily limit 200, auto-pause when locked.
+Status file for external monitoring. Runs 24/7 as systemd service.
 """
-import sqlite3, urllib.request, urllib.parse, http.cookiejar, re, time, sys, signal
+import sqlite3, urllib.request, urllib.parse, http.cookiejar, ssl, re, time, sys, signal, json, os
 from datetime import datetime, timedelta
 
 DB = "/opt/bulkwatch/db/ships.db"
-DELAY_PER_CYCLE = 30  # seconds between each 3-request cycle
+STATUS_FILE = "/opt/bulkwatch/equasis-status.json"
+DELAY_BETWEEN_REQUESTS = 30  # seconds between each request (shared across all accounts)
 RESCRAPE_DAYS = 14
 LOG_EVERY = 10  # print progress every N ships
+DAILY_LIMIT_PER_ACCOUNT = 200  # max requests per account per day to avoid locks
 
 ACCOUNTS = [
-    ("kayconrad@posteo.de", "!nfinitY!981"),
-    ("kayconrad81@googlemail.com", "!nfinitY!981"),
-    ("kpoffen@proton.me", "!nfinitY!981"),
-    ("apmoeller1@proton.me", "!nfinitY!981"),
-    ("aandresen1@proton.me", "!nfinitY!981"),
+    ("jjeppsen@proton.me", "!nfinitY1981"),
+    ("G.Klausen88@proton.me", "InfinitY!981"),
+    ("hhansen77@proton.me", "!nfinitY!981"),
+    # gesperrt bis ~09.07.2026:
+    # ("kayconrad@posteo.de", "!nfinitY!981"),
+    # ("kayconrad81@googlemail.com", "!nfinitY!981"),
+    # ("kpoffen@proton.me", "!nfinitY!981"),
+    # ("apmoeller1@proton.me", "!nfinitY!981"),
+    # ("aandresen1@proton.me", "!nfinitY!981"),
 ]
 
 STATUS_MAP = {
@@ -45,7 +51,7 @@ signal.signal(signal.SIGINT, handle_signal)
 
 
 class EquasisSession:
-    """Persistent session for one Equasis account."""
+    """Persistent session for one Equasis account with SSL and daily limit."""
     def __init__(self, email, password):
         self.email = email
         self.password = password
@@ -53,11 +59,25 @@ class EquasisSession:
         self.locked = False
         self.lock_until = None
         self.consecutive_fails = 0
-    
+        self.daily_count = 0
+        self.daily_date = datetime.now().strftime("%Y-%m-%d")
+        self.total_enriched = 0
+        self.total_errors = 0
+
+    def _reset_daily(self):
+        today = datetime.now().strftime("%Y-%m-%d")
+        if self.daily_date != today:
+            self.daily_count = 0
+            self.daily_date = today
+
     def login(self):
-        """Create fresh session and login."""
+        """Create fresh session with SSL and login."""
+        ctx = ssl.create_default_context()
         cj = http.cookiejar.CookieJar()
-        self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+        self.opener = urllib.request.build_opener(
+            urllib.request.HTTPCookieProcessor(cj),
+            urllib.request.HTTPSHandler(context=ctx)
+        )
         self.opener.addheaders = [("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")]
         try:
             self.opener.open("https://www.equasis.org/EquasisWeb/public/HomePage", timeout=30)
@@ -66,54 +86,73 @@ class EquasisSession:
             html = r.read().decode("utf-8", errors="ignore")
             if "locked" in html.lower():
                 self.locked = True
-                self.lock_until = datetime.now() + timedelta(hours=6)
+                self.lock_until = datetime.now() + timedelta(days=7)
                 return False
             self.locked = False
             self.consecutive_fails = 0
             return True
         except Exception as e:
             print(f"  Login failed ({self.email}): {e}", flush=True)
+            self.opener = None
             return False
-    
+
     def is_available(self):
-        if not self.locked:
-            return True
-        if self.lock_until and datetime.now() > self.lock_until:
-            self.locked = False
-            return True
-        return False
-    
+        self._reset_daily()
+        if self.locked:
+            if self.lock_until and datetime.now() > self.lock_until:
+                self.locked = False
+            else:
+                return False
+        if self.daily_count >= DAILY_LIMIT_PER_ACCOUNT:
+            return False
+        return True
+
     def scrape(self, imo):
         """Scrape one ship. Returns dict or None."""
         if not self.opener:
             if not self.login():
                 return None
-        
+
+        self._reset_daily()
+        self.daily_count += 1
         result = {}
         try:
             # Search
             sd = urllib.parse.urlencode({"P_ENTREE_HOME": str(imo)}).encode()
             self.opener.open("https://www.equasis.org/EquasisWeb/restricted/Search?fs=HomePage", sd, timeout=20)
-            
+
             # Detail
             dd = urllib.parse.urlencode({"P_IMO": str(imo)}).encode()
             r = self.opener.open("https://www.equasis.org/EquasisWeb/restricted/ShipInfo?fs=Search", dd, timeout=20)
             html = r.read().decode("utf-8", errors="ignore")
-            
+
+            if "locked" in html.lower() and "7 days" in html.lower():
+                print(f"  ⚠ LOCKED: {self.email} — 7 Tage Sperre!", flush=True)
+                self.locked = True
+                self.lock_until = datetime.now() + timedelta(days=7)
+                self.opener = None
+                return {"_error": True}
+
             if "CtrlGeneralError" in html or len(html) < 5000:
                 self.consecutive_fails += 1
-                if self.consecutive_fails >= 2:
-                    self.opener = None  # force re-login next time
+                self.total_errors += 1
+                err_detail = "CtrlGeneralError" if "CtrlGeneralError" in html else f"short_response({len(html)})"
+                print(f"  ERR {self.email.split('@')[0]}: IMO {imo} — {err_detail} (fails: {self.consecutive_fails})", flush=True)
+                if self.consecutive_fails >= 3:
+                    print(f"  → Re-login {self.email.split('@')[0]}...", flush=True)
+                    self.opener = None
                     self.consecutive_fails = 0
+                    if not self.login():
+                        print(f"  → Re-login FAILED", flush=True)
                 return {"_error": True}
-            
+
             self.consecutive_fails = 0
-            
+
             # Extract fields
             def ef(label):
                 m = re.search(label + r'\s*</b>.*?<div[^>]*class="col-[^"]*"[^>]*>\s*([^<\r\n]+)', html, re.DOTALL | re.I)
                 return m.group(1).strip() if m else None
-            
+
             v = ef("DWT")
             if v and v.replace(",","").isdigit(): result["dwt"] = int(v.replace(",",""))
             v = ef("Gross tonnage")
@@ -135,36 +174,36 @@ class EquasisSession:
                 for key in STATUS_MAP:
                     if key.lower() in v.lower():
                         result["equasis_status"] = STATUS_MAP[key]; break
-            
+
             # Classification
             cs = html.find("Classification")
             ce = html.find("Surveys", cs+20) if cs>0 else -1
             section = html[cs:ce] if cs>0 and ce>0 else html
             for cls in CLASS_NAMES:
                 if cls in section: result["classification"] = cls; break
-            
+
             # MOU
             m = re.search(r'Paris MOU.*?(White|Grey|Black)', html, re.DOTALL|re.I)
             if m: result["flag_paris_mou"] = m.group(1).capitalize()
             m = re.search(r'Tokyo MOU.*?(White|Grey|Black)', html, re.DOTALL|re.I)
             if m: result["flag_tokyo_mou"] = m.group(1).capitalize()
-            
+
             # Detention %
             m = re.search(r"([\d.]+)%\s*Of inspections.*?detention", html, re.DOTALL|re.I)
             if m:
                 try: result["detention_pct"] = float(m.group(1))
                 except: pass
-            
+
             # Inspections
             m = re.search(r'Inspections\s*\((\d+)\)', html)
             if m: result["inspections_count"] = int(m.group(1))
-            
+
             # Surveys
             m = re.search(r'Last renewal survey[^<]*?(\d{4}-\d{2}-\d{2})', html, re.DOTALL|re.I)
             if m: result["last_survey"] = m.group(1)
             m = re.search(r'Next renewal survey[^<]*?(\d{4}-\d{2}-\d{2})', html, re.DOTALL|re.I)
             if m: result["next_survey"] = m.group(1)
-            
+
             # P&I
             pi_start = html.find("P&amp;I Information")
             if pi_start<0: pi_start = html.find("P&I Information")
@@ -184,7 +223,7 @@ class EquasisSession:
                         cl = re.sub(r"<[^>]+>","",line).strip()
                         if cl and len(cl)>3: clubs.append(cl[:60])
                 if clubs: result["p_and_i"] = "; ".join(clubs[:3])
-            
+
             # Management
             mgmt_start = html.find("Management detail")
             mgmt_end = html.find("Classification", mgmt_start+20) if mgmt_start>0 else -1
@@ -200,22 +239,24 @@ class EquasisSession:
                 result["owner"] = er("Registered owner", mgmt)
                 result["manager"] = er("Ship manager", mgmt) or er("Commercial manager", mgmt) or er("manager", mgmt)
                 result["ism_manager"] = er("ISM Manager", mgmt)
-        
+
         except urllib.error.HTTPError as e:
+            self.total_errors += 1
+            print(f"  ERR {self.email.split('@')[0]}: IMO {imo} — HTTP {e.code}", flush=True)
             if e.code == 429:
                 self.locked = True
-                self.lock_until = datetime.now() + timedelta(hours=6)
-            elif e.code in (404,403):
+                self.lock_until = datetime.now() + timedelta(days=7)
+            elif e.code in (404, 403):
                 return {"_error": True}
-        except Exception:
-            pass
-        
-        # Sanity check: if we only got classification and nothing else,
-        # it is a fake match from the error page dropdown
+        except Exception as e:
+            self.total_errors += 1
+            print(f"  ERR {self.email.split('@')[0]}: IMO {imo} — {type(e).__name__}: {e}", flush=True)
+
+        # Sanity check
         real_fields = [k for k in result if k not in ("classification", "equasis_status", "flag_paris_mou", "flag_tokyo_mou")]
         if len(real_fields) == 0 and "classification" in result:
             return {"_error": True}
-        
+
         return result
 
 
@@ -236,7 +277,7 @@ def update_ship(con, imo, dwt, data):
     """Write scraped data to DB."""
     updates = []
     params = []
-    
+
     field_map = {
         "gross_tonnage": "gross_tonnage = ?",
         "dwt": "dwt = ?",
@@ -258,58 +299,103 @@ def update_ship(con, imo, dwt, data):
         "manager": "manager = ?",
         "ism_manager": "ism_manager = ?",
     }
-    
+
     for key, sql in field_map.items():
         val = data.get(key)
         if val is not None:
             if key == "dwt" and val > 0 and dwt not in DEFAULT_DWTS:
-                continue  # don't overwrite good DWT
+                continue
             if key == "dwt" and val <= 0:
                 continue
             updates.append(sql)
             params.append(val)
-    
+
     if data.get("ism_manager"):
         cur = con.execute("SELECT operator FROM ships WHERE imo=?", (imo,)).fetchone()
         if cur and (not cur[0] or cur[0] == ""):
             updates.append("operator = ?")
             params.append(data["ism_manager"])
-    
+
     updates.append("equasis_last_scraped = ?")
     params.append(datetime.now().strftime("%Y-%m-%d"))
     params.append(imo)
-    
+
     con.execute(f"UPDATE ships SET {', '.join(updates)} WHERE imo = ?", params)
     con.commit()
-    return len(updates) - 1  # minus the timestamp
+    return len(updates) - 1
+
+
+def write_status(sessions, enriched, errors, start_time):
+    """Write JSON status file for external monitoring."""
+    elapsed = (time.time() - start_time) / 3600
+    rate = enriched / elapsed if elapsed > 0.01 else 0
+    status = {
+        "daemon": "running",
+        "started": datetime.fromtimestamp(start_time).strftime("%Y-%m-%d %H:%M"),
+        "updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "enriched": enriched,
+        "errors": errors,
+        "rate_per_hour": round(rate, 1),
+        "runtime_hours": round(elapsed, 2),
+        "accounts": []
+    }
+    for s in sessions:
+        status["accounts"].append({
+            "email": s.email,
+            "status": "locked" if s.locked else ("limit" if s.daily_count >= DAILY_LIMIT_PER_ACCOUNT else "active"),
+            "daily_count": s.daily_count,
+            "daily_limit": DAILY_LIMIT_PER_ACCOUNT,
+            "enriched": s.total_enriched,
+            "errors": s.total_errors,
+            "consecutive_fails": s.consecutive_fails,
+        })
+    try:
+        with open(STATUS_FILE, "w") as f:
+            json.dump(status, f, indent=2)
+    except Exception:
+        pass
 
 
 def main():
-    print(f"Equasis Daemon v7 started — {datetime.now().strftime('%Y-%m-%d %H:%M')}", flush=True)
-    print(f"Accounts: {len(ACCOUNTS)}, Delay: {DELAY_PER_CYCLE}s per cycle", flush=True)
-    
-    # Create sessions
+    print(f"Equasis Daemon v8 started — {datetime.now().strftime('%Y-%m-%d %H:%M')}", flush=True)
+    print(f"Accounts: {len(ACCOUNTS)}, Delay: {DELAY_BETWEEN_REQUESTS}s, Limit: {DAILY_LIMIT_PER_ACCOUNT}/account/day", flush=True)
+
     sessions = [EquasisSession(email, pw) for email, pw in ACCOUNTS]
-    
-    # Login all
+
     for s in sessions:
         if s.login():
-            print(f"  Logged in: {s.email}", flush=True)
+            print(f"  OK: {s.email}", flush=True)
         else:
             print(f"  LOCKED: {s.email}", flush=True)
-    
+
     con = sqlite3.connect(DB)
     con.execute("PRAGMA journal_mode=WAL")
     cutoff = (datetime.now() - timedelta(days=RESCRAPE_DAYS)).strftime("%Y-%m-%d")
-    
+
     enriched = 0
     errors = 0
     consecutive_errors = 0
-    cycle = 0
     account_idx = 0
     start_time = time.time()
-    
+    last_status_write = 0
+
     while running:
+        # Write status every 60s
+        now = time.time()
+        if now - last_status_write > 60:
+            write_status(sessions, enriched, errors, start_time)
+            last_status_write = now
+
+        # Reset daily counters at midnight
+        today = datetime.now().strftime("%Y-%m-%d")
+        for s in sessions:
+            if s.daily_date != today:
+                old = s.daily_count
+                s.daily_count = 0
+                s.daily_date = today
+                if old > 0:
+                    print(f"  Tages-Reset: {s.email.split('@')[0]} ({old} gestern)", flush=True)
+
         # Get next ship
         ship = get_next_ship(con, cutoff)
         if not ship:
@@ -317,9 +403,9 @@ def main():
             time.sleep(3600)
             cutoff = (datetime.now() - timedelta(days=RESCRAPE_DAYS)).strftime("%Y-%m-%d")
             continue
-        
+
         imo, name, dwt = ship
-        
+
         # Find available account (round-robin)
         session = None
         for _ in range(len(sessions)):
@@ -328,51 +414,60 @@ def main():
             if s.is_available():
                 session = s
                 break
-        
+
         if not session:
-            # All locked — wait 2 hours for unlock
-            print("All accounts locked. Sleeping 2h...", flush=True)
-            time.sleep(7200)
-            for s in sessions:
-                s.locked = False
-                s.opener = None
-            # Re-login all
-            for s in sessions:
-                if s.login():
-                    print(f"  Back online: {s.email}", flush=True)
+            # Check why: all locked or all at daily limit?
+            locked = [s for s in sessions if s.locked]
+            at_limit = [s for s in sessions if s.daily_count >= DAILY_LIMIT_PER_ACCOUNT and not s.locked]
+            if at_limit and not locked:
+                # All at daily limit — wait until midnight
+                now_dt = datetime.now()
+                tomorrow = (now_dt + timedelta(days=1)).replace(hour=0, minute=5, second=0)
+                wait = (tomorrow - now_dt).total_seconds()
+                print(f"  Alle Accounts am Tageslimit ({DAILY_LIMIT_PER_ACCOUNT}). Pause bis Mitternacht ({wait/3600:.1f}h)...", flush=True)
+                write_status(sessions, enriched, errors, start_time)
+                time.sleep(min(wait, 7200))
+            else:
+                print("All accounts locked. Sleeping 2h...", flush=True)
+                time.sleep(7200)
+                for s in sessions:
+                    if s.locked and s.lock_until and datetime.now() > s.lock_until:
+                        s.locked = False
+                        s.opener = None
+                        if s.login():
+                            print(f"  Back online: {s.email}", flush=True)
             continue
-        
+
         # Scrape
         data = session.scrape(imo)
-        
+
         if data and "_error" not in data and len(data) > 0:
             fields = update_ship(con, imo, dwt, data)
             enriched += 1
+            session.total_enriched += 1
             consecutive_errors = 0
-            
+
             # Quality monitor every 50 ships
             if enriched % 50 == 0 and enriched > 0:
-                bad = con.execute("""SELECT COUNT(*) FROM ships 
-                    WHERE equasis_last_scraped = ? 
-                    AND classification IS NOT NULL 
+                bad = con.execute("""SELECT COUNT(*) FROM ships
+                    WHERE equasis_last_scraped = ?
+                    AND classification IS NOT NULL
                     AND owner IS NULL AND manager IS NULL AND mmsi IS NULL
                     AND dwt IN (0,5000,10000,12000,15000,18000,20000,45000,46000,47000,50000,55000)
-                """, (datetime.now().strftime("%Y-%m-%d"),)).fetchone()[0]
+                """, (today,)).fetchone()[0]
                 if bad > 0:
-                    # Auto-repair: reset bad records
                     con.execute("""UPDATE ships SET classification = NULL, equasis_last_scraped = NULL
                         WHERE equasis_last_scraped = ?
                         AND classification IS NOT NULL
                         AND owner IS NULL AND manager IS NULL AND mmsi IS NULL
                         AND dwt IN (0,5000,10000,12000,15000,18000,20000,45000,46000,47000,50000,55000)
-                    """, (datetime.now().strftime("%Y-%m-%d"),))
+                    """, (today,))
                     con.commit()
-                    print(f"  ⚠ QUALITY CHECK: {bad} fake records detected and reset", flush=True)
-                    # Force re-login all sessions
+                    print(f"  ⚠ QUALITY CHECK: {bad} fake records reset", flush=True)
                     for s in sessions:
                         s.opener = None
                         s.consecutive_fails = 0
-                    print(f"  ⚠ All sessions reset — re-logging in...", flush=True)
+                    print(f"  ⚠ All sessions re-login...", flush=True)
                     for s in sessions:
                         if s.is_available():
                             s.login()
@@ -384,19 +479,15 @@ def main():
                 if data.get("owner"): parts.append(f"O={data['owner'][:20]}")
                 elapsed = (time.time() - start_time) / 3600
                 rate = enriched / elapsed if elapsed > 0 else 0
-                print(f"  [{enriched:4d}] {name[:22]:22} [{fields:2d}] {' | '.join(parts[:4])}  ({rate:.0f}/h via {session.email.split('@')[0]})", flush=True)
+                acct = session.email.split('@')[0]
+                print(f"  [{enriched:4d}] {name[:22]:22} [{fields:2d}] {' | '.join(parts[:4])}  ({rate:.0f}/h via {acct}, {session.daily_count}/{DAILY_LIMIT_PER_ACCOUNT})", flush=True)
         else:
             errors += 1
             consecutive_errors += 1
-            session.consecutive_fails += 1
-            if session.consecutive_fails >= 2:
-                session.opener = None
-                session.consecutive_fails = 0
-            # If 10+ errors in a row, all accounts are probably dead
             if consecutive_errors >= 10:
                 available = [s for s in sessions if s.is_available()]
-                if len(available) == 0:
-                    print(f"  10+ consecutive errors, all accounts dead. Sleeping 2h...", flush=True)
+                if not available:
+                    print(f"  10+ Errors, alle Accounts tot. Sleeping 2h...", flush=True)
                     time.sleep(7200)
                     for s in sessions:
                         s.locked = False
@@ -404,32 +495,26 @@ def main():
                     for s in sessions:
                         if s.login():
                             print(f"  Back online: {s.email}", flush=True)
-                    consecutive_errors = 0
                 else:
-                    # Force re-login available sessions
                     for s in available:
                         s.opener = None
-                    consecutive_errors = 0
-        
-        # Pause after every 3rd request (one full rotation)
-        cycle += 1
-        if cycle % len(sessions) == 0:
-            time.sleep(DELAY_PER_CYCLE)
-        else:
-            time.sleep(2)  # small pause between accounts
-    
+                consecutive_errors = 0
+
+        # Fixed delay between every request
+        time.sleep(DELAY_BETWEEN_REQUESTS)
+
     # Shutdown
+    write_status(sessions, enriched, errors, start_time)
     elapsed = (time.time() - start_time) / 3600
     print(f"\nDaemon stopped. Enriched: {enriched}, Errors: {errors}, Runtime: {elapsed:.1f}h", flush=True)
-    
-    # Recalculate valuations
+
     if enriched > 0:
         print("Recalculating valuations...", flush=True)
         import subprocess
         r = subprocess.run(["python3", "/opt/bulkwatch/scripts/daily-valuations.py"],
                            capture_output=True, text=True, cwd="/opt/bulkwatch")
         print(r.stdout, flush=True)
-    
+
     con.close()
 
 if __name__ == "__main__":
