@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { ArrowLeft, Hammer, Ship, Calendar, Building2, Flag, Anchor, MapPin } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Hammer, Calendar, Building2, Flag } from "lucide-react";
 
 interface NewbuildShip {
   imo: string;
@@ -25,226 +26,440 @@ interface NewbuildShip {
   deliveryDate?: string;
 }
 
-const NAV_LINKS: [string,string][] = [["Ships","/"],["Map","/karte"],["Live","/live"],["Top Picks","/top-picks"],["Compare","/vergleich"],["Watchlist","/watchlist"],["Newbuilds","/newbuilds"],["Voyage Calc","/voyage-calc"],["Valuation","/valuation"],["AI Chat","/chat"]];
+const SHIP_TYPES = [
+  "All",
+  "Bulk Carrier",
+  "Tanker",
+  "Container",
+  "General Cargo",
+  "LNG",
+  "LPG",
+  "VLCC",
+  "Capesize",
+  "Panamax",
+];
 
-function fmtDwt(dwt: number): string {
-  if (dwt >= 1000) return `${(dwt / 1000).toFixed(0)}k`;
-  return dwt > 0 ? dwt.toLocaleString() : "—";
+function formatDWT(dwt: number): string {
+  if (!dwt) return "—";
+  return dwt.toLocaleString() + " DWT";
 }
 
-function typeColor(type: string): string {
-  const t = type.toLowerCase();
-  if (t.includes("lng") || t.includes("lpg")) return "#a855f7";
-  if (t.includes("crude") || t.includes("vlcc") || t.includes("tanker")) return "#f87171";
-  if (t.includes("container") || t.includes("ulcv") || t.includes("panamax") && t.includes("neo")) return "#f59e0b";
-  if (t.includes("bulk") || t.includes("capesize") || t.includes("kamsarmax") || t.includes("newcastle") || t.includes("ultramax")) return "#3b82f6";
-  if (t.includes("cruise") || t.includes("passenger") || t.includes("ferry")) return "#ec4899";
-  if (t.includes("car carrier") || t.includes("roro")) return "#06b6d4";
-  if (t.includes("offshore")) return "#a3a3a3";
-  if (t.includes("reefer")) return "#84cc16";
-  if (t.includes("cargo")) return "#10b981";
-  return "#64748b";
+function formatDeliveryDate(dateStr?: string): string {
+  if (!dateStr) return "TBD";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+}
+
+function groupByDeliveryDate(ships: NewbuildShip[]): Record<string, NewbuildShip[]> {
+  const groups: Record<string, NewbuildShip[]> = {};
+  for (const ship of ships) {
+    const key = ship.deliveryDate
+      ? new Date(ship.deliveryDate).getFullYear().toString()
+      : "TBD";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(ship);
+  }
+  // Sort groups chronologically, TBD last
+  const sorted: Record<string, NewbuildShip[]> = {};
+  const keys = Object.keys(groups).sort((a, b) => {
+    if (a === "TBD") return 1;
+    if (b === "TBD") return -1;
+    return Number(a) - Number(b);
+  });
+  for (const k of keys) sorted[k] = groups[k];
+  return sorted;
+}
+
+function AnimatedCount({ value }: { value: number }) {
+  const [displayed, setDisplayed] = useState(0);
+
+  useEffect(() => {
+    if (value === 0) return;
+    let start = 0;
+    const step = Math.ceil(value / 40);
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= value) {
+        setDisplayed(value);
+        clearInterval(timer);
+      } else {
+        setDisplayed(start);
+      }
+    }, 20);
+    return () => clearInterval(timer);
+  }, [value]);
+
+  return (
+    <span className="bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
+      {displayed}
+    </span>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  sub,
+  color = "sky",
+}: {
+  label: string;
+  value: string | number;
+  sub?: string;
+  color?: "sky" | "violet" | "emerald" | "amber";
+}) {
+  const gradients: Record<string, string> = {
+    sky: "from-sky-500/10 to-sky-500/5 border-sky-500/10",
+    violet: "from-violet-500/10 to-violet-500/5 border-violet-500/10",
+    emerald: "from-emerald-500/10 to-emerald-500/5 border-emerald-500/10",
+    amber: "from-amber-500/10 to-amber-500/5 border-amber-500/10",
+  };
+  const textColors: Record<string, string> = {
+    sky: "from-sky-500 to-blue-600",
+    violet: "from-violet-500 to-purple-600",
+    emerald: "from-emerald-500 to-green-600",
+    amber: "from-amber-500 to-orange-500",
+  };
+
+  return (
+    <div
+      className={`rounded-xl border bg-gradient-to-br p-4 ${gradients[color]}`}
+    >
+      <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">
+        {label}
+      </p>
+      <p
+        className={`text-2xl font-bold bg-gradient-to-r ${textColors[color]} bg-clip-text text-transparent`}
+      >
+        {typeof value === "number" ? <AnimatedCount value={value} /> : value}
+      </p>
+      {sub && (
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{sub}</p>
+      )}
+    </div>
+  );
+}
+
+function ShipCard({ ship }: { ship: NewbuildShip }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <Card
+      className="group cursor-pointer border border-slate-200/60 dark:border-slate-700/40 bg-white dark:bg-slate-900/60 hover:border-sky-500/30 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300"
+      onClick={() => setExpanded((v) => !v)}
+    >
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+              {ship.name || "Unnamed"}
+            </h3>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+              IMO {ship.imo}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            <Badge
+              variant="outline"
+              className="text-[10px] uppercase tracking-widest border-sky-500/30 text-sky-600 dark:text-sky-400 bg-sky-500/5 flex items-center gap-1"
+            >
+              <Hammer className="w-2.5 h-2.5" />
+              Under Construction
+            </Badge>
+            <Badge
+              variant="outline"
+              className="text-[10px] uppercase tracking-widest border-slate-300/50 dark:border-slate-600/50 text-slate-500 dark:text-slate-400"
+            >
+              {ship.type}
+            </Badge>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-2">
+            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500">
+              DWT
+            </p>
+            <p className="text-sm font-medium text-slate-800 dark:text-slate-200 mt-0.5">
+              {ship.dwt ? ship.dwt.toLocaleString() : "—"}
+            </p>
+          </div>
+          <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-2">
+            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500">
+              LOA
+            </p>
+            <p className="text-sm font-medium text-slate-800 dark:text-slate-200 mt-0.5">
+              {ship.length ? `${ship.length}m` : "—"}
+            </p>
+          </div>
+          <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-2">
+            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500">
+              Beam
+            </p>
+            <p className="text-sm font-medium text-slate-800 dark:text-slate-200 mt-0.5">
+              {ship.beam ? `${ship.beam}m` : "—"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
+          {ship.builder && (
+            <span className="flex items-center gap-1">
+              <Building2 className="w-3 h-3 text-slate-400" />
+              {ship.builder}
+            </span>
+          )}
+          {ship.flag && (
+            <span className="flex items-center gap-1">
+              <Flag className="w-3 h-3 text-slate-400" />
+              {ship.flag}
+            </span>
+          )}
+          {ship.deliveryDate && (
+            <span className="flex items-center gap-1">
+              <Calendar className="w-3 h-3 text-slate-400" />
+              {formatDeliveryDate(ship.deliveryDate)}
+            </span>
+          )}
+        </div>
+
+        {expanded && ship.operator && (
+          <div className="mt-3 rounded-xl border border-slate-200/60 dark:border-slate-700/40 bg-slate-50 dark:bg-slate-800/40 p-3 space-y-1.5">
+            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">
+              Operator
+            </p>
+            <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+              {ship.operator}
+            </p>
+            {(ship.operatorCity || ship.operatorCountry) && (
+              <p className="text-xs text-slate-400 dark:text-slate-500">
+                {[ship.operatorCity, ship.operatorCountry]
+                  .filter(Boolean)
+                  .join(", ")}
+              </p>
+            )}
+            <div className="flex flex-wrap gap-2 mt-2">
+              {ship.operatorWebsite && (
+                <a
+                  href={
+                    ship.operatorWebsite.startsWith("http")
+                      ? ship.operatorWebsite
+                      : `https://${ship.operatorWebsite}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-[11px] text-sky-600 dark:text-sky-400 hover:underline"
+                >
+                  {ship.operatorWebsite}
+                </a>
+              )}
+              {ship.operatorEmail && (
+                <a
+                  href={`mailto:${ship.operatorEmail}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-[11px] text-sky-600 dark:text-sky-400 hover:underline"
+                >
+                  {ship.operatorEmail}
+                </a>
+              )}
+              {ship.operatorPhone && (
+                <a
+                  href={`tel:${ship.operatorPhone}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-[11px] text-sky-600 dark:text-sky-400 hover:underline"
+                >
+                  {ship.operatorPhone}
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function NewbuildsPage() {
   const [ships, setShips] = useState<NewbuildShip[]>([]);
-
-  const [theme, setTheme] = useState<"dark"|"light">("dark");
-
-  useEffect(() => {
-    const readTheme = () => {
-      const saved = localStorage.getItem("vessel-theme") || "dark";
-      setTheme(saved as "dark"|"light");
-    };
-    readTheme();
-    const obs = new MutationObserver(() => readTheme());
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => obs.disconnect();
-  }, []);
-
   const [loading, setLoading] = useState(true);
-  const [typeFilter, setTypeFilter] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [activeType, setActiveType] = useState("All");
 
   useEffect(() => {
     fetch("/api/ships?status=under_construction&limit=200&sort=year")
-      .then(r => r.json())
-      .then(data => { setShips(data.ships || []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data) => {
+        setShips(Array.isArray(data) ? data : data.ships ?? []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
   }, []);
 
-  const types = [...new Set(ships.map(s => s.type))].sort();
-  const filtered = typeFilter ? ships.filter(s => s.type === typeFilter) : ships;
+  const filtered =
+    activeType === "All"
+      ? ships
+      : ships.filter((s) =>
+          s.type?.toLowerCase().includes(activeType.toLowerCase())
+        );
 
-  const groups: Record<string, NewbuildShip[]> = {};
-  for (const s of filtered) {
-    const key = s.deliveryDate || `${s.yearBuilt}`;
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(s);
-  }
-  const sortedKeys = Object.keys(groups).sort();
+  const grouped = groupByDeliveryDate(filtered);
 
-  const isLight = theme === "light";
+  const uniqueTypes = Array.from(new Set(ships.map((s) => s.type).filter(Boolean)));
+  const availableTypes = ["All", ...uniqueTypes];
+
+  const totalDWT = filtered.reduce((acc, s) => acc + (s.dwt || 0), 0);
+  const uniqueBuilders = new Set(filtered.map((s) => s.builder).filter(Boolean))
+    .size;
+  const nearestYear = Object.keys(grouped).filter((k) => k !== "TBD")[0];
 
   return (
-    <div style={{ minHeight: "100vh", background: isLight ? "#f8fafc" : "#1e293b", color: isLight ? "#1e293b" : "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
-      {/* Mobile menu */}
-      <div className={`mobile-nav-overlay${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
-      <div className={`mobile-nav-panel${menuOpen ? " open" : ""}`}>
-        <button className="mobile-nav-close" onClick={() => setMenuOpen(false)}>&#x2715;</button>
-        {NAV_LINKS.map(([l,h]) => (
-          <a key={h} href={h} className={h==="/newbuilds" ? "active" : ""}>{l}</a>
-        ))}
-      </div>
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-white dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
 
-      <div className="page-header" style={{ background: isLight ? "#ffffff" : "#1e293b", borderBottom: `1px solid ${isLight ? "#e2e8f0" : "#1e3a5f"}`, padding: "16px 24px" }}>
-        <div style={{ maxWidth: "95%", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#38bdf8", display: "flex", alignItems: "center", gap: 10 }}>
-              <Hammer style={{ width: 24, height: 24 }} /> Newbuilds
-            </h1>
-            <p style={{ margin: "4px 0 0", fontSize: 13, color: "#94a3b8" }}>
-              <strong style={{ color: "#e2e8f0" }}>{ships.length}</strong> ships under construction
+        {/* Page header */}
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">
+            BulkWatch / Orderbook
+          </p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+            Newbuilds
+          </h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Vessels under construction, grouped by delivery year
+          </p>
+        </div>
+
+        {/* Stats */}
+        {!loading && !error && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <StatCard
+              label="Total Vessels"
+              value={filtered.length}
+              color="sky"
+            />
+            <StatCard
+              label="Total DWT"
+              value={
+                totalDWT >= 1_000_000
+                  ? `${(totalDWT / 1_000_000).toFixed(1)}M`
+                  : totalDWT.toLocaleString()
+              }
+              color="violet"
+            />
+            <StatCard
+              label="Shipyards"
+              value={uniqueBuilders}
+              color="emerald"
+            />
+            <StatCard
+              label="Earliest Delivery"
+              value={nearestYear ?? "—"}
+              color="amber"
+            />
+          </div>
+        )}
+
+        {/* Type filter chips */}
+        {!loading && !error && availableTypes.length > 1 && (
+          <div className="flex flex-wrap gap-2">
+            {availableTypes.map((type) => {
+              const isActive = activeType === type;
+              return (
+                <button
+                  key={type}
+                  onClick={() => setActiveType(type)}
+                  className={`
+                    rounded-full px-4 py-1.5 text-xs font-medium transition-all duration-200
+                    ${
+                      isActive
+                        ? "bg-sky-500 text-white shadow-md shadow-sky-500/25"
+                        : "bg-white dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/40 hover:border-sky-500/30 hover:text-sky-600 dark:hover:text-sky-400"
+                    }
+                  `}
+                >
+                  {type}
+                  {type !== "All" && (
+                    <span
+                      className={`ml-1.5 text-[10px] ${isActive ? "opacity-70" : "text-slate-400"}`}
+                    >
+                      {ships.filter((s) =>
+                        s.type?.toLowerCase().includes(type.toLowerCase())
+                      ).length}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Loading */}
+        {loading && (
+          <div className="flex items-center justify-center py-24">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-8 h-8 rounded-full border-2 border-sky-500/20 border-t-sky-500 animate-spin" />
+              <p className="text-sm text-slate-400 dark:text-slate-500">
+                Loading orderbook…
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Error */}
+        {error && (
+          <div className="rounded-xl border border-red-200/60 dark:border-red-900/40 bg-red-50/50 dark:bg-red-900/10 p-6 text-center">
+            <p className="text-sm font-medium text-red-600 dark:text-red-400">
+              Failed to load newbuilds
+            </p>
+            <p className="text-xs text-red-400 dark:text-red-500 mt-1">{error}</p>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && !error && filtered.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-24 gap-3">
+            <Hammer className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+            <p className="text-slate-400 dark:text-slate-500 text-sm">
+              No newbuilds found
+              {activeType !== "All" ? ` for type "${activeType}"` : ""}.
             </p>
           </div>
-          <button className="mobile-menu-btn" onClick={() => setMenuOpen(true)}>&#9776;</button>
-          <nav className="nav-links">
-            {NAV_LINKS.map(([l,h]) => (
-              <a key={h} href={h} style={{ color: h==="/newbuilds" ? "#38bdf8" : "#94a3b8", textDecoration: "none" }}>{l}</a>
-            ))}
-          </nav>
-        </div>
-      </div>
+        )}
 
-      <div style={{ background: isLight ? "#ffffff" : "#1e293b", borderBottom: `1px solid ${isLight ? "#e2e8f0" : "#1e3a5f"}`, padding: "12px 24px" }}>
-        <div className="stats-bar" style={{ maxWidth: "95%", margin: "0 auto", display: "flex", gap: 32, fontSize: 13 }}>
-          {[
-            ["Total Orders", ships.length.toString()],
-            ["Types", types.length.toString()],
-            ["Total DWT", `${(ships.reduce((a, s) => a + s.dwt, 0) / 1_000_000).toFixed(1)}M`],
-            ["Delivery 2026", ships.filter(s => s.deliveryDate?.startsWith("2026")).length.toString()],
-            ["Delivery 2027", ships.filter(s => s.deliveryDate?.startsWith("2027")).length.toString()],
-          ].map(([l, v]) => (
-            <div key={l}>
-              <div style={{ color: "#64748b" }}>{l}</div>
-              <div className="stat-value" style={{ color: "#38bdf8", fontWeight: 600, fontSize: 16 }}>{v}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+        {/* Grouped ship cards */}
+        {!loading &&
+          !error &&
+          Object.entries(grouped).map(([year, yearShips]) => (
+            <section key={year} className="space-y-4">
+              {/* Section header */}
+              <div className="flex items-center gap-3">
+                <Calendar className="w-4 h-4 text-sky-500" />
+                <h2 className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-semibold">
+                  Delivery {year}
+                </h2>
+                <div className="flex-1 h-px bg-slate-200/60 dark:bg-slate-700/40" />
+                <span className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                  {yearShips.length} vessel{yearShips.length !== 1 ? "s" : ""}
+                </span>
+              </div>
 
-      <div className="page-content" style={{ maxWidth: "95%", margin: "0 auto", padding: "16px 24px" }}>
-        <div className="newbuild-filter-bar" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
-          <button
-            onClick={() => setTypeFilter("")}
-            style={{
-              padding: "6px 14px", borderRadius: 20, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
-              background: !typeFilter ? "#2563eb" : isLight ? "#e2e8f0" : "#1e293b", color: !typeFilter ? "#fff" : isLight ? "#475569" : "#94a3b8",
-            }}
-          >All ({ships.length})</button>
-          {types.map(t => {
-            const count = ships.filter(s => s.type === t).length;
-            return (
-              <button key={t} onClick={() => setTypeFilter(typeFilter === t ? "" : t)}
-                style={{
-                  padding: "6px 14px", borderRadius: 20, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
-                  background: typeFilter === t ? typeColor(t) : isLight ? "#e2e8f0" : "#1e293b", color: typeFilter === t ? "#fff" : isLight ? "#475569" : "#94a3b8",
-                  borderLeft: `3px solid ${typeColor(t)}`,
-                }}
-              >{t} ({count})</button>
-            );
-          })}
-        </div>
-
-        {loading ? (
-          <div style={{ textAlign: "center", padding: 60, color: "#64748b" }}>Loading...</div>
-        ) : (
-          sortedKeys.map(key => (
-            <div key={key} style={{ marginBottom: 32 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: "#38bdf8", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                <Calendar style={{ width: 16, height: 16 }} />
-                Delivery {key}
-                <span style={{ fontSize: 12, color: "#64748b", fontWeight: 400 }}>({groups[key].length} ships)</span>
-              </h2>
-              <div className="newbuild-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 12 }}>
-                {groups[key].map(ship => (
-                  <a key={ship.imo} href={`/schiff/${ship.imo}`}
-                    style={{
-                      display: "block", background: isLight ? "#ffffff" : "#1e293b", borderRadius: 12, overflow: "hidden",
-                      border: "1px solid #1e3a5f", textDecoration: "none", color: "inherit",
-                    }}
-                  >
-                    {ship.imageUrl ? (
-                      <img src={ship.imageUrl} alt={ship.name}
-                        style={{ width: "100%", height: 140, objectFit: "cover" }}
-                        onError={e => (e.currentTarget.style.display = "none")}
-                      />
-                    ) : (
-                      <div style={{
-                        width: "100%", height: 140, display: "flex", flexDirection: "column",
-                        alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden",
-                        background: "linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e293b 100%)",
-                      }}>
-                        <div style={{ position: "relative", textAlign: "center" }}>
-                          <div style={{ fontSize: 32, marginBottom: 4 }}>🏗️</div>
-                          <div style={{ fontSize: 11, color: "#fbbf24", fontWeight: 600 }}>Under Construction</div>
-                        </div>
-                      </div>
-                    )}
-                    <div style={{ padding: "14px 16px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                        <span style={{ width: 10, height: 10, borderRadius: "50%", background: typeColor(ship.type), flexShrink: 0 }} />
-                        <strong style={{ fontSize: 15 }}>{ship.name}</strong>
-                      </div>
-                      <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 8 }}>
-                        {ship.type} · {fmtDwt(ship.dwt)} DWT · IMO {ship.imo}
-                      </div>
-                      <div style={{ display: "flex", gap: 16, fontSize: 11, color: "#64748b", flexWrap: "wrap" }}>
-                        {ship.builder && (
-                          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                            <Hammer style={{ width: 12, height: 12 }} /> {ship.builder}
-                          </span>
-                        )}
-                        {ship.operator && (
-                          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                            <Building2 style={{ width: 12, height: 12 }} /> {ship.operator}
-                          </span>
-                        )}
-                        {ship.flag && (
-                          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                            <Flag style={{ width: 12, height: 12 }} /> {ship.flag}
-                          </span>
-                        )}
-                      </div>
-                      {(ship.operatorWebsite || ship.operatorEmail || ship.operatorPhone) && (
-                        <div style={{ marginTop: 8, padding: "8px 10px", borderRadius: 8, background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.12)", fontSize: 11, color: "#94a3b8", display: "flex", flexWrap: "wrap", gap: "6px 14px" }}>
-                          {ship.operatorWebsite && (
-                            <a href={ship.operatorWebsite} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ color: "#38bdf8", textDecoration: "none", display: "flex", alignItems: "center", gap: 3 }}>🌐 Website</a>
-                          )}
-                          {ship.operatorEmail && (
-                            <a href={`mailto:${ship.operatorEmail}`} onClick={e => e.stopPropagation()} style={{ color: "#38bdf8", textDecoration: "none", display: "flex", alignItems: "center", gap: 3 }}>✉️ {ship.operatorEmail}</a>
-                          )}
-                          {ship.operatorPhone && (
-                            <a href={`tel:${ship.operatorPhone}`} onClick={e => e.stopPropagation()} style={{ color: "#38bdf8", textDecoration: "none", display: "flex", alignItems: "center", gap: 3 }}>📞 {ship.operatorPhone}</a>
-                          )}
-                          {ship.operatorCity && (
-                            <span style={{ display: "flex", alignItems: "center", gap: 3 }}>📍 {ship.operatorCity}{ship.operatorCountry ? `, ${ship.operatorCountry}` : ""}</span>
-                          )}
-                        </div>
-                      )}
-                      <div style={{
-                        marginTop: 8, padding: "4px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600,
-                        background: "rgba(251,191,36,0.12)", color: "#fbbf24", display: "inline-block",
-                      }}>
-                        Under Construction · ETA {ship.deliveryDate || ship.yearBuilt}
-                      </div>
-                    </div>
-                  </a>
+              {/* Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {yearShips.map((ship) => (
+                  <ShipCard key={ship.imo} ship={ship} />
                 ))}
               </div>
-            </div>
-          ))
-        )}
+            </section>
+          ))}
       </div>
     </div>
   );

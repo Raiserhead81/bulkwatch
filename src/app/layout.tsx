@@ -4,6 +4,7 @@ import "./globals.css"
 import { VersionChecker } from "@/components/version-checker";
 import { Toaster } from "@/components/ui/toaster";
 import GlobalNav from "@/components/global-nav";
+import MarketTicker from "@/components/market-ticker";
 import { I18nProvider } from "@/lib/i18n";
 
 const geistSans = Geist({
@@ -72,6 +73,7 @@ export default function RootLayout({
       >
         <I18nProvider>
           <GlobalNav />
+          <MarketTicker />
           {children}
           <Toaster />
         </I18nProvider>
