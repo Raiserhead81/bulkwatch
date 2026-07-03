@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, RefreshCw, Database, TrendingUp, Ship, FileText,
+  RefreshCw, Database, TrendingUp, Ship, FileText,
   Activity, AlertTriangle, CheckCircle, Clock, BarChart2,
 } from "lucide-react";
 
@@ -62,15 +61,44 @@ function fmtDate(iso: string | null): string {
   } catch { return iso; }
 }
 
+// ── useCountUp hook ────────────────────────────────────────────────────────
+function useCountUp(target: number, duration = 1200): number {
+  const [value, setValue] = useState(0);
+  const rafRef = useRef<number>(0);
+  const startRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (target === 0) { setValue(0); return; }
+    startRef.current = null;
+    const animate = (ts: number) => {
+      if (startRef.current === null) startRef.current = ts;
+      const elapsed = ts - startRef.current;
+      const progress = Math.min(elapsed / duration, 1);
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(eased * target));
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(animate);
+      }
+    };
+    rafRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [target, duration]);
+
+  return value;
+}
+
+// ── ProgressBar ────────────────────────────────────────────────────────────
 function ProgressBar({ pct, className }: { pct: number; className?: string }) {
   const color = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-red-500";
   return (
-    <div className={`h-1.5 rounded-full bg-slate-700 overflow-hidden ${className}`}>
+    <div className={`h-1.5 rounded-full bg-slate-200 dark:bg-white/[0.06] overflow-hidden ${className}`}>
       <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${Math.min(pct, 100)}%` }} />
     </div>
   );
 }
 
+// ── StatusBadge ────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: "running" | "ok" | "stale" | "error" }) {
   const styles: Record<string, string> = {
     running: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
@@ -91,13 +119,14 @@ function StatusBadge({ status }: { status: "running" | "ok" | "stale" | "error" 
   );
 }
 
+// ── AccuracyIndicator ──────────────────────────────────────────────────────
 function AccuracyIndicator({ pct }: { pct: number }) {
   if (pct <= 15) return <span className="text-emerald-400 font-bold">±{pct}%</span>;
   if (pct <= 25) return <span className="text-amber-400 font-bold">±{pct}%</span>;
   return <span className="text-red-400 font-bold">±{pct}%</span>;
 }
 
-// ── Mini SVG bar chart ────────────────────────────────────────────────────
+// ── DailyChart SVG ─────────────────────────────────────────────────────────
 function DailyChart({ data }: { data: Array<{ date: string; count: number }> }) {
   if (!data || data.length === 0) {
     return <p className="text-slate-500 text-sm">No enrichment data yet</p>;
@@ -119,14 +148,14 @@ function DailyChart({ data }: { data: Array<{ date: string; count: number }> }) 
           return (
             <g key={d.date}>
               <rect x={x} y={y} width={barW} height={barH}
-                className="fill-blue-500 hover:fill-blue-400 transition-colors"
+                className="fill-sky-500 hover:fill-sky-400 transition-colors"
                 rx="2"
               >
                 <title>{d.date}: {d.count.toLocaleString()} ships</title>
               </rect>
               {i % 2 === 0 && (
                 <text x={x + barW / 2} y={H + 14} textAnchor="middle"
-                  className="fill-slate-500" fontSize="8">
+                  className="fill-slate-400" fontSize="8">
                   {d.date.slice(5)}
                 </text>
               )}
@@ -138,7 +167,57 @@ function DailyChart({ data }: { data: Array<{ date: string; count: number }> }) 
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────
+// ── Overview Card ──────────────────────────────────────────────────────────
+function OverviewCard({
+  icon, label, value, sub, glowColor, textGradient, children,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  sub: React.ReactNode;
+  glowColor: string;
+  textGradient: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="relative overflow-hidden bg-white/60 dark:bg-white/[0.03] backdrop-blur-sm border border-slate-200/80 dark:border-white/[0.05] rounded-2xl p-5 space-y-3">
+      {/* Corner glow */}
+      <div className={`absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br ${glowColor} rounded-full opacity-[0.07] blur-2xl pointer-events-none`} />
+      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium">
+        {icon} {label}
+      </div>
+      <div className={`text-2xl font-bold bg-gradient-to-r ${textGradient} bg-clip-text text-transparent tabular-nums`}>
+        {value}
+      </div>
+      <div className="text-xs text-slate-500 dark:text-white/30">{sub}</div>
+      {children}
+    </div>
+  );
+}
+
+// ── Section Header ─────────────────────────────────────────────────────────
+function SectionHeader({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <h2 className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium mb-3">
+      {icon} {children}
+    </h2>
+  );
+}
+
+// ── Premium card wrapper ───────────────────────────────────────────────────
+function Card({ className = "", children }: { className?: string; children: React.ReactNode }) {
+  return (
+    <div className={`bg-white/60 dark:bg-white/[0.03] backdrop-blur-sm border border-slate-200/80 dark:border-white/[0.05] rounded-2xl ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+function CardInner({ className = "", children }: { className?: string; children: React.ReactNode }) {
+  return <div className={`p-5 ${className}`}>{children}</div>;
+}
+
+// ── Main page ──────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const router = useRouter();
   const [stats, setStats] = useState<StatsPayload | null>(null);
@@ -148,7 +227,6 @@ export default function AdminDashboard() {
 
   const load = useCallback(async () => {
     try {
-      // Auth check
       const meRes = await fetch("/api/auth/me");
       const meData = await meRes.json();
       if (!meData.user || meData.user.role !== "admin") {
@@ -183,12 +261,18 @@ export default function AdminDashboard() {
     hasScrubber: "Scrubber Data",
   };
 
+  // Animated counters — only run once data is available
+  const equasisScraped = useCountUp(stats?.enrichment.equasisScraped ?? 0);
+  const totalFleetRaw = stats?.valuation.totalFleetValue ?? 0;
+  const spTransactions = useCountUp(stats?.valuation.spTransactions ?? 0);
+  const shipsValued = useCountUp(stats?.valuation.shipsValued ?? 0);
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex items-center gap-3 text-slate-400">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-white dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] flex items-center justify-center">
+        <div className="flex items-center gap-3 text-slate-400 dark:text-white/30">
           <RefreshCw className="h-5 w-5 animate-spin" />
-          <span>Loading intelligence dashboard…</span>
+          <span className="text-sm">Loading intelligence dashboard…</span>
         </div>
       </div>
     );
@@ -196,11 +280,11 @@ export default function AdminDashboard() {
 
   if (error || !stats) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-white dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] flex items-center justify-center">
         <div className="text-center space-y-3">
           <AlertTriangle className="h-10 w-10 text-red-400 mx-auto" />
-          <p className="text-red-400 font-medium">{error || "Failed to load"}</p>
-          <button onClick={load} className="text-sm text-blue-400 hover:underline">Retry</button>
+          <p className="text-red-400 font-medium text-sm">{error || "Failed to load"}</p>
+          <button onClick={load} className="text-sm text-sky-400 hover:underline">Retry</button>
         </div>
       </div>
     );
@@ -209,312 +293,330 @@ export default function AdminDashboard() {
   const { enrichment, valuation, marketData, pipelines } = stats;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="border-b border-blue-500/10 bg-background/90 backdrop-blur-md sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-sm text-slate-400 hover:text-blue-400">
-            <ArrowLeft className="h-4 w-4" /> Back
-          </Link>
-          <h1 className="font-bold text-lg flex items-center gap-2">
-            <BarChart2 className="h-5 w-5 text-blue-400" /> Data Intelligence
-          </h1>
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-white dark:from-[#060610] dark:via-[#0a0a18] dark:to-[#0f0f1a] text-slate-900 dark:text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+
+        {/* ── Page Title ──────────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2.5 mb-1">
+              <BarChart2 className="h-5 w-5 text-sky-500" />
+              <h1 className="text-xl font-bold tracking-tight">Data Intelligence</h1>
+            </div>
+            <p className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium">
+              Admin Dashboard · Auto-refreshes every 60 s
+            </p>
+          </div>
           <div className="flex items-center gap-3">
             {lastRefresh && (
-              <span className="text-xs text-slate-500">
-                Refreshed {lastRefresh.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+              <span className="text-xs text-slate-400 dark:text-white/30 hidden sm:block">
+                {lastRefresh.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
               </span>
             )}
             <button
               onClick={() => { setLoading(true); load(); }}
-              className="flex items-center gap-1 text-xs text-slate-400 hover:text-blue-400 transition-colors"
+              className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-white/30 hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
             >
               <RefreshCw className="h-3.5 w-3.5" /> Refresh
             </button>
           </div>
         </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
         {/* ── Section 1: Overview Bar ─────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Ships Enriched */}
-          <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
-            <div className="flex items-center gap-2 text-slate-400 text-xs font-medium uppercase tracking-wide">
-              <Database className="h-4 w-4 text-blue-400" /> Ships Enriched
-            </div>
-            <div>
-              <span className="text-2xl font-bold">{enrichment.equasisScraped.toLocaleString()}</span>
-              <span className="text-slate-400 text-sm ml-1">/ {enrichment.total.toLocaleString()}</span>
-            </div>
-            <div>
-              <div className="flex justify-between text-xs text-slate-500 mb-1">
-                <span>Equasis coverage</span>
-                <span className={enrichment.equasisPct >= 80 ? "text-emerald-400" : enrichment.equasisPct >= 50 ? "text-amber-400" : "text-red-400"}>
-                  {enrichment.equasisPct}%
-                </span>
-              </div>
-              <ProgressBar pct={enrichment.equasisPct} />
-            </div>
-          </div>
+          <OverviewCard
+            icon={<Database className="h-3.5 w-3.5" />}
+            label="Ships Enriched"
+            value={<>{equasisScraped.toLocaleString()} <span className="text-base font-normal text-slate-400 dark:text-white/25">/ {enrichment.total.toLocaleString()}</span></>}
+            sub={<>Equasis coverage <span className={enrichment.equasisPct >= 80 ? "text-emerald-500" : enrichment.equasisPct >= 50 ? "text-amber-500" : "text-red-400"}>{enrichment.equasisPct}%</span></>}
+            glowColor="from-sky-400 to-blue-600"
+            textGradient="from-sky-500 to-blue-600"
+          >
+            <ProgressBar pct={enrichment.equasisPct} />
+          </OverviewCard>
 
           {/* Fleet Value */}
-          <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
-            <div className="flex items-center gap-2 text-slate-400 text-xs font-medium uppercase tracking-wide">
-              <TrendingUp className="h-4 w-4 text-emerald-400" /> Fleet Value
-            </div>
-            <div className="text-2xl font-bold text-emerald-400">{fmtB(valuation.totalFleetValue)}</div>
-            <p className="text-xs text-slate-500">
-              {valuation.shipsValued.toLocaleString()} ships valued · avg confidence {valuation.avgConfidence}%
-            </p>
-          </div>
+          <OverviewCard
+            icon={<TrendingUp className="h-3.5 w-3.5" />}
+            label="Fleet Value"
+            value={fmtB(totalFleetRaw)}
+            sub={<>{shipsValued.toLocaleString()} ships valued · avg confidence {valuation.avgConfidence}%</>}
+            glowColor="from-emerald-400 to-green-600"
+            textGradient="from-emerald-500 to-green-600"
+          />
 
           {/* Model Accuracy */}
-          <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
-            <div className="flex items-center gap-2 text-slate-400 text-xs font-medium uppercase tracking-wide">
-              <Activity className="h-4 w-4 text-amber-400" /> Model Accuracy
-            </div>
-            <div className="text-2xl font-bold">
-              {valuation.modelAccuracy
-                ? <AccuracyIndicator pct={valuation.modelAccuracy.medianAbsError} />
-                : <span className="text-slate-500">—</span>}
-            </div>
-            <p className="text-xs text-slate-500">
-              {valuation.modelAccuracy ? "median error vs real deals" : "Not enough S&P data yet"}
-            </p>
-          </div>
+          <OverviewCard
+            icon={<Activity className="h-3.5 w-3.5" />}
+            label="Model Accuracy"
+            value={
+              valuation.modelAccuracy
+                ? <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">±{valuation.modelAccuracy.medianAbsError}%</span>
+                : <span className="text-slate-400 dark:text-white/25 text-xl">—</span>
+            }
+            sub={valuation.modelAccuracy ? "median error vs real deals" : "Not enough S&P data yet"}
+            glowColor="from-amber-400 to-orange-500"
+            textGradient="from-amber-500 to-orange-500"
+          />
 
           {/* S&P Deals */}
-          <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
-            <div className="flex items-center gap-2 text-slate-400 text-xs font-medium uppercase tracking-wide">
-              <FileText className="h-4 w-4 text-purple-400" /> S&amp;P Deals
-            </div>
-            <div className="text-2xl font-bold text-purple-400">{valuation.spTransactions.toLocaleString()}</div>
-            <p className="text-xs text-slate-500">
-              Transactions collected · {enrichment.scrapedToday} ships scraped today
-            </p>
-          </div>
+          <OverviewCard
+            icon={<FileText className="h-3.5 w-3.5" />}
+            label="S&P Deals"
+            value={spTransactions.toLocaleString()}
+            sub={<>{enrichment.scrapedToday} ships scraped today</>}
+            glowColor="from-purple-400 to-violet-600"
+            textGradient="from-purple-500 to-violet-600"
+          />
         </div>
 
         {/* ── Section 2: Enrichment Progress ───────────────────────────────── */}
         <div>
-          <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Database className="h-4 w-4" /> Enrichment Progress
-          </h2>
+          <SectionHeader icon={<Database className="h-3.5 w-3.5" />}>
+            Enrichment Progress
+          </SectionHeader>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Field completeness table */}
-            <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
-              <h3 className="text-xs font-semibold text-slate-400 mb-4">Field Completeness</h3>
-              <div className="space-y-3">
-                {Object.entries(enrichment.fields).map(([key, val]) => (
-                  <div key={key}>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-slate-300">{fieldLabels[key] || key}</span>
-                      <span className="text-slate-400 tabular-nums">
-                        {val.filled.toLocaleString()} <span className="text-slate-600">({val.pct}%)</span>
-                      </span>
+            {/* Field completeness */}
+            <Card>
+              <CardInner>
+                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium mb-4">
+                  Field Completeness
+                </h3>
+                <div className="space-y-3.5">
+                  {Object.entries(enrichment.fields).map(([key, val]) => (
+                    <div key={key}>
+                      <div className="flex justify-between text-xs mb-1.5">
+                        <span className="text-slate-600 dark:text-white/50">{fieldLabels[key] || key}</span>
+                        <span className="text-slate-400 dark:text-white/30 tabular-nums">
+                          {val.filled.toLocaleString()} <span className="text-slate-300 dark:text-white/15">({val.pct}%)</span>
+                        </span>
+                      </div>
+                      <ProgressBar pct={val.pct} />
                     </div>
-                    <ProgressBar pct={val.pct} />
-                  </div>
-                ))}
-              </div>
-            </div>
+                  ))}
+                </div>
+              </CardInner>
+            </Card>
 
             {/* Daily enrichment chart */}
-            <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xs font-semibold text-slate-400">Daily Enrichment (last 14 days)</h3>
-                <span className="text-xs text-slate-500">{enrichment.scrapedLast7d.toLocaleString()} in 7d</span>
-              </div>
-              <DailyChart data={enrichment.daily} />
-            </div>
+            <Card>
+              <CardInner>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium">
+                    Daily Enrichment — last 14 days
+                  </h3>
+                  <span className="text-xs text-slate-400 dark:text-white/30 tabular-nums">{enrichment.scrapedLast7d.toLocaleString()} in 7d</span>
+                </div>
+                <DailyChart data={enrichment.daily} />
+              </CardInner>
+            </Card>
           </div>
         </div>
 
         {/* ── Section 3: Valuation Quality ─────────────────────────────────── */}
         <div>
-          <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" /> Valuation Quality
-          </h2>
+          <SectionHeader icon={<TrendingUp className="h-3.5 w-3.5" />}>
+            Valuation Quality
+          </SectionHeader>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Model accuracy metrics */}
-            <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
-              <h3 className="text-xs font-semibold text-slate-400 mb-4">
-                Model Accuracy — {valuation.spTransactions} reference transactions
-              </h3>
-              {valuation.modelAccuracy ? (
-                <table className="w-full text-sm">
-                  <tbody className="divide-y divide-slate-800">
-                    {[
-                      ["Mean absolute error",   `±${valuation.modelAccuracy.meanAbsError}%`],
-                      ["Median absolute error", `±${valuation.modelAccuracy.medianAbsError}%`],
-                      ["Within ±10%",           `${valuation.modelAccuracy.within10pct}%`],
-                      ["Within ±15%",           `${valuation.modelAccuracy.within15pct}%`],
-                      ["Within ±20%",           `${valuation.modelAccuracy.within20pct}%`],
-                      ["Valuation bias",        `${valuation.modelAccuracy.bias > 0 ? "+" : ""}${valuation.modelAccuracy.bias}%`],
-                    ].map(([label, value]) => (
-                      <tr key={label}>
-                        <td className="py-2 text-slate-400">{label}</td>
-                        <td className="py-2 text-right font-mono font-bold text-slate-200">{value}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <p className="text-slate-500 text-sm">
-                  Need at least 3 S&amp;P transactions with ship_type, DWT and year_built to calculate accuracy.
-                  Currently {valuation.spTransactions} deals collected.
-                </p>
-              )}
-            </div>
+            <Card>
+              <CardInner>
+                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium mb-4">
+                  Model Accuracy — {valuation.spTransactions} reference transactions
+                </h3>
+                {valuation.modelAccuracy ? (
+                  <table className="w-full text-sm">
+                    <tbody>
+                      {[
+                        ["Mean absolute error",   `±${valuation.modelAccuracy.meanAbsError}%`],
+                        ["Median absolute error", `±${valuation.modelAccuracy.medianAbsError}%`],
+                        ["Within ±10%",           `${valuation.modelAccuracy.within10pct}%`],
+                        ["Within ±15%",           `${valuation.modelAccuracy.within15pct}%`],
+                        ["Within ±20%",           `${valuation.modelAccuracy.within20pct}%`],
+                        ["Valuation bias",        `${valuation.modelAccuracy.bias > 0 ? "+" : ""}${valuation.modelAccuracy.bias}%`],
+                      ].map(([label, value], i, arr) => (
+                        <tr key={label} className={i < arr.length - 1 ? "border-b border-slate-100 dark:border-white/[0.04]" : ""}>
+                          <td className="py-2.5 text-slate-500 dark:text-white/35">{label}</td>
+                          <td className="py-2.5 text-right font-mono font-bold text-slate-800 dark:text-white/80">{value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p className="text-slate-500 dark:text-white/30 text-sm leading-relaxed">
+                    Need at least 3 S&amp;P transactions with ship_type, DWT and year_built to calculate accuracy.
+                    Currently {valuation.spTransactions} deals collected.
+                  </p>
+                )}
+              </CardInner>
+            </Card>
 
             {/* Benchmark comparison */}
-            <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
-              <h3 className="text-xs font-semibold text-slate-400 mb-4">Benchmark Comparison</h3>
-              <div className="space-y-4">
-                {/* Our model */}
-                <div className="flex items-center justify-between rounded-xl bg-slate-800/50 px-4 py-3">
-                  <div>
-                    <p className="text-sm font-semibold">Our Model</p>
-                    <p className="text-xs text-slate-500">Hedonic pricing v4</p>
+            <Card>
+              <CardInner>
+                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium mb-4">
+                  Benchmark Comparison
+                </h3>
+                <div className="space-y-3">
+                  {/* Our model */}
+                  <div className="flex items-center justify-between rounded-xl bg-sky-50 dark:bg-white/[0.04] border border-sky-100/80 dark:border-white/[0.06] px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800 dark:text-white/80">Our Model</p>
+                      <p className="text-xs text-slate-400 dark:text-white/30">Hedonic pricing v4</p>
+                    </div>
+                    <div className="text-right">
+                      {valuation.modelAccuracy ? (
+                        <AccuracyIndicator pct={valuation.modelAccuracy.medianAbsError} />
+                      ) : (
+                        <span className="text-slate-400 dark:text-white/25 text-sm">—</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-right">
-                    {valuation.modelAccuracy ? (
-                      <AccuracyIndicator pct={valuation.modelAccuracy.medianAbsError} />
-                    ) : (
-                      <span className="text-slate-500 text-sm">—</span>
-                    )}
+                  {/* VesselsValue */}
+                  <div className="flex items-center justify-between rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100/80 dark:border-white/[0.04] px-4 py-3">
+                    <div>
+                      <p className="text-sm font-medium text-slate-700 dark:text-white/60">VesselsValue</p>
+                      <p className="text-xs text-slate-400 dark:text-white/25">Industry benchmark</p>
+                    </div>
+                    <span className="text-emerald-500 font-bold text-sm">±10%</span>
                   </div>
+                  {/* Clarksons */}
+                  <div className="flex items-center justify-between rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100/80 dark:border-white/[0.04] px-4 py-3">
+                    <div>
+                      <p className="text-sm font-medium text-slate-700 dark:text-white/60">Clarksons SIN</p>
+                      <p className="text-xs text-slate-400 dark:text-white/25">Broker quality</p>
+                    </div>
+                    <span className="text-emerald-500 font-bold text-sm">±5–8%</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 dark:text-white/20 pt-1 leading-relaxed">
+                    Target: within ±15% of VesselsValue. Green = achieved, amber = close, red = needs work.
+                  </p>
                 </div>
-                {/* VesselsValue */}
-                <div className="flex items-center justify-between rounded-xl bg-slate-800/30 px-4 py-3">
-                  <div>
-                    <p className="text-sm font-medium text-slate-300">VesselsValue</p>
-                    <p className="text-xs text-slate-500">Industry benchmark</p>
-                  </div>
-                  <span className="text-emerald-400 font-bold">±10%</span>
-                </div>
-                {/* Clarksons */}
-                <div className="flex items-center justify-between rounded-xl bg-slate-800/30 px-4 py-3">
-                  <div>
-                    <p className="text-sm font-medium text-slate-300">Clarksons SIN</p>
-                    <p className="text-xs text-slate-500">Broker quality</p>
-                  </div>
-                  <span className="text-emerald-400 font-bold">±5–8%</span>
-                </div>
-                {/* Note */}
-                <p className="text-xs text-slate-600 pt-1">
-                  Target: within ±15% of VesselsValue. Green = achieved, amber = close, red = needs work.
-                </p>
-              </div>
-            </div>
+              </CardInner>
+            </Card>
           </div>
         </div>
 
         {/* ── Section 4: Data Pipelines ─────────────────────────────────────── */}
         <div>
-          <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Activity className="h-4 w-4" /> Data Pipelines
-          </h2>
-          <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+          <SectionHeader icon={<Activity className="h-3.5 w-3.5" />}>
+            Data Pipelines
+          </SectionHeader>
+          <Card>
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-800">
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Pipeline</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Last Run</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Detail</th>
+                <tr className="border-b border-slate-100 dark:border-white/[0.05]">
+                  <th className="text-left px-5 py-3 text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium">Pipeline</th>
+                  <th className="text-left px-5 py-3 text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium hidden sm:table-cell">Last Run</th>
+                  <th className="text-left px-5 py-3 text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium">Status</th>
+                  <th className="text-left px-5 py-3 text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium hidden md:table-cell">Detail</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
-                {pipelines.map((p) => (
-                  <tr key={p.name} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="px-5 py-3 font-medium">{p.name}</td>
-                    <td className="px-5 py-3 text-slate-400 text-xs hidden sm:table-cell tabular-nums">{fmtDate(p.lastRun)}</td>
+              <tbody>
+                {pipelines.map((p, i) => (
+                  <tr
+                    key={p.name}
+                    className={[
+                      "transition-colors hover:bg-slate-50 dark:hover:bg-white/[0.04]",
+                      i % 2 === 1 ? "bg-slate-50/50 dark:bg-white/[0.01]" : "",
+                      i < pipelines.length - 1 ? "border-b border-slate-100 dark:border-white/[0.04]" : "",
+                    ].join(" ")}
+                  >
+                    <td className="px-5 py-3 font-medium text-slate-800 dark:text-white/75">{p.name}</td>
+                    <td className="px-5 py-3 text-slate-400 dark:text-white/30 text-xs hidden sm:table-cell tabular-nums">{fmtDate(p.lastRun)}</td>
                     <td className="px-5 py-3"><StatusBadge status={p.status} /></td>
-                    <td className="px-5 py-3 text-slate-500 text-xs hidden md:table-cell">{p.detail}</td>
+                    <td className="px-5 py-3 text-slate-400 dark:text-white/30 text-xs hidden md:table-cell">{p.detail}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          </Card>
         </div>
 
         {/* ── Section 5: Market Data ────────────────────────────────────────── */}
         <div>
-          <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Ship className="h-4 w-4" /> Market Data
+          <SectionHeader icon={<Ship className="h-3.5 w-3.5" />}>
+            Market Data
             {marketData.lastUpdate && (
-              <span className="text-xs font-normal text-slate-500 ml-2">as of {marketData.lastUpdate}</span>
+              <span className="text-[10px] font-normal text-slate-400 dark:text-white/20 ml-1 normal-case tracking-normal">
+                as of {marketData.lastUpdate}
+              </span>
             )}
-          </h2>
+          </SectionHeader>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Indices */}
-            <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
-              <h3 className="text-xs font-semibold text-slate-400 mb-3">Freight &amp; Scrap</h3>
-              <table className="w-full text-sm">
-                <tbody className="divide-y divide-slate-800">
-                  <tr>
-                    <td className="py-2 text-slate-400">Baltic Dry Index</td>
-                    <td className="py-2 text-right font-mono font-bold">{marketData.bdi.toLocaleString()}</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 text-slate-400">Scrap LDT</td>
-                    <td className="py-2 text-right font-mono">${marketData.scrapLDT}/LDT</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 text-slate-400">Capesize T/C</td>
-                    <td className="py-2 text-right font-mono">${marketData.charterCape.toLocaleString()}/d</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            {/* Freight & Scrap */}
+            <Card>
+              <CardInner>
+                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium mb-4">
+                  Freight &amp; Scrap
+                </h3>
+                <table className="w-full text-sm">
+                  <tbody>
+                    {[
+                      ["Baltic Dry Index",  marketData.bdi.toLocaleString()],
+                      ["Scrap LDT",         `$${marketData.scrapLDT}/LDT`],
+                      ["Capesize T/C",      `$${marketData.charterCape.toLocaleString()}/d`],
+                    ].map(([label, value], i, arr) => (
+                      <tr key={label} className={i < arr.length - 1 ? "border-b border-slate-100 dark:border-white/[0.04]" : ""}>
+                        <td className="py-2.5 text-slate-500 dark:text-white/35">{label}</td>
+                        <td className="py-2.5 text-right font-mono font-semibold text-slate-800 dark:text-white/75">{value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </CardInner>
+            </Card>
 
             {/* Bunker prices */}
-            <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
-              <h3 className="text-xs font-semibold text-slate-400 mb-3">
-                Bunker Prices (Singapore) · {marketData.bunkerPorts} ports tracked
-              </h3>
-              <table className="w-full text-sm">
-                <tbody className="divide-y divide-slate-800">
-                  <tr>
-                    <td className="py-2 text-slate-400">VLSFO</td>
-                    <td className="py-2 text-right font-mono">${marketData.bunkerVLSFO}/t</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 text-slate-400">HSFO</td>
-                    <td className="py-2 text-right font-mono">${marketData.bunkerHSFO}/t</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 text-slate-400">MGO</td>
-                    <td className="py-2 text-right font-mono">${marketData.bunkerMGO}/t</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <Card>
+              <CardInner>
+                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium mb-4">
+                  Bunker Prices (Singapore) · {marketData.bunkerPorts} ports
+                </h3>
+                <table className="w-full text-sm">
+                  <tbody>
+                    {[
+                      ["VLSFO", `$${marketData.bunkerVLSFO}/t`],
+                      ["HSFO",  `$${marketData.bunkerHSFO}/t`],
+                      ["MGO",   `$${marketData.bunkerMGO}/t`],
+                    ].map(([label, value], i, arr) => (
+                      <tr key={label} className={i < arr.length - 1 ? "border-b border-slate-100 dark:border-white/[0.04]" : ""}>
+                        <td className="py-2.5 text-slate-500 dark:text-white/35">{label}</td>
+                        <td className="py-2.5 text-right font-mono font-semibold text-slate-800 dark:text-white/75">{value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </CardInner>
+            </Card>
 
-            {/* Sources */}
-            <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
-              <h3 className="text-xs font-semibold text-slate-400 mb-3">Data Sources</h3>
-              {marketData.sources.length > 0 ? (
-                <ul className="space-y-1.5">
-                  {marketData.sources.map((s, i) => (
-                    <li key={i} className="flex items-center gap-2 text-xs text-slate-300">
-                      <span className="h-1.5 w-1.5 rounded-full bg-blue-400 flex-shrink-0" />
-                      {s}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-slate-500 text-xs">No sources listed in opex_rates.json</p>
-              )}
-            </div>
+            {/* Data Sources */}
+            <Card>
+              <CardInner>
+                <h3 className="text-[10px] uppercase tracking-[0.15em] text-slate-400 dark:text-white/25 font-medium mb-4">
+                  Data Sources
+                </h3>
+                {marketData.sources.length > 0 ? (
+                  <ul className="space-y-2">
+                    {marketData.sources.map((s, i) => (
+                      <li key={i} className="flex items-center gap-2 text-xs text-slate-600 dark:text-white/50">
+                        <span className="h-1.5 w-1.5 rounded-full bg-sky-400 flex-shrink-0" />
+                        {s}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-slate-400 dark:text-white/25 text-xs">No sources listed in opex_rates.json</p>
+                )}
+              </CardInner>
+            </Card>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="text-center text-xs text-slate-600 pb-4">
+        <div className="text-center text-[10px] uppercase tracking-[0.15em] text-slate-300 dark:text-white/15 font-medium pb-4">
           Auto-refreshes every 60 seconds · Admin only
         </div>
       </div>
