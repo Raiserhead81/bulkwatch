@@ -14,8 +14,8 @@ LOG_EVERY = 10  # print progress every N ships
 DAILY_LIMIT_PER_ACCOUNT = 200  # max requests per account per day to avoid locks
 
 ACCOUNTS = [
-    ("jjeppsen@proton.me", "!nfinitY1981"),
-    ("G.Klausen88@proton.me", "InfinitY!981"),
+    ("jjeppsen@proton.me", "!nfinitY!981"),
+    ("G.Klausen88@proton.me", "!nfinitY!981"),
     ("hhansen77@proton.me", "!nfinitY!981"),
     # gesperrt bis ~09.07.2026:
     # ("kayconrad@posteo.de", "!nfinitY!981"),
