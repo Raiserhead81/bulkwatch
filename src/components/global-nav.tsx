@@ -130,7 +130,7 @@ export default function GlobalNav() {
             <button onClick={toggleTheme} className="ml-1 px-1.5 py-1 rounded border border-slate-700 text-sm cursor-pointer" title="Toggle theme">
               {theme === "dark" ? "☀️" : "🌙"}
             </button>
-            {currentUser?.role === "admin" && <a href="/admin/dashboard" className="ml-1 text-xs text-slate-500 hover:text-blue-400">📊</a>}
+            {currentUser?.role === "admin" && <a href="/admin/dashboard" className={`flex items-center gap-1 ml-2 px-2 py-1.5 rounded text-xs whitespace-nowrap ${path === "/admin/dashboard" ? "text-blue-400 font-semibold" : "text-slate-500 hover:text-slate-200"}`}>📊 Dashboard</a>}
             <a href="/api/auth/logout" className="ml-1 text-xs text-slate-600 hover:text-red-400">Logout</a>
             <a href="/settings" title="Settings"
               className={`ml-1 text-base leading-none ${path === "/settings" ? "text-blue-400" : "text-slate-500 hover:text-slate-200"}`}>
