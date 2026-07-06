@@ -233,7 +233,7 @@ export async function GET(req: NextRequest) {
 
     // ── Pipeline status ──
     const equasisStat  = pipelineStatus("/var/log/bulkwatch-equasis.log");
-    const opexStat     = pipelineStatus("/opt/bulkwatch/opex-update.log");
+    const opexStat     = pipelineStatus("/var/log/bulkwatch-opex.log");
     const spStat       = pipelineStatus("/var/log/bulkwatch-sp-scraper.log");
     const valueStat    = pipelineStatus("/var/log/bulkwatch-valuations.log");
 

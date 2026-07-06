@@ -17,6 +17,7 @@ ACCOUNTS = [
     ("jjeppsen@proton.me", "!nfinitY!981"),
     ("G.Klausen88@proton.me", "!nfinitY!981"),
     ("hhansen77@proton.me", "!nfinitY!981"),
+    ("shansen99@proton.me", "!nfinitY!981"),
     # gesperrt bis ~09.07.2026:
     # ("kayconrad@posteo.de", "!nfinitY!981"),
     # ("kayconrad81@googlemail.com", "!nfinitY!981"),
