@@ -5,7 +5,7 @@ image actually shows a cargo ship via Claude Haiku Vision."""
 import sqlite3, urllib.request, urllib.parse, json, time, re, sys, base64
 
 DB = "/opt/bulkwatch/db/ships.db"
-DELAY = 3.0
+DELAY = 2.0
 UA = "VesselDB/1.0 (hallo@gemivo.de; vessel image enrichment)"
 API_KEY = ""
 
@@ -114,7 +114,7 @@ def verify_ship_image(image_url):
 def main():
     db = sqlite3.connect(DB)
     ships = db.execute(
-        "SELECT imo, name FROM ships WHERE (image_url IS NULL OR image_url = '') ORDER BY dwt DESC LIMIT 500"
+        "SELECT imo, name FROM ships WHERE (image_url IS NULL OR image_url = '') ORDER BY dwt DESC LIMIT 1000"
     ).fetchall()
 
     print(f"Searching images for {len(ships)} ships (v4: strict + vision)...", flush=True)
