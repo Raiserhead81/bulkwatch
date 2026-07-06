@@ -36,10 +36,10 @@ const NEWBUILD_PRICES: Record<string, { dwt: number; nb: number }> = {
   "Handysize":         { dwt: 38000,  nb: 31_000_000 },
   "Mini-Bulker":       { dwt: 12000,  nb: 18_000_000 },
   // Tanker
-  "VLCC":                  { dwt: 300000, nb: 125_000_000 },
-  "Suezmax":               { dwt: 157000, nb: 85_000_000  },
-  "Aframax":               { dwt: 115000, nb: 65_000_000  },
-  "Product Tanker":        { dwt: 50000,  nb: 44_000_000  },
+  "VLCC":                  { dwt: 300000, nb: 135_000_000 },
+  "Suezmax":               { dwt: 157000, nb: 95_000_000  },
+  "Aframax":               { dwt: 115000, nb: 72_000_000  },
+  "Product Tanker":        { dwt: 50000,  nb: 48_000_000  },
   "Chemical Tanker":       { dwt: 25000,  nb: 42_000_000  },
   "Crude Oil Tanker":      { dwt: 105000, nb: 60_000_000  },
   "Oil/Chemical Tanker":   { dwt: 45000,  nb: 40_000_000  },
@@ -47,7 +47,7 @@ const NEWBUILD_PRICES: Record<string, { dwt: number; nb: number }> = {
   "Container Ship":    { dwt: 70000,  nb: 95_000_000  },
   // Gas
   "LNG Tanker":        { dwt: 80000,  nb: 250_000_000 },
-  "LPG Tanker":        { dwt: 50000,  nb: 85_000_000  },
+  "LPG Tanker":        { dwt: 50000,  nb: 95_000_000  },
   // Specialized
   "Car Carrier":       { dwt: 15000,  nb: 70_000_000  },
   "RoRo":              { dwt: 12000,  nb: 45_000_000  },

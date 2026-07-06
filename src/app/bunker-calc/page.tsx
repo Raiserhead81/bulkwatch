@@ -90,11 +90,11 @@ export default function BunkerCalcPage() {
     if (!from || !to || from.name === to.name) return;
 
     setLoading(true);
-    fetch(`/api/searoute?from=${from.lon},${from.lat}&to=${to.lon},${to.lat}`)
+    fetch(`/api/searoute?fromLat=${from.lat}&fromLon=${from.lon}&toLat=${to.lat}&toLon=${to.lon}`)
       .then(r => r.json())
       .then(data => {
-        if (data.distanceNm && data.route?.coordinates) {
-          setRouteData({ distanceNm: data.distanceNm, waypoints: data.route.coordinates });
+        if (data.distanceNm && data.points) {
+          setRouteData({ distanceNm: data.distanceNm, waypoints: data.points });
         } else if (data.distanceKm) {
           setRouteData({
             distanceNm: Math.round(data.distanceKm / 1.852),
