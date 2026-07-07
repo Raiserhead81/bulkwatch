@@ -15,28 +15,20 @@ DAILY_LIMIT_PER_ACCOUNT = 200  # max requests per account per day to avoid locks
 
 ACCOUNTS_FILE = "/opt/bulkwatch/config/equasis-accounts.json"
 
-# Hardcoded fallback (used if config file not found)
-_FALLBACK_ACCOUNTS = [
-    ("jjeppsen@proton.me", "!nfinitY!981"),
-    ("G.Klausen88@proton.me", "!nfinitY!981"),
-    ("hhansen77@proton.me", "!nfinitY!981"),
-    ("shansen99@proton.me", "!nfinitY!981"),
-]
-
 def load_accounts():
-    """Load accounts from JSON config file, fallback to hardcoded."""
+    """Load accounts from JSON config file. Exit if not found."""
+    if not os.path.exists(ACCOUNTS_FILE):
+        sys.exit(f"ERROR: {ACCOUNTS_FILE} not found. Cannot start without credentials.")
     try:
         with open(ACCOUNTS_FILE) as f:
             data = json.load(f)
         accts = [(a["email"], a["password"]) for a in data.get("accounts", [])]
-        if accts:
-            print(f"Loaded {len(accts)} accounts from {ACCOUNTS_FILE}")
-            return accts
-    except FileNotFoundError:
-        print(f"Config {ACCOUNTS_FILE} not found, using fallback accounts")
+        if not accts:
+            sys.exit(f"ERROR: No accounts found in {ACCOUNTS_FILE}")
+        print(f"Loaded {len(accts)} accounts from {ACCOUNTS_FILE}")
+        return accts
     except Exception as e:
-        print(f"Error loading {ACCOUNTS_FILE}: {e}, using fallback accounts")
-    return _FALLBACK_ACCOUNTS
+        sys.exit(f"ERROR: Failed to load {ACCOUNTS_FILE}: {e}")
 
 ACCOUNTS = load_accounts()
 
