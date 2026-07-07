@@ -175,10 +175,12 @@ function initParams() {
   } : { ...INLINE_MARKET };
 
   const biasCorrection = modelJson?.segment_bias_correction ?? {};
+  const containerSegments = modelJson?.containerSegments?.segments ?? [];
 
   return {
     nbPrices, fallbackMult, depBrackets, segGroups, mfBaselines,
     tankerPremium, builderTiers, ldtRatios, ecoBenchmarks, market, biasCorrection,
+    containerSegments,
   };
 }
 
@@ -190,6 +192,7 @@ function resolveType(rawType: string): string {
 }
 
 const BIAS_CORRECTION: Record<string, number> = P.biasCorrection;
+const CONTAINER_SEGMENTS: Array<{name: string; maxTeu: number; nb: number}> = P.containerSegments;
 const NEWBUILD_PRICES    = P.nbPrices;
 const FALLBACK_TYPE_MULT = P.fallbackMult;
 const DEP_BRACKETS       = P.depBrackets as DepBracket[];
@@ -343,7 +346,8 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   const dwt           = Math.max(ship.dwt || 0, 500);
   const shipType      = resolveType(ship.type);
 
-  const nb = newbuildPrice(shipType, dwt);
+  const teu = (ship as any).teu as number | undefined;
+  const nb = newbuildPrice(shipType, dwt, teu);
   const isKnownSegment = !!NEWBUILD_PRICES[shipType];
   factors.push({
     label:  "Newbuild Cost",

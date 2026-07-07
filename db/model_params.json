@@ -412,5 +412,40 @@
     "Oil/Chemical Tanker": 0.85,
     "Container Ship": 0.92,
     "LNG Tanker": 0.93
+  },
+  "containerSegments": {
+    "comment": "Container ship valuation by TEU class. If TEU unknown, derive from DWT/14.",
+    "segments": [
+      {
+        "name": "Feeder",
+        "maxTeu": 3000,
+        "nb": 30000000
+      },
+      {
+        "name": "Sub-Panamax",
+        "maxTeu": 5000,
+        "nb": 45000000
+      },
+      {
+        "name": "Panamax",
+        "maxTeu": 8000,
+        "nb": 65000000
+      },
+      {
+        "name": "Post-Panamax",
+        "maxTeu": 12000,
+        "nb": 95000000
+      },
+      {
+        "name": "Neo-Panamax",
+        "maxTeu": 15000,
+        "nb": 120000000
+      },
+      {
+        "name": "ULCV",
+        "maxTeu": 999999,
+        "nb": 165000000
+      }
+    ]
   }
 }

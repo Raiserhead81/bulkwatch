@@ -31,6 +31,7 @@ FALLBACK_TYPE_MULT = PARAMS["fallbackTypeMult"]
 LDT_RATIOS         = PARAMS["ldtRatios"]
 ECO_BENCHMARKS     = PARAMS["ecoBenchmarks"]
 BIAS_CORRECTION    = PARAMS.get("segment_bias_correction", {})
+CONTAINER_SEGMENTS = PARAMS.get("containerSegments", {}).get("segments", [])
 
 # Segment groupings from shared params
 CAPESIZE_TYPES  = set(PARAMS["segmentGroups"]["capesize"])
@@ -60,8 +61,23 @@ DEP_BRACKETS = PARAMS["depreciation"]["brackets"]
 # ═══════════════════════════════════════════════════════════════
 # A) Newbuild price with DWT scaling
 # ═══════════════════════════════════════════════════════════════
-def newbuild_price(ship_type, dwt):
+def container_newbuild_price(teu):
+    """TEU-based container pricing."""
+    if not CONTAINER_SEGMENTS or teu <= 0:
+        return None
+    for seg in CONTAINER_SEGMENTS:
+        if teu <= seg["maxTeu"]:
+            return seg["nb"]
+    return CONTAINER_SEGMENTS[-1]["nb"]
+
+def newbuild_price(ship_type, dwt, teu=0):
     dwt = max(dwt, 500)
+    # Container ships: use TEU-based pricing
+    if ship_type == "Container Ship" and CONTAINER_SEGMENTS:
+        effective_teu = teu if teu and teu > 0 else round(dwt / 14)
+        cnb = container_newbuild_price(effective_teu)
+        if cnb:
+            return cnb
     if ship_type in NEWBUILD_PRICES:
         ref = NEWBUILD_PRICES[ship_type]
         nb = ref["nb"] * ((dwt / ref["dwt"]) ** 0.7)
@@ -216,6 +232,7 @@ def estimate(ship_row, market):
     classification = ship_row[10] if len(ship_row) > 10 else None
     length = ship_row[11] if len(ship_row) > 11 else None
     beam = ship_row[12] if len(ship_row) > 12 else None
+    teu = ship_row[13] if len(ship_row) > 13 else 0
     stype    = resolve_type(stype or )""
     dwt      = dwt or 0
     builder  = builder or ""
@@ -227,7 +244,7 @@ def estimate(ship_row, market):
     eff_year = year_built if year_built and year_built > 1900 else YEAR - 10
     age      = YEAR - eff_year
 
-    nb  = newbuild_price(stype, dwt)
+    nb  = newbuild_price(stype, dwt, teu or 0)
     dep = depreciation(age)
     mf  = market_factor(stype, market["bdi"], market["charter_rates"])
     bf  = builder_factor(builder)
@@ -296,7 +313,7 @@ def main():
 
     ships = con.execute("""
         SELECT imo, name, type, dwt, year_built, builder, flag, status, has_scrubber,
-               fuel_consumption_tons_day, class_society, length, beam
+               fuel_consumption_tons_day, class_society, length, beam, teu
         FROM ships
         WHERE type IS NOT NULL AND type != '' AND dwt > 0
           AND NOT (dwt IN (0,5000,10000,12000,15000,18000,20000,
