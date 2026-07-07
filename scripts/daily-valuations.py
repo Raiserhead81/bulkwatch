@@ -1,107 +1,53 @@
 #!/usr/bin/env python3
-"""Broker-Quality Daily Vessel Valuations v4.
+"""Broker-Quality Daily Vessel Valuations v4.1.
 Hedonic pricing model: segment-specific newbuild prices, survey-cycle depreciation,
 segment-specific market factors, LDT-based scrap floor, eco premium.
+Model params loaded from shared db/model_params.json (single source of truth).
 Cron: 30 19 * * *"""
-import sqlite3, time, math, json
+import sqlite3, time, math, json, os
 
 DB   = "/opt/bulkwatch/db/ships.db"
 OPEX = "/opt/bulkwatch/db/opex_rates.json"
+MODEL_PARAMS = "/opt/bulkwatch/db/model_params.json"
 YEAR = 2026
 
 # ═══════════════════════════════════════════════════════════════
-# A) SEGMENT-SPECIFIC NEWBUILD PRICES (mid-2026 benchmarks, USD)
+# Load shared model parameters
 # ═══════════════════════════════════════════════════════════════
-NEWBUILD_PRICES = {
-    # Dry Bulk
-    "Capesize":          {"dwt": 180000, "nb": 70_000_000},
-    "Newcastlemax":      {"dwt": 210000, "nb": 72_000_000},
-    "Kamsarmax":         {"dwt": 82000,  "nb": 38_000_000},
-    "Panamax":           {"dwt": 77000,  "nb": 35_000_000},
-    "Post-Panamax":      {"dwt": 95000,  "nb": 42_000_000},
-    "Ultramax":          {"dwt": 64000,  "nb": 35_000_000},
-    "Supramax":          {"dwt": 58000,  "nb": 33_000_000},
-    "Handymax":          {"dwt": 50000,  "nb": 32_000_000},
-    "Handysize":         {"dwt": 38000,  "nb": 31_000_000},
-    "Mini-Bulker":       {"dwt": 12000,  "nb": 18_000_000},
-    # Tanker
-    "VLCC":                  {"dwt": 300000, "nb": 125_000_000},
-    "Suezmax":               {"dwt": 157000, "nb": 85_000_000},
-    "Aframax":               {"dwt": 115000, "nb": 78_000_000},
-    "Product Tanker":        {"dwt": 50000,  "nb": 44_000_000},
-    "Chemical Tanker":       {"dwt": 25000,  "nb": 42_000_000},
-    "Crude Oil Tanker":      {"dwt": 105000, "nb": 60_000_000},
-    "Oil/Chemical Tanker":   {"dwt": 45000,  "nb": 40_000_000},
-    # Container
-    "Container Ship":    {"dwt": 70000, "nb": 95_000_000},
-    # Gas
-    "LNG Tanker":        {"dwt": 80000,  "nb": 250_000_000},
-    "LPG Tanker":        {"dwt": 50000,  "nb": 85_000_000},
-    # Specialized
-    "Car Carrier":       {"dwt": 15000, "nb": 70_000_000},
-    "RoRo":              {"dwt": 12000, "nb": 45_000_000},
-    "Reefer":            {"dwt": 12000, "nb": 35_000_000},
-    "Multipurpose":      {"dwt": 15000, "nb": 22_000_000},
-    "Heavy Lift":        {"dwt": 20000, "nb": 45_000_000},
-    "General Cargo":     {"dwt": 10000, "nb": 18_000_000},
-    "Bulk Carrier":      {"dwt": 60000, "nb": 34_000_000},  # generic fallback
-}
+def load_model_params():
+    with open(MODEL_PARAMS) as f:
+        return json.load(f)
 
-# Fallback power-law for ship types not in NEWBUILD_PRICES
-# Uses Bulk Carrier curve × type multiplier
-FALLBACK_TYPE_MULT = {
-    "Valemax": 1.05, "VLOC": 1.00, "Gearless": 0.98, "Geared": 0.95,
-    "Tanker": 1.10, "ULCV": 1.60, "Neo-Panamax": 1.30, "Feeder": 0.80,
-    "RoPax": 1.80, "Cruise Ship": 4.50, "Passenger": 3.00, "Ferry": 1.60,
-    "OSV": 1.80, "Offshore": 1.60, "Tug": 2.50, "Dredger": 1.50,
-}
+PARAMS = load_model_params()
 
-# ═══════════════════════════════════════════════════════════════
-# Segment type groupings for market factor
-# ═══════════════════════════════════════════════════════════════
-CAPESIZE_TYPES  = {"Capesize", "Newcastlemax", "Valemax", "VLOC"}
-PANAMAX_TYPES   = {"Panamax", "Kamsarmax", "Gearless"}
-SUPRAMAX_TYPES  = {"Supramax", "Ultramax", "Geared"}
-HANDYSIZE_TYPES = {"Handysize", "Handymax", "Mini-Bulker"}
+NEWBUILD_PRICES    = PARAMS["newbuildPrices"]
+FALLBACK_TYPE_MULT = PARAMS["fallbackTypeMult"]
+LDT_RATIOS         = PARAMS["ldtRatios"]
+ECO_BENCHMARKS     = PARAMS["ecoBenchmarks"]
 
-# ═══════════════════════════════════════════════════════════════
-# Builder quality tiers
-# ═══════════════════════════════════════════════════════════════
-TIER1_BUILDERS = [
-    "hyundai", "samsung", "daewoo", "imabari", "oshima", "tsuneishi",
-    "namura", "mitsubishi", "mitsui", "kawasaki", "jmu", "hanjin",
-    "universal shipbuilding", "sanoyas", "shin kurushima",
-]
-TIER2_BUILDERS = [
-    "cosco", "jiangnan", "hudong", "dalian", "yangzijiang", "nantong",
-    "new times", "jinhai", "zhejiang", "cssc", "csic",
-]
-TIER4_BUILDERS = [
-    "spain", "spanish", "huelva", "navantia", "astilleros",
-    "constanta", "mangalia", "gdynia", "split", "uljanik",
-]
+# Segment groupings from shared params
+CAPESIZE_TYPES  = set(PARAMS["segmentGroups"]["capesize"])
+PANAMAX_TYPES   = set(PARAMS["segmentGroups"]["panamax"])
+SUPRAMAX_TYPES  = set(PARAMS["segmentGroups"]["supramax"])
+HANDYSIZE_TYPES = set(PARAMS["segmentGroups"]["handysize"])
 
-# LDT/DWT ratios for scrap value
-LDT_RATIOS = {
-    "Bulk Carrier": 0.17, "Capesize": 0.15, "Newcastlemax": 0.15,
-    "Handymax": 0.18, "Handysize": 0.18, "Supramax": 0.17, "Ultramax": 0.17,
-    "Kamsarmax": 0.16, "Panamax": 0.16, "Post-Panamax": 0.16,
-    "Tanker": 0.18, "VLCC": 0.15, "Suezmax": 0.17, "Aframax": 0.18,
-    "Product Tanker": 0.19, "Chemical Tanker": 0.20, "Crude Oil Tanker": 0.17,
-    "Container Ship": 0.22, "General Cargo": 0.25,
-    "RoRo": 0.30, "Car Carrier": 0.35, "Reefer": 0.28,
-    "LNG Tanker": 0.25, "LPG Tanker": 0.22,
-}
+# Tanker premium
+TANKER_PREMIUM_FACTOR = PARAMS["tankerPremium"]["factor"]
+TANKER_PREMIUM_TYPES  = set(PARAMS["tankerPremium"]["types"])
 
-# Eco benchmarks (tons/day fuel consumption)
-ECO_BENCHMARKS = {
-    "Capesize": 35, "Newcastlemax": 37, "Kamsarmax": 28, "Panamax": 26,
-    "Post-Panamax": 30, "Ultramax": 24, "Supramax": 23, "Handymax": 20,
-    "Handysize": 18, "Mini-Bulker": 12,
-    "VLCC": 65, "Suezmax": 45, "Aframax": 38, "Product Tanker": 28,
-    "Chemical Tanker": 22, "Crude Oil Tanker": 40, "LNG Tanker": 80,
-    "LPG Tanker": 40, "Container Ship": 120, "General Cargo": 15,
-}
+# Market factor baselines
+MF_BASELINES = PARAMS["marketFactorBaselines"]
+
+# Builder tiers from shared params
+TIER1_BUILDERS = PARAMS["builderTiers"]["tier1"]["keywords"]
+TIER1_FACTOR   = PARAMS["builderTiers"]["tier1"]["factor"]
+TIER2_BUILDERS = PARAMS["builderTiers"]["tier2"]["keywords"]
+TIER2_FACTOR   = PARAMS["builderTiers"]["tier2"]["factor"]
+TIER4_BUILDERS = PARAMS["builderTiers"]["tier4"]["keywords"]
+TIER4_FACTOR   = PARAMS["builderTiers"]["tier4"]["factor"]
+
+# Depreciation brackets from shared params
+DEP_BRACKETS = PARAMS["depreciation"]["brackets"]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -111,10 +57,8 @@ def newbuild_price(ship_type, dwt):
     dwt = max(dwt, 500)
     if ship_type in NEWBUILD_PRICES:
         ref = NEWBUILD_PRICES[ship_type]
-        # Economies of scale: exponent 0.7
         nb = ref["nb"] * ((dwt / ref["dwt"]) ** 0.7)
         return nb
-    # Fallback: use Bulk Carrier curve × type multiplier
     ref = NEWBUILD_PRICES["Bulk Carrier"]
     mult = FALLBACK_TYPE_MULT.get(ship_type, 1.0)
     nb = ref["nb"] * ((dwt / ref["dwt"]) ** 0.7) * mult
@@ -125,41 +69,44 @@ def newbuild_price(ship_type, dwt):
 # B) Hedonic depreciation with survey-cycle penalties
 # ═══════════════════════════════════════════════════════════════
 def depreciation(age):
-    """Market-calibrated — fitted to 18 real S&P transactions (Jun 2026)."""
-    if age <= 0: return 1.12
-    if age <= 2: return 1.08
-    if age <= 5: return 1.0 - (age - 2) * 0.02
-    if age <= 9: return 0.94 - (age - 5) * 0.04
-    if age <= 14: return 0.78 - (age - 9) * 0.052
-    if age <= 20: return 0.52 - (age - 14) * 0.037
-    if age <= 25: return 0.30 - (age - 20) * 0.03
-    return max(0.08, 0.15 - (age - 25) * 0.015)
+    """Market-calibrated — fitted to 18 real S&P transactions (Jun 2026).
+    Parameters loaded from model_params.json."""
+    for b in DEP_BRACKETS:
+        if age <= b["maxAge"]:
+            if "slope" in b:
+                val = b["startValue"] - (age - b["fromAge"]) * b["slope"]
+                return max(val, b.get("floor", 0))
+            return b["value"]
+    # Beyond all brackets
+    last = DEP_BRACKETS[-1]
+    val = last["startValue"] - (age - last["fromAge"]) * last["slope"]
+    return max(val, last.get("floor", 0.08))
 
 
 def market_factor(ship_type, bdi, charter_rates):
     if ship_type in CAPESIZE_TYPES:
-        rate     = charter_rates.get("capesize", 29000)
-        baseline = 22000
+        seg = "capesize"
     elif ship_type in PANAMAX_TYPES:
-        rate     = charter_rates.get("panamax", 21500)
-        baseline = 16000
+        seg = "panamax"
     elif ship_type in SUPRAMAX_TYPES:
-        rate     = charter_rates.get("supramax", 24000)
-        baseline = 14000
+        seg = "supramax"
     elif ship_type in HANDYSIZE_TYPES:
-        rate     = charter_rates.get("handysize", 13500)
-        baseline = 11000
+        seg = "handysize"
     else:
-        rate     = bdi
-        baseline = 1500
+        seg = "other"
+
+    bl = MF_BASELINES[seg]
+    if seg == "other":
+        rate = bdi
+    else:
+        rate = charter_rates.get(seg, bl["defaultRate"])
+    baseline = bl["baseline"]
 
     ratio = rate / baseline
     base = 0.85 + 0.15 * (ratio ** 0.5)
-    # Tanker market premium (sanctions-driven, mid-2026)
-    tanker_types = {"VLCC", "Suezmax", "Aframax", "Product Tanker", "Chemical Tanker",
-                    "Crude Oil Tanker", "Tanker", "Oil/Chemical Tanker"}
-    if ship_type in tanker_types:
-        base *= 1.15  # +15% tanker asset premium (fleet tightness + sanctions)
+
+    if ship_type in TANKER_PREMIUM_TYPES:
+        base *= TANKER_PREMIUM_FACTOR
     return base
 
 
@@ -201,12 +148,12 @@ def builder_factor(builder):
         return 1.0
     bl = builder.lower()
     if any(p in bl for p in TIER1_BUILDERS):
-        return 1.07   # Tier 1 (Japan/Korea top): +5-8% → midpoint 7%
+        return TIER1_FACTOR
     if any(p in bl for p in TIER2_BUILDERS):
-        return 1.015  # Tier 2 (China major): +0-3% → midpoint 1.5%
+        return TIER2_FACTOR
     if any(p in bl for p in TIER4_BUILDERS):
-        return 0.925  # Tier 4 (Minor yards): -5-10% → midpoint 7.5%
-    return 1.0        # Tier 3 (China small / EU standard): 0%
+        return TIER4_FACTOR
+    return 1.0
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -321,6 +268,7 @@ def recommendation(value, stype, dwt, age, status, market):
 
 def main():
     market = load_market_data()
+    print(f"Model params v{PARAMS.get('version','?')} loaded from {MODEL_PARAMS}")
     print(f"Market data ({market['date']}): BDI={market['bdi']}, "
           f"Capesize={market['charter_rates'].get('capesize')}, "
           f"Panamax={market['charter_rates'].get('panamax')}, "
