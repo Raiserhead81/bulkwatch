@@ -47,8 +47,33 @@ function isRateLimited(ip: string, pathname: string): boolean {
   return false;
 }
 
+const ALLOWED_ORIGINS = [
+  "https://vessels.gemivo.de",
+  "http://localhost:3099",
+];
+
+function isOriginAllowed(req: NextRequest): boolean {
+  const origin = req.headers.get("origin");
+  const referer = req.headers.get("referer");
+  if (origin) return ALLOWED_ORIGINS.some(o => origin === o);
+  if (referer) return ALLOWED_ORIGINS.some(o => referer.startsWith(o));
+  // No origin/referer = same-site navigation (browser forms, curl, etc.)
+  return true;
+}
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // CSRF protection: block mutating requests from foreign origins
+  const method = req.method;
+  if (pathname.startsWith("/api/") && ["POST", "PUT", "DELETE", "PATCH"].includes(method)) {
+    if (!isOriginAllowed(req)) {
+      return NextResponse.json(
+        { error: "CSRF check failed: origin not allowed" },
+        { status: 403 }
+      );
+    }
+  }
 
   // Rate limiting for all API endpoints
   if (pathname.startsWith("/api/")) {
