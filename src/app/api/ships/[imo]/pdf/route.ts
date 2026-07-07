@@ -1,44 +1,9 @@
 import { getDb } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
+import { toShip } from "@/lib/shipMapper";
 import { estimatePrice, formatPrice, getRecommendationLabel } from "@/lib/priceEstimator";
 
 export const dynamic = "force-dynamic";
-
-function toShip(row: Record<string, unknown>) {
-  return {
-    imo: row.imo as string,
-    name: row.name as string,
-    mmsi: row.mmsi as string,
-    type: row.type as string,
-    dwt: (row.dwt as number) || 0,
-    length: (row.length as number) || 0,
-    beam: (row.beam as number) || 0,
-    draft: (row.draft as number) || 0,
-    yearBuilt: (row.year_built as number) || 0,
-    builder: row.builder as string,
-    flag: row.flag as string || "Unknown",
-    operator: row.operator as string,
-    homePort: row.home_port as string,
-    imageUrl: row.image_url as string,
-    status: (row.status as string) || "active",
-    grossTonnage: (row.gross_tonnage as number) || 0,
-    netTonnage: (row.net_tonnage as number) || 0,
-    engineType: row.engine_type as string,
-    enginePowerKw: (row.engine_power_kw as number) || 0,
-    speedKnots: (row.speed_knots as number) || 0,
-    fuelConsumption: (row.fuel_consumption_tons_day as number) || 0,
-    fuelType: row.fuel_type as string,
-    crewSize: (row.crew_size as number) || 0,
-    grainCapacity: (row.grain_capacity as number) || 0,
-    holds: (row.holds as number) || 0,
-    hatches: (row.hatches as number) || 0,
-    cranes: row.cranes as string,
-    classSociety: row.class_society as string,
-    deliveryDate: row.delivery_date as string,
-    lat: row.lat as number,
-    lon: row.lon as number,
-  };
-}
 
 function recColor(r: string) {
   if (r === "BUY")   return "#10b981";
@@ -56,7 +21,7 @@ export async function GET(
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const ship = toShip(row);
-  const price = estimatePrice(ship);
+  const price = estimatePrice(ship as any);
   const currentYear = new Date().getFullYear();
   const effectiveYear = ship.yearBuilt > 1900 ? ship.yearBuilt : currentYear - 10;
   const age = currentYear - effectiveYear;
@@ -64,33 +29,38 @@ export async function GET(
 
   // Voyage simulation (simplified server-side)
   const voyageHtml = ship.lat && ship.lon
-    ? `<div style="margin-top:8px;font-size:13px;color:#94a3b8;">Last known position: ${ship.lat.toFixed(3)}, ${ship.lon.toFixed(3)}</div>`
+    ? `<div style="margin-top:8px;font-size:13px;color:#94a3b8;">Last known position: ${(ship.lat as number).toFixed(3)}, ${(ship.lon as number).toFixed(3)}</div>`
     : "";
 
   const specs = [
     ["Type", ship.type],
-    ["DWT", ship.dwt > 0 ? `${ship.dwt.toLocaleString("en-US")} t` : "-"],
+    ["DWT", ship.dwt > 0 ? `${(ship.dwt as number).toLocaleString("en-US")} t` : "-"],
     ["Length", ship.length > 0 ? `${ship.length} m` : "-"],
     ["Beam", ship.beam > 0 ? `${ship.beam} m` : "-"],
     ["Draft", ship.draft > 0 ? `${ship.draft} m` : "-"],
     ["Year Built", ship.yearBuilt > 0 ? `${ship.yearBuilt}` : "-"],
     ["Builder", ship.builder || "-"],
     ["Flag", ship.flag],
+    ["Owner", ship.owner || "-"],
+    ["Manager", ship.manager || "-"],
     ["Operator", ship.operator || "-"],
     ["Home Port", ship.homePort || "-"],
     ["Status", ship.status],
-    ["Gross Tonnage", ship.grossTonnage > 0 ? `${ship.grossTonnage.toLocaleString("en-US")} GT` : "-"],
-    ["Net Tonnage", ship.netTonnage > 0 ? `${ship.netTonnage.toLocaleString("en-US")} NT` : "-"],
+    ["Gross Tonnage", ship.grossTonnage > 0 ? `${(ship.grossTonnage as number).toLocaleString("en-US")} GT` : "-"],
+    ["Net Tonnage", ship.netTonnage > 0 ? `${(ship.netTonnage as number).toLocaleString("en-US")} NT` : "-"],
     ["Engine", ship.engineType || "-"],
-    ["Engine Power", ship.enginePowerKw > 0 ? `${(ship.enginePowerKw / 1000).toFixed(0)} MW` : "-"],
+    ["Engine Power", ship.enginePowerKw > 0 ? `${((ship.enginePowerKw as number) / 1000).toFixed(0)} MW` : "-"],
     ["Speed", ship.speedKnots > 0 ? `${ship.speedKnots} kn` : "-"],
     ["Fuel", ship.fuelType || "-"],
     ["Fuel Consumption", ship.fuelConsumption > 0 ? `${ship.fuelConsumption} t/day` : "-"],
+    ["TEU", ship.teu > 0 ? `${(ship.teu as number).toLocaleString("en-US")}` : "-"],
     ["Crew", ship.crewSize > 0 ? `${ship.crewSize}` : "-"],
     ["Holds/Hatches", ship.holds > 0 ? `${ship.holds} / ${ship.hatches}` : "-"],
-    ["Grain Capacity", ship.grainCapacity > 0 ? `${ship.grainCapacity.toLocaleString("en-US")} m3` : "-"],
+    ["Grain Capacity", ship.grainCapacity > 0 ? `${(ship.grainCapacity as number).toLocaleString("en-US")} m3` : "-"],
     ["Cranes", ship.cranes || "-"],
     ["Class Society", ship.classSociety || "-"],
+    ["Classification", ship.classification || "-"],
+    ["P&I Club", ship.pAndI || "-"],
     ["IMO", ship.imo],
   ].filter(([, v]) => v !== "-");
 
@@ -184,7 +154,7 @@ export async function GET(
   return new NextResponse(html, {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Content-Disposition": `inline; filename="${ship.name.replace(/[^a-zA-Z0-9]/g, "_")}_Report.html"`,
+      "Content-Disposition": `inline; filename="${(ship.name as string).replace(/[^a-zA-Z0-9]/g, "_")}_Report.html"`,
     },
   });
 }

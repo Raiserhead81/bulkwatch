@@ -1,4 +1,5 @@
 import { getDb } from "@/lib/db";
+import { toShip } from "@/lib/shipMapper";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -19,34 +20,11 @@ export async function GET(request: NextRequest) {
   // Get ships for this operator
   const ships = (db.prepare(
     "SELECT * FROM ships WHERE operator LIKE ? ORDER BY dwt DESC"
-  ).all(`%${operator}%`) as Record<string, unknown>[]).map(row => ({
-    imo: row.imo,
-    name: row.name,
-    type: row.type,
-    dwt: row.dwt || 0,
-    length: row.length || 0,
-    beam: row.beam || 0,
-    draft: row.draft || 0,
-    yearBuilt: row.year_built || 0,
-    builder: row.builder,
-    flag: row.flag || "Unknown",
-    operator: row.operator,
-    imageUrl: row.image_url,
-    status: row.status || "active",
-    grossTonnage: row.gross_tonnage || 0,
-    engineType: row.engine_type,
-    enginePowerKw: row.engine_power_kw || 0,
-    speedKnots: row.speed_knots || 0,
-    fuelConsumption: row.fuel_consumption_tons_day || 0,
-    fuelType: row.fuel_type,
-    crewSize: row.crew_size || 0,
-    lat: row.lat,
-    lon: row.lon,
-  }));
+  ).all(`%${operator}%`) as Record<string, unknown>[]).map(row => toShip(row));
 
   // Fleet stats
   const currentYear = new Date().getFullYear();
-  const totalDwt = ships.reduce((s, sh) => s + (sh.dwt as number), 0);
+  const totalDwt = ships.reduce((s, sh) => s + ((sh.dwt as number) || 0), 0);
   const ages = ships.filter(s => (s.yearBuilt as number) > 0).map(s => currentYear - (s.yearBuilt as number));
   const avgAge = ages.length > 0 ? (ages.reduce((a, b) => a + b, 0) / ages.length) : 0;
   const types: Record<string, number> = {};
