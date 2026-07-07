@@ -1,11 +1,11 @@
 {
   "daemon": "running",
-  "started": "2026-07-03 08:18",
-  "updated": "2026-07-03 10:55:45",
-  "enriched": 288,
-  "errors": 20,
-  "rate_per_hour": 110.2,
-  "runtime_hours": 2.61,
+  "started": "2026-07-07 08:27",
+  "updated": "2026-07-07 08:41:25",
+  "enriched": 24,
+  "errors": 4,
+  "rate_per_hour": 99.9,
+  "runtime_hours": 0.24,
   "accounts": [
     {
       "email": "jjeppsen@proton.me",
@@ -18,20 +18,29 @@
     },
     {
       "email": "G.Klausen88@proton.me",
-      "status": "active",
-      "daily_count": 154,
+      "status": "locked",
+      "daily_count": 0,
       "daily_limit": 200,
-      "enriched": 143,
-      "errors": 8,
+      "enriched": 0,
+      "errors": 0,
       "consecutive_fails": 0
     },
     {
       "email": "hhansen77@proton.me",
-      "status": "active",
-      "daily_count": 154,
+      "status": "locked",
+      "daily_count": 0,
       "daily_limit": 200,
-      "enriched": 145,
-      "errors": 9,
+      "enriched": 0,
+      "errors": 0,
+      "consecutive_fails": 0
+    },
+    {
+      "email": "shansen99@proton.me",
+      "status": "active",
+      "daily_count": 28,
+      "daily_limit": 200,
+      "enriched": 24,
+      "errors": 2,
       "consecutive_fails": 0
     }
   ]
