@@ -277,13 +277,19 @@ class EquasisSession:
 
 
 def get_next_ship(con, cutoff):
-    """Get next ship to scrape."""
+    """Get next ship to scrape. Prioritizes: 1) never scraped + no year_built, 
+    2) never scraped, 3) needs re-scrape + no year_built, 4) needs re-scrape."""
     return con.execute("""
         SELECT imo, name, dwt FROM ships
         WHERE imo NOT LIKE 'cat-%'
         AND (equasis_last_scraped IS NULL OR equasis_last_scraped < ?)
         ORDER BY
-            CASE WHEN equasis_last_scraped IS NULL THEN 0 ELSE 1 END,
+            CASE 
+                WHEN equasis_last_scraped IS NULL AND (year_built IS NULL OR year_built = 0) THEN 0
+                WHEN equasis_last_scraped IS NULL THEN 1
+                WHEN year_built IS NULL OR year_built = 0 THEN 2
+                ELSE 3
+            END,
             RANDOM()
         LIMIT 1
     """, (cutoff,)).fetchone()
