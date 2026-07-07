@@ -64,3 +64,4 @@ db/*.db-wal
 *.log
 
 .cloudflare-token
+config/

@@ -13,18 +13,32 @@ RESCRAPE_DAYS = 14
 LOG_EVERY = 10  # print progress every N ships
 DAILY_LIMIT_PER_ACCOUNT = 200  # max requests per account per day to avoid locks
 
-ACCOUNTS = [
+ACCOUNTS_FILE = "/opt/bulkwatch/config/equasis-accounts.json"
+
+# Hardcoded fallback (used if config file not found)
+_FALLBACK_ACCOUNTS = [
     ("jjeppsen@proton.me", "!nfinitY!981"),
     ("G.Klausen88@proton.me", "!nfinitY!981"),
     ("hhansen77@proton.me", "!nfinitY!981"),
     ("shansen99@proton.me", "!nfinitY!981"),
-    # gesperrt bis ~09.07.2026:
-    # ("kayconrad@posteo.de", "!nfinitY!981"),
-    # ("kayconrad81@googlemail.com", "!nfinitY!981"),
-    # ("kpoffen@proton.me", "!nfinitY!981"),
-    # ("apmoeller1@proton.me", "!nfinitY!981"),
-    # ("aandresen1@proton.me", "!nfinitY!981"),
 ]
+
+def load_accounts():
+    """Load accounts from JSON config file, fallback to hardcoded."""
+    try:
+        with open(ACCOUNTS_FILE) as f:
+            data = json.load(f)
+        accts = [(a["email"], a["password"]) for a in data.get("accounts", [])]
+        if accts:
+            print(f"Loaded {len(accts)} accounts from {ACCOUNTS_FILE}")
+            return accts
+    except FileNotFoundError:
+        print(f"Config {ACCOUNTS_FILE} not found, using fallback accounts")
+    except Exception as e:
+        print(f"Error loading {ACCOUNTS_FILE}: {e}, using fallback accounts")
+    return _FALLBACK_ACCOUNTS
+
+ACCOUNTS = load_accounts()
 
 STATUS_MAP = {
     "In Service": "active", "In Service/Commission": "active",
@@ -95,6 +109,7 @@ class EquasisSession:
         except Exception as e:
             print(f"  Login failed ({self.email}): {e}", flush=True)
             self.opener = None
+            self._last_login_error = str(e)
             return False
 
     def is_available(self):
@@ -363,11 +378,22 @@ def main():
 
     sessions = [EquasisSession(email, pw) for email, pw in ACCOUNTS]
 
-    for s in sessions:
-        if s.login():
-            print(f"  OK: {s.email}", flush=True)
-        else:
-            print(f"  LOCKED: {s.email}", flush=True)
+    # Login with retry for temporary errors (503, timeouts)
+    for attempt in range(3):
+        pending = [s for s in sessions if not s.locked and s.opener is None]
+        if not pending:
+            break
+        if attempt > 0:
+            print(f"  Retry {attempt}/2 in 60s...", flush=True)
+            time.sleep(60)
+        for s in pending:
+            if s.login():
+                print(f"  OK: {s.email}", flush=True)
+            elif s.locked:
+                print(f"  LOCKED: {s.email} (Equasis-Sperre)", flush=True)
+            else:
+                err = getattr(s, '_last_login_error', 'unknown')
+                print(f"  TEMP-FAIL: {s.email} ({err})", flush=True)
 
     con = sqlite3.connect(DB)
     con.execute("PRAGMA journal_mode=WAL")
@@ -429,12 +455,18 @@ def main():
                 write_status(sessions, enriched, errors, start_time)
                 time.sleep(min(wait, 7200))
             else:
-                print("All accounts locked. Sleeping 2h...", flush=True)
-                time.sleep(7200)
+                # Check if actually locked or just temporary errors
+                actually_locked = [s for s in sessions if s.locked and s.lock_until]
+                if len(actually_locked) == len(sessions):
+                    print("All accounts locked (Equasis-Sperre). Sleeping 2h...", flush=True)
+                    time.sleep(7200)
+                else:
+                    print(f"All accounts unavailable ({len(actually_locked)} locked, rest temp-fail). Retry in 5min...", flush=True)
+                    time.sleep(300)
                 for s in sessions:
                     if s.locked and s.lock_until and datetime.now() > s.lock_until:
                         s.locked = False
-                        s.opener = None
+                    if not s.locked and s.opener is None:
                         if s.login():
                             print(f"  Back online: {s.email}", flush=True)
             continue
