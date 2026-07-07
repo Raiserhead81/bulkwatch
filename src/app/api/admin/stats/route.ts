@@ -11,45 +11,31 @@ function getUser(req: NextRequest) {
   return verifySession(session);
 }
 
-// ── Valuation model (mirrors priceEstimator.ts logic for server-side use) ──
+// ── Valuation model — loads from model_params.json (single source of truth) ──
 
-const NEWBUILD_PRICES: Record<string, { dwt: number; nb: number }> = {
-  "Capesize":          { dwt: 180000, nb: 70_000_000 },
-  "Newcastlemax":      { dwt: 210000, nb: 72_000_000 },
-  "Kamsarmax":         { dwt: 82000,  nb: 38_000_000 },
-  "Panamax":           { dwt: 77000,  nb: 35_000_000 },
-  "Post-Panamax":      { dwt: 95000,  nb: 42_000_000 },
-  "Ultramax":          { dwt: 64000,  nb: 35_000_000 },
-  "Supramax":          { dwt: 58000,  nb: 33_000_000 },
-  "Handymax":          { dwt: 50000,  nb: 32_000_000 },
-  "Handysize":         { dwt: 38000,  nb: 31_000_000 },
-  "Mini-Bulker":       { dwt: 12000,  nb: 18_000_000 },
-  "VLCC":              { dwt: 300000, nb: 135_000_000 },
-  "Suezmax":           { dwt: 157000, nb: 95_000_000  },
-  "Aframax":           { dwt: 115000, nb: 72_000_000  },
-  "Product Tanker":    { dwt: 50000,  nb: 48_000_000  },
-  "Chemical Tanker":   { dwt: 25000,  nb: 42_000_000  },
-  "Crude Oil Tanker":  { dwt: 105000, nb: 60_000_000  },
-  "Container Ship":    { dwt: 70000,  nb: 95_000_000  },
-  "LNG Tanker":        { dwt: 80000,  nb: 250_000_000 },
-  "LPG Tanker":        { dwt: 50000,  nb: 95_000_000  },
-  "Car Carrier":       { dwt: 15000,  nb: 70_000_000  },
-  "RoRo":              { dwt: 12000,  nb: 45_000_000  },
-  "Bulk Carrier":      { dwt: 60000,  nb: 34_000_000  },
-  "General Cargo":     { dwt: 10000,  nb: 18_000_000  },
-  "Multipurpose":      { dwt: 15000,  nb: 22_000_000  },
-  "Heavy Lift":        { dwt: 20000,  nb: 45_000_000  },
-};
+function loadModelParams(): Record<string, { dwt: number; nb: number }> {
+  try {
+    const raw = readFileSync("/opt/bulkwatch/db/model_params.json", "utf8");
+    const params = JSON.parse(raw);
+    return params.newbuildPrices || {};
+  } catch {
+    // Minimal fallback if JSON missing
+    return { "Bulk Carrier": { dwt: 60000, nb: 34_000_000 } };
+  }
+}
+
+const NEWBUILD_PRICES = loadModelParams();
 
 function newbuildPrice(type: string, dwt: number): number {
+  const safeDwt = Math.max(dwt, 500);
   const seg = NEWBUILD_PRICES[type];
   if (seg) {
-    const scale = Math.pow(dwt / seg.dwt, 0.65);
+    const scale = Math.pow(safeDwt / seg.dwt, 0.65);
     return seg.nb * scale;
   }
   // fallback: generic bulk curve
-  const base = NEWBUILD_PRICES["Bulk Carrier"];
-  const scale = Math.pow(Math.max(dwt, 500) / base.dwt, 0.65);
+  const base = NEWBUILD_PRICES["Bulk Carrier"] || { dwt: 60000, nb: 34_000_000 };
+  const scale = Math.pow(safeDwt / base.dwt, 0.65);
   return base.nb * scale;
 }
 
