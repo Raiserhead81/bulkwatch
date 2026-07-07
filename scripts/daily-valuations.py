@@ -20,6 +20,12 @@ def load_model_params():
 
 PARAMS = load_model_params()
 
+TYPE_ALIASES       = PARAMS.get("type_aliases", {})
+
+def resolve_type(raw_type):
+    """Resolve raw ship type to known segment via aliases."""
+    return TYPE_ALIASES.get(raw_type, raw_type)
+
 NEWBUILD_PRICES    = PARAMS["newbuildPrices"]
 FALLBACK_TYPE_MULT = PARAMS["fallbackTypeMult"]
 LDT_RATIOS         = PARAMS["ldtRatios"]
@@ -209,7 +215,7 @@ def estimate(ship_row, market):
     classification = ship_row[10] if len(ship_row) > 10 else None
     length = ship_row[11] if len(ship_row) > 11 else None
     beam = ship_row[12] if len(ship_row) > 12 else None
-    stype    = stype or ""
+    stype    = resolve_type(stype or )""
     dwt      = dwt or 0
     builder  = builder or ""
     status   = status or "active"

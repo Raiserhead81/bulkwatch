@@ -181,6 +181,12 @@ function initParams() {
 }
 
 const P = initParams();
+const TYPE_ALIASES: Record<string, string> = (tryLoadJson("/opt/bulkwatch/db/model_params.json") ?? {}).type_aliases ?? {};
+
+function resolveType(rawType: string): string {
+  return TYPE_ALIASES[rawType] ?? rawType;
+}
+
 const NEWBUILD_PRICES    = P.nbPrices;
 const FALLBACK_TYPE_MULT = P.fallbackMult;
 const DEP_BRACKETS       = P.depBrackets as DepBracket[];
@@ -332,9 +338,10 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   const effectiveYear = ship.yearBuilt > 1900 ? ship.yearBuilt : currentYear - 10;
   const age           = currentYear - effectiveYear;
   const dwt           = Math.max(ship.dwt || 0, 500);
+  const shipType      = resolveType(ship.type);
 
-  const nb = newbuildPrice(ship.type, dwt);
-  const isKnownSegment = !!NEWBUILD_PRICES[ship.type];
+  const nb = newbuildPrice(shipType, dwt);
+  const isKnownSegment = !!NEWBUILD_PRICES[shipType];
   factors.push({
     label:  "Newbuild Cost",
     value:  `$${(nb / 1e6).toFixed(1)}M (${isKnownSegment ? ship.type : "estimated"})`,
@@ -359,13 +366,13 @@ export function estimatePrice(ship: Ship): PriceEstimate {
 
   factors.push({ label: "Age", value: ageLabel, impact: ageImpact, weight: age > 15 ? 30 : 20 });
 
-  const mf = marketFactor(ship.type);
-  const mfLabel = CAPESIZE_TYPES.has(ship.type)   ? `Capesize $${MARKET.charterRates.capesize.toLocaleString()}/d`
-                : PANAMAX_TYPES.has(ship.type)     ? `Panamax $${MARKET.charterRates.panamax.toLocaleString()}/d`
-                : SUPRAMAX_TYPES.has(ship.type)    ? `Supramax $${MARKET.charterRates.supramax.toLocaleString()}/d`
-                : HANDYSIZE_TYPES.has(ship.type)   ? `Handysize $${MARKET.charterRates.handysize.toLocaleString()}/d`
+  const mf = marketFactor(shipType);
+  const mfLabel = CAPESIZE_TYPES.has(shipType)   ? `Capesize $${MARKET.charterRates.capesize.toLocaleString()}/d`
+                : PANAMAX_TYPES.has(shipType)     ? `Panamax $${MARKET.charterRates.panamax.toLocaleString()}/d`
+                : SUPRAMAX_TYPES.has(shipType)    ? `Supramax $${MARKET.charterRates.supramax.toLocaleString()}/d`
+                : HANDYSIZE_TYPES.has(shipType)   ? `Handysize $${MARKET.charterRates.handysize.toLocaleString()}/d`
                 : `BDI ${MARKET.bdi}`;
-  const tankerNote = TANKER_PREMIUM_TYPES.has(ship.type) ? ` +${Math.round((TANKER_PREMIUM_FACTOR - 1) * 100)}% tanker premium` : "";
+  const tankerNote = TANKER_PREMIUM_TYPES.has(shipType) ? ` +${Math.round((TANKER_PREMIUM_FACTOR - 1) * 100)}% tanker premium` : "";
   factors.push({
     label:  "Market",
     value:  `${mfLabel} — x${mf.toFixed(3)}${tankerNote} (${MARKET.date})`,
@@ -385,7 +392,7 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   }
 
   const fuelCons = (ship as any).fuelConsumption as number | undefined;
-  const eco = ecoPremium(fuelCons, dwt, ship.type, age);
+  const eco = ecoPremium(fuelCons, dwt, shipType, age);
   if (eco > 0) {
     factors.push({
       label:  "Eco Premium",
@@ -428,7 +435,7 @@ export function estimatePrice(ship: Ship): PriceEstimate {
     weight: statusMult === 0 ? 100 : 10,
   });
 
-  const scrap = scrapValue(dwt, ship.type);
+  const scrap = scrapValue(dwt, shipType);
   factors.push({
     label:  "Scrap Floor",
     value:  `$${(scrap / 1e6).toFixed(2)}M (LDT-based, ${MARKET.scrapPerLDT} $/LDT)`,
@@ -444,7 +451,7 @@ export function estimatePrice(ship: Ship): PriceEstimate {
     )
   );
 
-  const conf = confidenceScore(ship, age);
+  const conf = confidenceScore({...ship, type: shipType}, age);
 
   let recommendation: "BUY" | "WATCH" | "AVOID" = "WATCH";
   let recommendationReasoning = "";
