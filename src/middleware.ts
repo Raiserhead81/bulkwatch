@@ -65,12 +65,31 @@ export function middleware(req: NextRequest) {
     }
   }
 
+  // Public paths that need no auth
   if (
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
     pathname.startsWith("/login") ||
     pathname.includes(".")
   ) {
+    return NextResponse.next();
+  }
+
+  // Public API endpoints (no auth required)
+  const publicApiPaths = ["/api/auth/login", "/api/auth/logout", "/api/version"];
+  if (publicApiPaths.some(p => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
+
+  // All other API endpoints require auth
+  if (pathname.startsWith("/api")) {
+    const cookie = req.cookies.get("vessel_session")?.value;
+    if (!cookie) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const session = verifySession(cookie);
+    if (!session || !session.username) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.next();
   }
 
