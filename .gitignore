@@ -67,3 +67,4 @@ db/*.db-wal
 config/
 *.bak*
 src.bak.*
+bulkwatch/
