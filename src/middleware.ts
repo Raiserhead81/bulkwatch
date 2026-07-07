@@ -4,40 +4,38 @@ import { verifySession } from "@/lib/session";
 export const runtime = "nodejs";
 
 // ═══════════════════════════════════════════════════════════════
-// In-memory rate limiting (per IP)
+// In-memory rate limiting (per IP, per route category)
 // ═══════════════════════════════════════════════════════════════
 const rateLimitMap = new Map<string, number[]>();
 
-const RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
-  "/api/ships": { max: 60, windowMs: 60_000 },
-  "/api/ships/pdf": { max: 30, windowMs: 60_000 },
-};
+interface RateRule { max: number; windowMs: number }
+
+const RATE_RULES: Array<{ match: (p: string) => boolean; key: string; rule: RateRule }> = [
+  { match: p => p.startsWith("/api/chat"),     key: "chat",   rule: { max: 10, windowMs: 60_000 } },
+  { match: p => p.endsWith("/pdf"),            key: "pdf",    rule: { max: 30, windowMs: 60_000 } },
+  { match: p => p.startsWith("/api/admin"),    key: "admin",  rule: { max: 30, windowMs: 60_000 } },
+  { match: p => p.startsWith("/api/users"),    key: "users",  rule: { max: 30, windowMs: 60_000 } },
+  { match: p => p.startsWith("/api/ais"),      key: "ais",    rule: { max: 60, windowMs: 60_000 } },
+  { match: p => p.startsWith("/api/market"),   key: "market", rule: { max: 60, windowMs: 60_000 } },
+  { match: p => p.startsWith("/api/ships"),    key: "ships",  rule: { max: 60, windowMs: 60_000 } },
+  { match: p => p.startsWith("/api/"),         key: "api",    rule: { max: 60, windowMs: 60_000 } },
+];
 
 function isRateLimited(ip: string, pathname: string): boolean {
-  // Find matching rate limit rule
-  let rule: { max: number; windowMs: number } | undefined;
-  if (pathname.endsWith("/pdf")) {
-    rule = RATE_LIMITS["/api/ships/pdf"];
-  } else if (pathname.startsWith("/api/ships")) {
-    rule = RATE_LIMITS["/api/ships"];
-  }
-  if (!rule) return false;
+  const matched = RATE_RULES.find(r => r.match(pathname));
+  if (!matched) return false;
 
-  const key = ip + ":" + (pathname.endsWith("/pdf") ? "pdf" : "ships");
+  const key = ip + ":" + matched.key;
   const now = Date.now();
   const timestamps = rateLimitMap.get(key) ?? [];
+  const recent = timestamps.filter(t => now - t < matched.rule.windowMs);
 
-  // Remove old entries outside window
-  const recent = timestamps.filter(t => now - t < rule!.windowMs);
-
-  if (recent.length >= rule.max) {
-    return true;
-  }
+  if (recent.length >= matched.rule.max) return true;
 
   recent.push(now);
   rateLimitMap.set(key, recent);
 
-  // Periodic cleanup: remove stale IPs every ~100 requests
+  // Periodic cleanup
   if (rateLimitMap.size > 500) {
     for (const [k, v] of rateLimitMap) {
       const fresh = v.filter(t => now - t < 120_000);
@@ -52,8 +50,8 @@ function isRateLimited(ip: string, pathname: string): boolean {
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Rate limiting for API endpoints
-  if (pathname.startsWith("/api/ships")) {
+  // Rate limiting for all API endpoints
+  if (pathname.startsWith("/api/")) {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
             || req.headers.get("x-real-ip")
             || "unknown";
@@ -95,11 +93,8 @@ export function middleware(req: NextRequest) {
 
   const cookie = req.cookies.get("vessel_session")?.value;
   if (cookie) {
-    // Try signed session first
     const session = verifySession(cookie);
     if (session && session.username) return NextResponse.next();
-
-
   }
 
   return NextResponse.redirect(new URL("/login", req.url));
