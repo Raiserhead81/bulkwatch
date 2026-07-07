@@ -318,9 +318,15 @@ function executeSqlTags(text: string, db: ReturnType<typeof getDb>): string {
 
   while ((match = sqlRegex.exec(text)) !== null) {
     const sql = match[1].trim();
-    // Security: only SELECT
-    if (!/^SELECT/i.test(sql) || /INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|ATTACH|DETACH/i.test(sql)) {
-      result = result.replace(match[0], "\n\n> Query blocked: only SELECT statements allowed.\n\n");
+    // Security: whitelist — ONLY SELECT allowed, block dangerous keywords and sensitive data
+    const sqlUpper = sql.toUpperCase().replace(/\s+/g, " ").trim();
+    const isSelect = /^SELECT\b/i.test(sql);
+    const hasDangerous = /\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|ATTACH|DETACH|PRAGMA|VACUUM|REINDEX|REPLACE|MERGE|TRUNCATE|GRANT|REVOKE|SAVEPOINT|RELEASE|BEGIN|COMMIT|ROLLBACK|EXPLAIN)\b/i.test(sql);
+    const hasDotCommand = /^\s*\./m.test(sql);
+    const hasSystemTable = /\b(sqlite_master|sqlite_schema|sqlite_temp_master|sqlite_temp_schema|sqlite_sequence)\b/i.test(sql);
+    const hasPasswordCol = /\bpassword_hash\b/i.test(sql);
+    if (!isSelect || hasDangerous || hasDotCommand || hasSystemTable || hasPasswordCol) {
+      result = result.replace(match[0], "\n\n> Query blocked: only safe SELECT statements allowed.\n\n");
       continue;
     }
     try {
