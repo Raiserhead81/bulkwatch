@@ -220,8 +220,24 @@ const TIER4_FACTOR   = P.builderTiers.tier4.factor;
 // ═══════════════════════════════════════════════════════════════
 // A) Newbuild price with DWT scaling (economies of scale exp 0.7)
 // ═══════════════════════════════════════════════════════════════
-function newbuildPrice(shipType: string, dwt: number): number {
+function containerNewbuildPrice(teu: number): number {
+  if (!CONTAINER_SEGMENTS.length || teu <= 0) return 0;
+  for (const seg of CONTAINER_SEGMENTS) {
+    if (teu <= seg.maxTeu) return seg.nb;
+  }
+  return CONTAINER_SEGMENTS[CONTAINER_SEGMENTS.length - 1].nb;
+}
+
+function newbuildPrice(shipType: string, dwt: number, teu: number = 0): number {
   const safeDwt = Math.max(dwt, 500);
+
+  // Container ships: use TEU-based segmentation (6 classes)
+  if (shipType === "Container Ship") {
+    const effectiveTeu = teu > 0 ? teu : Math.round(safeDwt / 14);
+    const cnb = containerNewbuildPrice(effectiveTeu);
+    if (cnb > 0) return cnb;
+  }
+
   if (NEWBUILD_PRICES[shipType]) {
     const ref = NEWBUILD_PRICES[shipType];
     return ref.nb * Math.pow(safeDwt / ref.dwt, 0.7);
