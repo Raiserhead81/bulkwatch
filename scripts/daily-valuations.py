@@ -30,6 +30,7 @@ NEWBUILD_PRICES    = PARAMS["newbuildPrices"]
 FALLBACK_TYPE_MULT = PARAMS["fallbackTypeMult"]
 LDT_RATIOS         = PARAMS["ldtRatios"]
 ECO_BENCHMARKS     = PARAMS["ecoBenchmarks"]
+BIAS_CORRECTION    = PARAMS.get("segment_bias_correction", {})
 
 # Segment groupings from shared params
 CAPESIZE_TYPES  = set(PARAMS["segmentGroups"]["capesize"])
@@ -236,7 +237,8 @@ def estimate(ship_row, market):
     status_mult = {"scrapped": 0.20, "laid_up": 0.75,
                    "under_construction": 1.10, "lost": 0.0}.get(status, 1.0)
 
-    base_value = nb * dep * mf * bf * status_mult
+    bias = BIAS_CORRECTION.get(stype, 1.0)
+    base_value = nb * dep * mf * bf * status_mult * bias
     value      = max(base_value + eco, scrap if status not in ("scrapped", "lost") else 0)
 
     conf = confidence_score(

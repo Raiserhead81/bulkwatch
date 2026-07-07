@@ -174,9 +174,11 @@ function initParams() {
     date:         opexJson.date           ?? INLINE_MARKET.date,
   } : { ...INLINE_MARKET };
 
+  const biasCorrection = modelJson?.segment_bias_correction ?? {};
+
   return {
     nbPrices, fallbackMult, depBrackets, segGroups, mfBaselines,
-    tankerPremium, builderTiers, ldtRatios, ecoBenchmarks, market,
+    tankerPremium, builderTiers, ldtRatios, ecoBenchmarks, market, biasCorrection,
   };
 }
 
@@ -187,6 +189,7 @@ function resolveType(rawType: string): string {
   return TYPE_ALIASES[rawType] ?? rawType;
 }
 
+const BIAS_CORRECTION: Record<string, number> = P.biasCorrection;
 const NEWBUILD_PRICES    = P.nbPrices;
 const FALLBACK_TYPE_MULT = P.fallbackMult;
 const DEP_BRACKETS       = P.depBrackets as DepBracket[];
@@ -443,7 +446,8 @@ export function estimatePrice(ship: Ship): PriceEstimate {
     weight: 5,
   });
 
-  const base = nb * dep * mf * bf * statusMult;
+  const bias = BIAS_CORRECTION[shipType] ?? 1.0;
+  const base = nb * dep * mf * bf * statusMult * bias;
   const estimatedValueUSD = Math.round(
     Math.max(
       base + eco,

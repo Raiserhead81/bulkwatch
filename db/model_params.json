@@ -397,5 +397,20 @@
     "Power Station Vessel": "Multipurpose",
     "Standby-Safety Vessel": "Multipurpose",
     "Well-Stimulation Vessel": "Multipurpose"
+  },
+  "segment_bias_correction": {
+    "Capesize": 0.89,
+    "Newcastlemax": 0.89,
+    "Handymax": 0.88,
+    "Handysize": 0.88,
+    "Product Tanker": 0.84,
+    "Aframax": 0.85,
+    "Chemical Tanker": 0.87,
+    "VLCC": 0.9,
+    "Suezmax": 0.88,
+    "Crude Oil Tanker": 0.86,
+    "Oil/Chemical Tanker": 0.85,
+    "Container Ship": 0.92,
+    "LNG Tanker": 0.93
   }
 }
