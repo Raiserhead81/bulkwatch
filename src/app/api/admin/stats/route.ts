@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/lib/session";
+import { estimatePrice } from "@/lib/priceEstimator";
 import Database from "better-sqlite3";
 import { readFileSync, existsSync, statSync } from "fs";
 
@@ -9,52 +10,6 @@ function getUser(req: NextRequest) {
   const session = req.cookies.get("vessel_session")?.value;
   if (!session) return null;
   return verifySession(session);
-}
-
-// ── Valuation model — loads from model_params.json (single source of truth) ──
-
-function loadModelParams(): Record<string, { dwt: number; nb: number }> {
-  try {
-    const raw = readFileSync("/opt/bulkwatch/db/model_params.json", "utf8");
-    const params = JSON.parse(raw);
-    return params.newbuildPrices || {};
-  } catch {
-    // Minimal fallback if JSON missing
-    return { "Bulk Carrier": { dwt: 60000, nb: 34_000_000 } };
-  }
-}
-
-const NEWBUILD_PRICES = loadModelParams();
-
-function newbuildPrice(type: string, dwt: number): number {
-  const safeDwt = Math.max(dwt, 500);
-  const seg = NEWBUILD_PRICES[type];
-  if (seg) {
-    const scale = Math.pow(safeDwt / seg.dwt, 0.65);
-    return seg.nb * scale;
-  }
-  // fallback: generic bulk curve
-  const base = NEWBUILD_PRICES["Bulk Carrier"] || { dwt: 60000, nb: 34_000_000 };
-  const scale = Math.pow(safeDwt / base.dwt, 0.65);
-  return base.nb * scale;
-}
-
-function depreciation(age: number): number {
-  if (age <= 0) return 1.0;
-  if (age <= 5) return 1.0 - age * 0.025;
-  if (age <= 10) return 0.875 - (age - 5) * 0.030;
-  if (age <= 15) return 0.725 - (age - 10) * 0.030;
-  if (age <= 20) return 0.575 - (age - 15) * 0.025;
-  if (age <= 25) return 0.450 - (age - 20) * 0.020;
-  return Math.max(0.35 - (age - 25) * 0.015, 0.10);
-}
-
-function serverEstimate(shipType: string, dwt: number, yearBuilt: number): number {
-  const age = new Date().getFullYear() - (yearBuilt > 1900 ? yearBuilt : 2010);
-  const effectiveDwt = Math.max(dwt || 0, 500);
-  const nb = newbuildPrice(shipType, effectiveDwt);
-  const dep = depreciation(age);
-  return nb * dep;
 }
 
 // ── Pipeline status helper ──
@@ -146,27 +101,47 @@ export async function GET(req: NextRequest) {
     // S&P transactions
     const spCount = (db.prepare("SELECT COUNT(*) as n FROM sp_transactions").get() as { n: number }).n;
 
-    // Model accuracy: compare sp_transactions with model estimates
+    // Model accuracy: compare sp_transactions with estimatePrice (shared model)
     const spRows = db.prepare(
-      `SELECT ship_type, dwt, year_built, sale_price_usd
-       FROM sp_transactions
-       WHERE ship_type IS NOT NULL AND dwt IS NOT NULL AND year_built IS NOT NULL AND sale_price_usd > 0`
-    ).all() as Array<{ ship_type: string; dwt: number; year_built: number; sale_price_usd: number }>;
+      `SELECT s.imo, s.name, s.type as ship_type, s.dwt, s.year_built, s.flag, s.status,
+              s.builder, s.length, s.beam, s.draft, s.operator, s.fuel_consumption_tons_day,
+              s.classification, s.mmsi, sp.sale_price_usd
+       FROM sp_transactions sp
+       JOIN ships s ON s.imo = sp.imo
+       WHERE s.type IS NOT NULL AND s.dwt IS NOT NULL AND s.year_built IS NOT NULL AND sp.sale_price_usd > 0`
+    ).all() as Array<Record<string, unknown>>;
 
     let modelAccuracy = null;
     if (spRows.length >= 3) {
       const errors: number[] = [];
-      const pctErrors: number[] = [];
       const biases: number[] = [];
 
       for (const sp of spRows) {
-        const modelVal = serverEstimate(sp.ship_type, sp.dwt, sp.year_built);
+        const ship = {
+          id: `imo-${sp.imo}`,
+          imo: sp.imo as string,
+          name: sp.name as string,
+          mmsi: (sp.mmsi as string) || "",
+          type: sp.ship_type as string,
+          dwt: (sp.dwt as number) || 0,
+          length: (sp.length as number) || 0,
+          beam: (sp.beam as number) || 0,
+          draft: (sp.draft as number) || 0,
+          yearBuilt: (sp.year_built as number) || 0,
+          builder: (sp.builder as string) || "",
+          flag: (sp.flag as string) || "Unknown",
+          operator: (sp.operator as string) || "",
+          status: (sp.status as string) || "active",
+          fuelConsumption: (sp.fuel_consumption_tons_day as number) || 0,
+          classification: (sp.classification as string) || "",
+        };
+        const est = estimatePrice(ship as any);
+        const modelVal = est.estimatedValueUSD;
         if (modelVal <= 0) continue;
-        const actual = sp.sale_price_usd;
+        const actual = sp.sale_price_usd as number;
         const absErr = Math.abs(modelVal - actual) / actual;
         const bias = (modelVal - actual) / actual;
         errors.push(absErr);
-        pctErrors.push(absErr);
         biases.push(bias);
       }
 
