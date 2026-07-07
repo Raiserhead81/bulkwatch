@@ -1,12 +1,10 @@
 // Vessel value estimation — Hedonic Pricing Model v4.1
-// Segment-specific newbuild prices × survey-cycle depreciation × segment market factor
-// ALL parameters loaded from shared db/model_params.json (single source of truth with Python).
-// Market data loaded from db/opex_rates.json (live, updated daily by cron).
+// Segment-specific newbuild prices x survey-cycle depreciation x segment market factor
+// Server-side: parameters loaded from db/model_params.json + db/opex_rates.json
+// Client-side: uses inline fallback constants (same values, compiled at build time)
 // Sources: Clarksons, Baltic Exchange, NautiSNP, Xclusiv Shipbrokers
 
 import type { Ship } from "@/data/ships";
-import * as fs from "fs";
-import * as path from "path";
 
 export interface PriceEstimate {
   estimatedValueUSD: number;
@@ -23,19 +21,9 @@ export interface PriceEstimate {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Load shared model parameters from JSON
+// Model parameters — inline defaults (kept in sync with model_params.json)
+// On server side these get overridden by the JSON file at module load
 // ═══════════════════════════════════════════════════════════════
-interface ModelParams {
-  newbuildPrices: Record<string, { dwt: number; nb: number }>;
-  fallbackTypeMult: Record<string, number>;
-  depreciation: { brackets: DepBracket[] };
-  segmentGroups: Record<string, string[]>;
-  marketFactorBaselines: Record<string, { defaultRate: number; baseline: number }>;
-  tankerPremium: { factor: number; types: string[] };
-  builderTiers: Record<string, { factor: number; keywords: string[] }>;
-  ldtRatios: Record<string, number>;
-  ecoBenchmarks: Record<string, number>;
-}
 
 interface DepBracket {
   maxAge: number;
@@ -46,19 +34,103 @@ interface DepBracket {
   floor?: number;
 }
 
-interface MarketData {
-  bdi: number;
-  charterRates: { capesize: number; panamax: number; supramax: number; handysize: number };
-  scrapPerLDT: number;
-  fuelVLSFO: number;
-  date: string;
-}
+// Inline defaults matching model_params.json (Python canonical values)
+const INLINE_NEWBUILD_PRICES: Record<string, { dwt: number; nb: number }> = {
+  "Capesize":          { dwt: 180000, nb: 70_000_000 },
+  "Newcastlemax":      { dwt: 210000, nb: 72_000_000 },
+  "Kamsarmax":         { dwt: 82000,  nb: 38_000_000 },
+  "Panamax":           { dwt: 77000,  nb: 35_000_000 },
+  "Post-Panamax":      { dwt: 95000,  nb: 42_000_000 },
+  "Ultramax":          { dwt: 64000,  nb: 35_000_000 },
+  "Supramax":          { dwt: 58000,  nb: 33_000_000 },
+  "Handymax":          { dwt: 50000,  nb: 32_000_000 },
+  "Handysize":         { dwt: 38000,  nb: 31_000_000 },
+  "Mini-Bulker":       { dwt: 12000,  nb: 18_000_000 },
+  "VLCC":              { dwt: 300000, nb: 125_000_000 },
+  "Suezmax":           { dwt: 157000, nb: 85_000_000 },
+  "Aframax":           { dwt: 115000, nb: 78_000_000 },
+  "Product Tanker":    { dwt: 50000,  nb: 44_000_000 },
+  "Chemical Tanker":   { dwt: 25000,  nb: 42_000_000 },
+  "Crude Oil Tanker":  { dwt: 105000, nb: 60_000_000 },
+  "Oil/Chemical Tanker": { dwt: 45000, nb: 40_000_000 },
+  "Container Ship":    { dwt: 70000,  nb: 95_000_000 },
+  "LNG Tanker":        { dwt: 80000,  nb: 250_000_000 },
+  "LPG Tanker":        { dwt: 50000,  nb: 85_000_000 },
+  "Car Carrier":       { dwt: 15000,  nb: 70_000_000 },
+  "RoRo":              { dwt: 12000,  nb: 45_000_000 },
+  "Reefer":            { dwt: 12000,  nb: 35_000_000 },
+  "Multipurpose":      { dwt: 15000,  nb: 22_000_000 },
+  "Heavy Lift":        { dwt: 20000,  nb: 45_000_000 },
+  "General Cargo":     { dwt: 10000,  nb: 18_000_000 },
+  "Bulk Carrier":      { dwt: 60000,  nb: 34_000_000 },
+};
 
-const MODEL_PARAMS_PATH = path.join(process.cwd(), "db", "model_params.json");
-const OPEX_RATES_PATH   = path.join(process.cwd(), "db", "opex_rates.json");
+const INLINE_FALLBACK_TYPE_MULT: Record<string, number> = {
+  "Valemax": 1.05, "VLOC": 1.00, "Gearless": 0.98, "Geared": 0.95,
+  "Tanker": 1.10, "ULCV": 1.60, "Neo-Panamax": 1.30, "Feeder": 0.80,
+  "RoPax": 1.80, "Cruise Ship": 4.50, "Passenger": 3.00, "Ferry": 1.60,
+  "OSV": 1.80, "Offshore": 1.60, "Tug": 2.50, "Dredger": 1.50,
+};
 
-// Fallback hardcoded values (used if files don't exist)
-const FALLBACK_MARKET: MarketData = {
+const INLINE_DEP_BRACKETS: DepBracket[] = [
+  { maxAge: 0,  value: 1.12 },
+  { maxAge: 2,  value: 1.08 },
+  { maxAge: 5,  startValue: 1.0,  slope: 0.02,  fromAge: 2 },
+  { maxAge: 9,  startValue: 0.94, slope: 0.04,  fromAge: 5 },
+  { maxAge: 14, startValue: 0.78, slope: 0.052, fromAge: 9 },
+  { maxAge: 20, startValue: 0.52, slope: 0.037, fromAge: 14 },
+  { maxAge: 25, startValue: 0.30, slope: 0.03,  fromAge: 20 },
+  { maxAge: 99, startValue: 0.15, slope: 0.015, fromAge: 25, floor: 0.08 },
+];
+
+const INLINE_SEGMENT_GROUPS = {
+  capesize:  ["Capesize", "Newcastlemax", "Valemax", "VLOC"],
+  panamax:   ["Panamax", "Kamsarmax", "Gearless"],
+  supramax:  ["Supramax", "Ultramax", "Geared"],
+  handysize: ["Handysize", "Handymax", "Mini-Bulker"],
+};
+
+const INLINE_MF_BASELINES: Record<string, { defaultRate: number; baseline: number }> = {
+  capesize:  { defaultRate: 29000, baseline: 22000 },
+  panamax:   { defaultRate: 21500, baseline: 16000 },
+  supramax:  { defaultRate: 24000, baseline: 14000 },
+  handysize: { defaultRate: 13500, baseline: 11000 },
+  other:     { defaultRate: 1500,  baseline: 1500 },
+};
+
+const INLINE_TANKER_PREMIUM = {
+  factor: 1.15,
+  types: ["VLCC", "Suezmax", "Aframax", "Product Tanker", "Chemical Tanker",
+          "Crude Oil Tanker", "Tanker", "Oil/Chemical Tanker"],
+};
+
+const INLINE_BUILDER_TIERS = {
+  tier1: { factor: 1.07, keywords: ["hyundai", "samsung", "daewoo", "imabari", "oshima", "tsuneishi", "namura", "mitsubishi", "mitsui", "kawasaki", "jmu", "hanjin", "universal shipbuilding", "sanoyas", "shin kurushima"] },
+  tier2: { factor: 1.015, keywords: ["cosco", "jiangnan", "hudong", "dalian", "yangzijiang", "nantong", "new times", "jinhai", "zhejiang", "cssc", "csic"] },
+  tier4: { factor: 0.925, keywords: ["huelva", "navantia", "astilleros", "constanta", "mangalia", "gdynia", "split", "uljanik"] },
+};
+
+const INLINE_LDT_RATIOS: Record<string, number> = {
+  "Bulk Carrier": 0.17, "Capesize": 0.15, "Newcastlemax": 0.15,
+  "Handymax": 0.18, "Handysize": 0.18, "Supramax": 0.17, "Ultramax": 0.17,
+  "Kamsarmax": 0.16, "Panamax": 0.16, "Post-Panamax": 0.16,
+  "Tanker": 0.18, "VLCC": 0.15, "Suezmax": 0.17, "Aframax": 0.18,
+  "Product Tanker": 0.19, "Chemical Tanker": 0.20, "Crude Oil Tanker": 0.17,
+  "Container Ship": 0.22, "General Cargo": 0.25,
+  "RoRo": 0.30, "Car Carrier": 0.35, "Reefer": 0.28,
+  "LNG Tanker": 0.25, "LPG Tanker": 0.22,
+};
+
+const INLINE_ECO_BENCHMARKS: Record<string, number> = {
+  "Capesize": 35, "Newcastlemax": 37, "Kamsarmax": 28, "Panamax": 26,
+  "Post-Panamax": 30, "Ultramax": 24, "Supramax": 23, "Handymax": 20,
+  "Handysize": 18, "Mini-Bulker": 12,
+  "VLCC": 65, "Suezmax": 45, "Aframax": 38, "Product Tanker": 28,
+  "Chemical Tanker": 22, "Crude Oil Tanker": 40, "LNG Tanker": 80,
+  "LPG Tanker": 40, "Container Ship": 120, "General Cargo": 15,
+};
+
+const INLINE_MARKET = {
   bdi:          2562,
   charterRates: { capesize: 29000, panamax: 21500, supramax: 24000, handysize: 13500 },
   scrapPerLDT:  478,
@@ -66,64 +138,72 @@ const FALLBACK_MARKET: MarketData = {
   date:         "fallback",
 };
 
-function loadModelParams(): ModelParams {
+// ═══════════════════════════════════════════════════════════════
+// Try to load from JSON files (server-side only)
+// ═══════════════════════════════════════════════════════════════
+function tryLoadJson(filePath: string): any {
+  if (typeof window !== "undefined") return null; // client-side: skip
   try {
-    const raw = fs.readFileSync(MODEL_PARAMS_PATH, "utf8");
-    return JSON.parse(raw) as ModelParams;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require("fs");
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
   } catch {
-    // Should not happen in production — but fail gracefully
-    console.warn("priceEstimator: could not load model_params.json, using inline fallback");
-    return null as any; // will cause errors below, but better than silent wrong data
+    return null;
   }
 }
 
-function loadMarketData(): MarketData {
-  try {
-    const raw = fs.readFileSync(OPEX_RATES_PATH, "utf8");
-    const data = JSON.parse(raw);
-    return {
-      bdi:          data.bdiIndex ?? FALLBACK_MARKET.bdi,
-      charterRates: data.charterRates ?? FALLBACK_MARKET.charterRates,
-      scrapPerLDT:  data.scrapPriceLDT ?? FALLBACK_MARKET.scrapPerLDT,
-      fuelVLSFO:    data.bunkerVLSFO ?? FALLBACK_MARKET.fuelVLSFO,
-      date:         data.date ?? FALLBACK_MARKET.date,
-    };
-  } catch {
-    console.warn("priceEstimator: could not load opex_rates.json, using hardcoded fallback");
-    return { ...FALLBACK_MARKET };
-  }
+function initParams() {
+  const modelJson = tryLoadJson("/opt/bulkwatch/db/model_params.json");
+  const opexJson  = tryLoadJson("/opt/bulkwatch/db/opex_rates.json");
+
+  const nbPrices       = modelJson?.newbuildPrices       ?? INLINE_NEWBUILD_PRICES;
+  const fallbackMult   = modelJson?.fallbackTypeMult     ?? INLINE_FALLBACK_TYPE_MULT;
+  const depBrackets    = modelJson?.depreciation?.brackets ?? INLINE_DEP_BRACKETS;
+  const segGroups      = modelJson?.segmentGroups        ?? INLINE_SEGMENT_GROUPS;
+  const mfBaselines    = modelJson?.marketFactorBaselines ?? INLINE_MF_BASELINES;
+  const tankerPremium  = modelJson?.tankerPremium        ?? INLINE_TANKER_PREMIUM;
+  const builderTiers   = modelJson?.builderTiers         ?? INLINE_BUILDER_TIERS;
+  const ldtRatios      = modelJson?.ldtRatios            ?? INLINE_LDT_RATIOS;
+  const ecoBenchmarks  = modelJson?.ecoBenchmarks        ?? INLINE_ECO_BENCHMARKS;
+
+  const market = opexJson ? {
+    bdi:          opexJson.bdiIndex       ?? INLINE_MARKET.bdi,
+    charterRates: opexJson.charterRates   ?? INLINE_MARKET.charterRates,
+    scrapPerLDT:  opexJson.scrapPriceLDT  ?? INLINE_MARKET.scrapPerLDT,
+    fuelVLSFO:    opexJson.bunkerVLSFO    ?? INLINE_MARKET.fuelVLSFO,
+    date:         opexJson.date           ?? INLINE_MARKET.date,
+  } : { ...INLINE_MARKET };
+
+  return {
+    nbPrices, fallbackMult, depBrackets, segGroups, mfBaselines,
+    tankerPremium, builderTiers, ldtRatios, ecoBenchmarks, market,
+  };
 }
 
-// Load once at module init (server-side, reloaded on restart)
-const PARAMS = loadModelParams();
-const MARKET = loadMarketData();
+const P = initParams();
+const NEWBUILD_PRICES    = P.nbPrices;
+const FALLBACK_TYPE_MULT = P.fallbackMult;
+const DEP_BRACKETS       = P.depBrackets as DepBracket[];
+const LDT_RATIOS         = P.ldtRatios;
+const ECO_BENCHMARKS     = P.ecoBenchmarks;
+const MARKET             = P.market;
 
-const NEWBUILD_PRICES    = PARAMS.newbuildPrices;
-const FALLBACK_TYPE_MULT = PARAMS.fallbackTypeMult;
-const LDT_RATIOS         = PARAMS.ldtRatios;
-const ECO_BENCHMARKS     = PARAMS.ecoBenchmarks;
-const DEP_BRACKETS       = PARAMS.depreciation.brackets;
+const CAPESIZE_TYPES  = new Set(P.segGroups.capesize);
+const PANAMAX_TYPES   = new Set(P.segGroups.panamax);
+const SUPRAMAX_TYPES  = new Set(P.segGroups.supramax);
+const HANDYSIZE_TYPES = new Set(P.segGroups.handysize);
 
-// Segment sets from shared params
-const CAPESIZE_TYPES  = new Set(PARAMS.segmentGroups.capesize);
-const PANAMAX_TYPES   = new Set(PARAMS.segmentGroups.panamax);
-const SUPRAMAX_TYPES  = new Set(PARAMS.segmentGroups.supramax);
-const HANDYSIZE_TYPES = new Set(PARAMS.segmentGroups.handysize);
+const TANKER_PREMIUM_FACTOR = P.tankerPremium.factor;
+const TANKER_PREMIUM_TYPES  = new Set(P.tankerPremium.types);
 
-// Tanker premium from shared params
-const TANKER_PREMIUM_FACTOR = PARAMS.tankerPremium.factor;
-const TANKER_PREMIUM_TYPES  = new Set(PARAMS.tankerPremium.types);
+const MF_BASELINES = P.mfBaselines;
 
-// Market factor baselines from shared params
-const MF_BASELINES = PARAMS.marketFactorBaselines;
-
-// Builder tiers from shared params
-const TIER1_BUILDERS = PARAMS.builderTiers.tier1.keywords;
-const TIER1_FACTOR   = PARAMS.builderTiers.tier1.factor;
-const TIER2_BUILDERS = PARAMS.builderTiers.tier2.keywords;
-const TIER2_FACTOR   = PARAMS.builderTiers.tier2.factor;
-const TIER4_BUILDERS = PARAMS.builderTiers.tier4.keywords;
-const TIER4_FACTOR   = PARAMS.builderTiers.tier4.factor;
+const TIER1_BUILDERS = P.builderTiers.tier1.keywords;
+const TIER1_FACTOR   = P.builderTiers.tier1.factor;
+const TIER2_BUILDERS = P.builderTiers.tier2.keywords;
+const TIER2_FACTOR   = P.builderTiers.tier2.factor;
+const TIER4_BUILDERS = P.builderTiers.tier4.keywords;
+const TIER4_FACTOR   = P.builderTiers.tier4.factor;
 
 // ═══════════════════════════════════════════════════════════════
 // A) Newbuild price with DWT scaling (economies of scale exp 0.7)
@@ -152,7 +232,6 @@ function depreciation(age: number): number {
       return b.value!;
     }
   }
-  // Beyond all brackets
   const last = DEP_BRACKETS[DEP_BRACKETS.length - 1];
   const val = (last.startValue ?? 0.15) - (age - (last.fromAge ?? 25)) * (last.slope ?? 0.015);
   return Math.max(val, last.floor ?? 0.08);
@@ -177,15 +256,12 @@ function marketFactor(shipType: string): number {
     rate = (MARKET.charterRates as any)[seg] ?? bl.defaultRate;
   }
   const baseline = bl.baseline;
-
   const ratio = rate / baseline;
   let base = 0.85 + 0.15 * Math.pow(ratio, 0.5);
 
-  // Tanker market premium
   if (TANKER_PREMIUM_TYPES.has(shipType)) {
     base *= TANKER_PREMIUM_FACTOR;
   }
-
   return base;
 }
 
@@ -240,7 +316,7 @@ function confidenceScore(ship: Ship, age: number): number {
   if (NEWBUILD_PRICES[ship.type])         score += 10;
   if ((ship as any).fuelConsumption > 0)  score += 5;
   if ((ship as any).classification)       score += 5;
-  score += 5;  // market data is fresh (loaded from opex_rates.json)
+  score += 5;  // market data from opex_rates.json
   if (ship.builder)                       score += 3;
   if (ship.length > 0 && ship.beam > 0)   score += 5;
   if (age > 20) score = Math.max(30, score - 10);
@@ -257,7 +333,6 @@ export function estimatePrice(ship: Ship): PriceEstimate {
   const age           = currentYear - effectiveYear;
   const dwt           = Math.max(ship.dwt || 0, 500);
 
-  // ── Newbuild price ──────────────────────────────────────────
   const nb = newbuildPrice(ship.type, dwt);
   const isKnownSegment = !!NEWBUILD_PRICES[ship.type];
   factors.push({
@@ -267,7 +342,6 @@ export function estimatePrice(ship: Ship): PriceEstimate {
     weight: 15,
   });
 
-  // ── Depreciation ────────────────────────────────────────────
   const dep = depreciation(age);
   let ageLabel: string;
   let ageImpact: "positive" | "neutral" | "negative";
@@ -285,7 +359,6 @@ export function estimatePrice(ship: Ship): PriceEstimate {
 
   factors.push({ label: "Age", value: ageLabel, impact: ageImpact, weight: age > 15 ? 30 : 20 });
 
-  // ── Market factor ───────────────────────────────────────────
   const mf = marketFactor(ship.type);
   const mfLabel = CAPESIZE_TYPES.has(ship.type)   ? `Capesize $${MARKET.charterRates.capesize.toLocaleString()}/d`
                 : PANAMAX_TYPES.has(ship.type)     ? `Panamax $${MARKET.charterRates.panamax.toLocaleString()}/d`
@@ -300,7 +373,6 @@ export function estimatePrice(ship: Ship): PriceEstimate {
     weight: 15,
   });
 
-  // ── Builder ─────────────────────────────────────────────────
   const bf = builderFactor(ship.builder);
   if (bf !== 1.0) {
     const tier = bf >= 1.05 ? "Tier 1 premium" : bf >= 1.01 ? "Tier 2 premium" : "Tier 4 discount";
@@ -312,7 +384,6 @@ export function estimatePrice(ship: Ship): PriceEstimate {
     });
   }
 
-  // ── Eco premium ─────────────────────────────────────────────
   const fuelCons = (ship as any).fuelConsumption as number | undefined;
   const eco = ecoPremium(fuelCons, dwt, ship.type, age);
   if (eco > 0) {
@@ -324,7 +395,6 @@ export function estimatePrice(ship: Ship): PriceEstimate {
     });
   }
 
-  // ── Tonnage ─────────────────────────────────────────────────
   if (ship.dwt > 0) {
     factors.push({
       label:  "Tonnage",
@@ -334,7 +404,6 @@ export function estimatePrice(ship: Ship): PriceEstimate {
     });
   }
 
-  // ── Flag ────────────────────────────────────────────────────
   const reputableFlags = ["Norway", "Denmark", "Germany", "Netherlands",
                           "United Kingdom", "Japan", "Singapore"];
   const flagLowCost    = ["Mongolia", "Cambodia", "Belize", "Comoros"];
@@ -344,7 +413,6 @@ export function estimatePrice(ship: Ship): PriceEstimate {
     factors.push({ label: "Flag", value: `${ship.flag} (Flag of Convenience)`, impact: "negative", weight: 10 });
   }
 
-  // ── Status ──────────────────────────────────────────────────
   const statusMults: Record<string, number> = {
     scrapped: 0.20, laid_up: 0.75, under_construction: 1.10, lost: 0.0,
   };
@@ -360,7 +428,6 @@ export function estimatePrice(ship: Ship): PriceEstimate {
     weight: statusMult === 0 ? 100 : 10,
   });
 
-  // ── Scrap floor ─────────────────────────────────────────────
   const scrap = scrapValue(dwt, ship.type);
   factors.push({
     label:  "Scrap Floor",
@@ -369,7 +436,6 @@ export function estimatePrice(ship: Ship): PriceEstimate {
     weight: 5,
   });
 
-  // ═══ FINAL CALCULATION ════════════════════════════════════════
   const base = nb * dep * mf * bf * statusMult;
   const estimatedValueUSD = Math.round(
     Math.max(
@@ -380,7 +446,6 @@ export function estimatePrice(ship: Ship): PriceEstimate {
 
   const conf = confidenceScore(ship, age);
 
-  // ═══ RECOMMENDATION (I) ══════════════════════════════════════
   let recommendation: "BUY" | "WATCH" | "AVOID" = "WATCH";
   let recommendationReasoning = "";
 
