@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Database from "better-sqlite3";
 import bcrypt from "bcryptjs";
+import { signSession } from "@/lib/session";
 
 const DB_PATH = process.env.DB_PATH || "/opt/bulkwatch/db/ships.db";
 
@@ -32,9 +33,11 @@ export async function POST(req: NextRequest) {
     db2.prepare("UPDATE users SET last_login = datetime('now') WHERE id = ?").run(user.id);
     db2.close();
 
-    const sessionData = JSON.stringify({ id: user.id, username: user.username, company: user.company, role: user.role });
+    const sessionData = { id: user.id, username: user.username, company: user.company, role: user.role };
+    const signedCookie = signSession(sessionData);
+
     const res = NextResponse.json({ ok: true, user: { username: user.username, company: user.company, role: user.role } });
-    res.cookies.set("vessel_session", sessionData, {
+    res.cookies.set("vessel_session", signedCookie, {
       httpOnly: true,
       secure: true,
       sameSite: "lax",

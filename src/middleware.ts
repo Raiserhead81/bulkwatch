@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifySession } from "@/lib/session";
+
+export const runtime = "nodejs";
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -12,11 +15,15 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const session = req.cookies.get("vessel_session")?.value;
-  if (session) {
-    // Only accept JSON sessions with username (not old "authenticated" string)
+  const cookie = req.cookies.get("vessel_session")?.value;
+  if (cookie) {
+    // Try signed session first
+    const session = verifySession(cookie);
+    if (session && session.username) return NextResponse.next();
+
+    // Legacy fallback: plain JSON (will be replaced on next login)
     try {
-      const data = JSON.parse(session);
+      const data = JSON.parse(cookie);
       if (data.username) return NextResponse.next();
     } catch {}
   }
