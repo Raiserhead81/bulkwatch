@@ -66,3 +66,4 @@ db/*.db-wal
 .cloudflare-token
 config/
 *.bak*
+src.bak.*
