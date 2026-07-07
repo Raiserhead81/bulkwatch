@@ -98,7 +98,7 @@ export function middleware(req: NextRequest) {
   }
 
   // Public API endpoints (no auth required)
-  const publicApiPaths = ["/api/auth/login", "/api/auth/logout", "/api/version"];
+  const publicApiPaths = ["/api/auth/login", "/api/auth/logout", "/api/version", "/api/health"];
   if (publicApiPaths.some(p => pathname.startsWith(p))) {
     return NextResponse.next();
   }
