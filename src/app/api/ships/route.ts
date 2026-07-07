@@ -1,47 +1,10 @@
 import { getDb } from "@/lib/db";
+import { toShip } from "@/lib/shipMapper";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-function toShip(row: Record<string, unknown>) {
-  return {
-    id: `imo-${row.imo}`,
-    imo: row.imo,
-    name: row.name,
-    mmsi: row.mmsi,
-    type: row.type,
-    dwt: row.dwt || 0,
-    length: row.length || 0,
-    beam: row.beam || 0,
-    draft: row.draft || 0,
-    yearBuilt: row.year_built || 0,
-    builder: row.builder,
-    flag: row.flag || "Unknown",
-    operator: row.operator,
-    operatorWebsite: row.op_website || null,
-    operatorEmail: row.op_email || null,
-    operatorPhone: row.op_phone || null,
-    operatorCity: row.op_city || null,
-    operatorCountry: row.op_country || null,
-    homePort: row.home_port,
-    imageUrl: row.image_url,
-    imageAttribution: row.image_attribution,
-    position: row.lat ? { lat: row.lat, lon: row.lon } : undefined,
-    lat: row.lat,
-    lon: row.lon,
-    lastSeen: row.last_seen,
-    status: row.status || "active",
-    deliveryDate: row.delivery_date,
-    grossTonnage: row.gross_tonnage || 0,
-    netTonnage: row.net_tonnage || 0,
-    engineType: row.engine_type,
-    enginePowerKw: row.engine_power_kw || 0,
-    speedKnots: row.speed_knots || 0,
-    fuelConsumption: row.fuel_consumption_tons_day || 0,
-    fuelType: row.fuel_type,
-    crewSize: row.crew_size || 0,
-  };
-}
+
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
