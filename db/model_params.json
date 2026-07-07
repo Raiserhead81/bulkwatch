@@ -110,6 +110,10 @@
     "Bulk Carrier": {
       "dwt": 60000,
       "nb": 34000000
+    },
+    "Other": {
+      "dwt": 10000,
+      "nb": 15000000
     }
   },
   "fallbackTypeMult": {
@@ -411,7 +415,8 @@
     "Crude Oil Tanker": 0.86,
     "Oil/Chemical Tanker": 0.85,
     "Container Ship": 0.92,
-    "LNG Tanker": 0.93
+    "LNG Tanker": 0.93,
+    "Other": 0.85
   },
   "containerSegments": {
     "comment": "Container ship valuation by TEU class. If TEU unknown, derive from DWT/14.",

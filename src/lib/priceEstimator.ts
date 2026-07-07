@@ -348,6 +348,7 @@ function confidenceScore(ship: Ship, age: number): number {
   if (ship.builder)                       score += 3;
   if (ship.length > 0 && ship.beam > 0)   score += 5;
   if (age > 20) score = Math.max(30, score - 10);
+  if (ship.type === "Other") score = Math.max(30, score - 10);
   return Math.min(92, score);
 }
 
