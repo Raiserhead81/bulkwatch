@@ -11,11 +11,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ user: session });
   }
 
-  // Legacy fallback: plain JSON (will be replaced on next login)
-  try {
-    const data = JSON.parse(cookie);
-    if (data.username) return NextResponse.json({ user: data });
-  } catch {}
+
 
   return NextResponse.json({ user: null });
 }

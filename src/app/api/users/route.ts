@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifySession } from "@/lib/session";
 import Database from "better-sqlite3";
 import bcrypt from "bcryptjs";
 
@@ -6,8 +7,8 @@ const DB_PATH = process.env.DB_PATH || "/opt/bulkwatch/db/ships.db";
 
 function getUser(req: NextRequest) {
   const session = req.cookies.get("vessel_session")?.value;
-  if (!session || session === "authenticated") return { role: "admin" }; // legacy
-  try { return JSON.parse(session); } catch { return null; }
+  if (!session) return null;
+  return verifySession(session);
 }
 
 // GET: list users (admin only)

@@ -80,11 +80,7 @@ export function middleware(req: NextRequest) {
     const session = verifySession(cookie);
     if (session && session.username) return NextResponse.next();
 
-    // Legacy fallback: plain JSON (will be replaced on next login)
-    try {
-      const data = JSON.parse(cookie);
-      if (data.username) return NextResponse.next();
-    } catch {}
+
   }
 
   return NextResponse.redirect(new URL("/login", req.url));
