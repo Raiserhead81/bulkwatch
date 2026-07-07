@@ -2,7 +2,7 @@
 // Works in both Node.js and Edge Runtime (Web Crypto API)
 import { createHmac } from "crypto";
 
-const SECRET = process.env.NEXTAUTH_SECRET || process.env.SESSION_SECRET;
+const SECRET = process.env.NEXTAUTH_SECRET || process.env.SESSION_SECRET || "";
 if (!SECRET) throw new Error("NEXTAUTH_SECRET or SESSION_SECRET environment variable is required");
 
 export interface SessionData {

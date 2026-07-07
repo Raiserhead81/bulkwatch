@@ -476,7 +476,7 @@ export function estimatePrice(ship: Ship): PriceEstimate {
     )
   );
 
-  const conf = confidenceScore({...ship, type: shipType}, age);
+  const conf = confidenceScore({...ship, type: shipType as any}, age);
 
   let recommendation: "BUY" | "WATCH" | "AVOID" = "WATCH";
   let recommendationReasoning = "";

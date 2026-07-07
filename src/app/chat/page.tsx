@@ -231,6 +231,7 @@ export default function ChatPage() {
 
       const decoder = new TextDecoder();
       let accumulated = "";
+      let chunkCount = 0;
       let buffer = "";
 
       while (true) {

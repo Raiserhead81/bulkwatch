@@ -137,7 +137,7 @@ export default function FleetPage() {
 
   const stats = computeStats(ships);
   const fleetValue = ships.reduce(
-    (sum, s) => sum + estimatePrice(s).estimatedValueUSD,
+    (sum, s) => sum + estimatePrice(s as any).estimatedValueUSD,
     0
   );
 

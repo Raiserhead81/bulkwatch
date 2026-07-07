@@ -54,7 +54,7 @@ const SPEC_ROWS: SpecRow[] = [
     label: "Est. Value",
     key: "estimatedValue",
     format: (s) => {
-      const val = estimatePrice(s).estimatedValueUSD;
+      const val = estimatePrice(s as any).estimatedValueUSD;
       return "$" + (val / 1_000_000).toFixed(1) + "M";
     },
     compareMode: "higher",
@@ -63,7 +63,7 @@ const SPEC_ROWS: SpecRow[] = [
     label: "$/DWT",
     key: "dollarPerDwt",
     format: (s) => {
-      const val = estimatePrice(s).estimatedValueUSD;
+      const val = estimatePrice(s as any).estimatedValueUSD;
       return "$" + (val / s.dwt).toFixed(0);
     },
     compareMode: "lower",
@@ -72,10 +72,10 @@ const SPEC_ROWS: SpecRow[] = [
 
 function getNumericValue(ship: Ship, row: SpecRow): number | null {
   if (row.key === "estimatedValue") {
-    return estimatePrice(ship).estimatedValueUSD;
+    return estimatePrice(ship as any).estimatedValueUSD;
   }
   if (row.key === "dollarPerDwt") {
-    return estimatePrice(ship).estimatedValueUSD / ship.dwt;
+    return estimatePrice(ship as any).estimatedValueUSD / ship.dwt;
   }
   const v = ship[row.key as keyof Ship];
   return typeof v === "number" ? v : null;

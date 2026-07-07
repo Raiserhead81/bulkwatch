@@ -9,11 +9,7 @@ const nextConfig: NextConfig = {
   },
   generateBuildId: () => Date.now().toString(36),
   output: "standalone",
-  /* config options here */
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  reactStrictMode: false,
+  reactStrictMode: true,
 };
 
 export default nextConfig;

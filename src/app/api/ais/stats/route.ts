@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import WebSocket from "ws";
+import "@/types/ais";
 
 declare global {
-  var __aisCache: Map<string, { timestamp: number }> | undefined;
-  var __aisWs: WebSocket | null | undefined;
+  // eslint-disable-next-line no-var
   var __aisLastMsg: number | undefined;
+  // eslint-disable-next-line no-var
   var __aisStarted: number | undefined;
 }
 

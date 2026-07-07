@@ -23,6 +23,43 @@ export interface Ship {
   status: "active" | "laid_up" | "scrapped" | "lost" | "under_construction";
   deliveryDate?: string;
   operatorDetails?: { country: string; city: string; website: string; email: string; phone: string; fleetSize: number };
+  grossTonnage?: number;
+  netTonnage?: number;
+  engineType?: string;
+  enginePowerKw?: number;
+  speedKnots?: number;
+  fuelConsumption?: number;
+  fuelType?: string;
+  crewSize?: number;
+  teu?: number;
+  grainCapacity?: number;
+  holds?: number;
+  hatches?: number;
+  cranes?: string;
+  classSociety?: string;
+  classification?: string;
+  pAndI?: string;
+  flagParisMou?: string;
+  flagTokyoMou?: string;
+  detentionPct?: number;
+  callSign?: string;
+  owner?: string;
+  manager?: string;
+  ismManager?: string;
+  inspectionsCount?: number;
+  lastSurvey?: string;
+  nextSurvey?: string;
+  hasScrubber?: boolean;
+  scrubberType?: string;
+  lat?: number;
+  lon?: number;
+  flagEmoji?: string;
+  operatorWebsite?: string;
+  operatorEmail?: string;
+  operatorPhone?: string;
+  operatorCity?: string;
+  operatorCountry?: string;
+  lastSeen?: number;
 }
 
 export type BulkCarrierType =
@@ -84,7 +121,7 @@ const RAW_TYPE_MAP: Record<string, BulkCarrierType> = {
   "Anchor Handling Vessel": "Offshore",
   "Livestock Carrier": "General Cargo", "Pipe Carrier": "General Cargo",
   "Cargo Barge": "General Cargo",
-  "Fish Carrier": "General Cargo", "Reefer": "Reefer",
+  "Fish Carrier": "General Cargo",
 };
 
 function getSizeClassFromDwt(dwt: number): BulkCarrierType {
@@ -347,7 +384,7 @@ function inferTypeFromName(name: string): BulkCarrierType {
 }
 
 function generateSpecsForType(type: BulkCarrierType): { dwt: number; length: number; beam: number; draft: number; yearBuilt: number } {
-  const specs: Record<BulkCarrierType, { dwt: number; length: number; beam: number; draft: number; yearBuilt: number }> = {
+  const specs: Partial<Record<BulkCarrierType, { dwt: number; length: number; beam: number; draft: number; yearBuilt: number }>> = {
     Valemax: { dwt: 400000, length: 361, beam: 65, draft: 23, yearBuilt: 2012 },
     VLOC: { dwt: 388000, length: 361, beam: 65, draft: 23, yearBuilt: 2012 },
     Newcastlemax: { dwt: 210000, length: 300, beam: 50, draft: 19, yearBuilt: 2016 },
@@ -361,7 +398,7 @@ function generateSpecsForType(type: BulkCarrierType): { dwt: number; length: num
     Gearless: { dwt: 75000, length: 225, beam: 32, draft: 14, yearBuilt: 2008 },
     Geared: { dwt: 47000, length: 190, beam: 30, draft: 11, yearBuilt: 2008 },
   };
-  return specs[type];
+  return specs[type] || { dwt: 35000, length: 180, beam: 28, draft: 10, yearBuilt: 2010 };
 }
 
 // Generiere Schiff-Einträge für alle Wikimedia-Bilder-Schiffe, die noch nicht in realShips sind

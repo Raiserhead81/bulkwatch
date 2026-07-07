@@ -1,24 +1,12 @@
 import { NextResponse } from "next/server";
 import WebSocket from "ws";
 
-// ─── In-Memory Cache (singleton in Next.js hot module) ─────────────────────
+import "@/types/ais";
+
 declare global {
-  var __aisCache: Map<string, {
-    mmsi: string;
-    imo?: string;
-    name?: string;
-    lat: number;
-    lon: number;
-    sog?: number;
-    cog?: number;
-    heading?: number;
-    navStatus?: number;
-    shipType?: number;
-    destination?: string;
-    timestamp: number;
-  }> | undefined;
-  var __aisWs: WebSocket | null | undefined;
+  // eslint-disable-next-line no-var
   var __aisLastMsg: number | undefined;
+  // eslint-disable-next-line no-var
   var __aisStarted: number | undefined;
 }
 

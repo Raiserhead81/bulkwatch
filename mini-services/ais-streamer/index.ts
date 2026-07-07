@@ -14,8 +14,8 @@
 
 import { createServer } from "node:http";
 import { WebSocket } from "ws";
-import { readFile } from "node:fs/promises";
-import { existsSync, writeFile, mkdir } from "node:fs";
+import { readFile, writeFile as writeFileAsync } from "node:fs/promises";
+import { existsSync, mkdir } from "node:fs";
 import path from "node:path";
 
 // ─── Config ────────────────────────────────────────────────────────────────
@@ -27,22 +27,24 @@ const CACHE_FILE = "/tmp/ais-cache.json";
 
 // ─── In-Memory Cache ──────────────────────────────────────────────────────
 // Key: MMSI (string), Value: AIS position data
-const shipCache = new Map<string, {
+interface CachedShip {
   mmsi: string;
   imo?: string;
   name?: string;
   shipName?: string;
   lat: number;
   lon: number;
-  sog?: number; // Speed Over Ground (knots)
-  cog?: number; // Course Over Ground (degrees)
+  sog?: number;
+  cog?: number;
   heading?: number;
   navStatus?: number;
   timestamp: number;
   shipType?: number;
   destination?: string;
   eta?: string;
-}>();
+}
+
+const shipCache = new Map<string, CachedShip>();
 
 // ─── HTTP Server ──────────────────────────────────────────────────────────
 const server = createServer(async (req, res) => {
@@ -237,7 +239,7 @@ function connectAISStream() {
 async function saveCache() {
   try {
     const data = Array.from(shipCache.values());
-    await writeFile(CACHE_FILE, JSON.stringify(data));
+    await writeFileAsync(CACHE_FILE, JSON.stringify(data));
     console.log(`[${new Date().toISOString()}] Cache gespeichert: ${data.length} Schiffe`);
   } catch (err) {
     console.error("Cache save error:", err);
@@ -248,7 +250,7 @@ async function loadCache() {
   try {
     if (!existsSync(CACHE_FILE)) return;
     const data = await readFile(CACHE_FILE, "utf-8");
-    const ships = JSON.parse(data) as Array<{ mmsi: string }>;
+    const ships = JSON.parse(data) as CachedShip[];
     for (const ship of ships) {
       if (ship.mmsi) shipCache.set(ship.mmsi, ship);
     }

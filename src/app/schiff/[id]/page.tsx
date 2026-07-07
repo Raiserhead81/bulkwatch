@@ -156,7 +156,7 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
   const oper = (ship.operator || "").toLowerCase();
   const mgmtType = (ismMgr && oper && (ismMgr.includes(oper.split(" ")[0]) || oper.includes(ismMgr.split(" ")[0]))) ? "own" as const : "third-party" as const;
   const s = ship as any;
-  const opex = ship.dwt > 0 ? calculateOpex(ship.dwt, ship.yearBuilt, ship.type, price.estimatedValueUSD, ship.flag, ship.fuelConsumption, ship.crewSize, ship.grossTonnage, mgmtType, !!(s.hasScrubber)) : null;
+  const opex = ship.dwt > 0 ? calculateOpex(ship.dwt, ship.yearBuilt, ship.type, price.estimatedValueUSD, ship.flag, s.fuelConsumption, s.crewSize, s.grossTonnage, mgmtType, !!(s.hasScrubber)) : null;
   const nearbySurveyPorts = getNearbySurveyPorts(voyage.currentPosition.lat, voyage.currentPosition.lon, 3000).slice(0, 3);
   const age = ship.yearBuilt > 1900 ? new Date().getFullYear() - ship.yearBuilt : null;
   const nextSurveyAlert = getSurveyAlert(s.nextSurvey);
@@ -169,16 +169,16 @@ export default function ShipDetailPage({ params }: { params: Promise<{ id: strin
     ship.length > 0 ? ["Length", `${ship.length} m`] : null,
     ship.beam > 0 ? ["Beam", `${ship.beam} m`] : null,
     ship.draft > 0 ? ["Draft", `${ship.draft} m`] : null,
-    ship.grossTonnage > 0 ? ["GT", `${ship.grossTonnage.toLocaleString()}`] : null,
-    ship.engineType ? ["Engine", ship.engineType] : null,
-    ship.enginePowerKw > 0 ? ["Power", `${(ship.enginePowerKw/1000).toFixed(0)} MW`] : null,
-    ship.speedKnots > 0 ? ["Speed", `${ship.speedKnots} kn`] : null,
-    ship.fuelConsumption > 0 ? ["Fuel", `${ship.fuelConsumption} t/d`] : null,
-    ship.crewSize > 0 ? ["Crew", `${ship.crewSize}`] : null,
-    ship.holds > 0 ? ["Holds/Hatches", `${ship.holds}/${ship.hatches}`] : null,
-    ship.grainCapacity > 0 ? ["Grain Cap.", `${ship.grainCapacity.toLocaleString()} m\u00b3`] : null,
-    ship.teu > 0 ? ["TEU", `${ship.teu.toLocaleString()}`] : null,
-    ship.cranes ? ["Cranes", ship.cranes] : null,
+    s.grossTonnage > 0 ? ["GT", `${s.grossTonnage.toLocaleString()}`] : null,
+    s.engineType ? ["Engine", s.engineType] : null,
+    s.enginePowerKw > 0 ? ["Power", `${(s.enginePowerKw/1000).toFixed(0)} MW`] : null,
+    s.speedKnots > 0 ? ["Speed", `${s.speedKnots} kn`] : null,
+    s.fuelConsumption > 0 ? ["Fuel", `${s.fuelConsumption} t/d`] : null,
+    s.crewSize > 0 ? ["Crew", `${s.crewSize}`] : null,
+    s.holds > 0 ? ["Holds/Hatches", `${s.holds}/${s.hatches}`] : null,
+    s.grainCapacity > 0 ? ["Grain Cap.", `${s.grainCapacity.toLocaleString()} m\u00b3`] : null,
+    s.teu > 0 ? ["TEU", `${s.teu.toLocaleString()}`] : null,
+    s.cranes ? ["Cranes", s.cranes] : null,
   ].filter(Boolean) as [string, string][];
 
   return (

@@ -1,11 +1,11 @@
 {
   "daemon": "running",
   "started": "2026-07-07 09:13",
-  "updated": "2026-07-07 09:20:16",
-  "enriched": 14,
-  "errors": 0,
-  "rate_per_hour": 117.8,
-  "runtime_hours": 0.12,
+  "updated": "2026-07-07 09:49:55",
+  "enriched": 70,
+  "errors": 2,
+  "rate_per_hour": 114.2,
+  "runtime_hours": 0.61,
   "accounts": [
     {
       "email": "jjeppsen@proton.me",
@@ -37,10 +37,10 @@
     {
       "email": "shansen99@proton.me",
       "status": "active",
-      "daily_count": 14,
+      "daily_count": 72,
       "daily_limit": 200,
-      "enriched": 14,
-      "errors": 0,
+      "enriched": 70,
+      "errors": 1,
       "consecutive_fails": 0
     }
   ]

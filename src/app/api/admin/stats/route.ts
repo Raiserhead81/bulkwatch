@@ -111,7 +111,7 @@ export async function GET(req: NextRequest) {
        WHERE s.type IS NOT NULL AND s.dwt IS NOT NULL AND s.year_built IS NOT NULL AND sp.sale_price_usd > 0`
     ).all() as Array<Record<string, unknown>>;
 
-    let modelAccuracy = null;
+    let modelAccuracy: { meanAbsError: number; medianAbsError: number; within10pct: number; within15pct: number; within20pct: number; bias: number } | null = null;
     if (spRows.length >= 3) {
       const errors: number[] = [];
       const biases: number[] = [];
