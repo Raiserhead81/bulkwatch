@@ -168,9 +168,16 @@ async def ais_stream():
 
 
 async def cache_saver():
-    """Speichert den Cache alle 5 Minuten."""
+    """Speichert den Cache alle 5 Minuten und evicted abgelaufene Eintraege."""
     while True:
         await asyncio.sleep(300)
+        # Evict entries older than 30 minutes
+        now = int(time.time())
+        stale_keys = [k for k, v in ship_cache.items() if now - v.get("timestamp", 0) > CACHE_TTL_SEC]
+        if stale_keys:
+            for k in stale_keys:
+                del ship_cache[k]
+            print(f"[{time.strftime('%H:%M:%S')}] Cache eviction: {len(stale_keys)} stale entries removed, {len(ship_cache)} remaining")
         save_cache()
 
 
