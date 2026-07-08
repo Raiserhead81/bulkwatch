@@ -1,19 +1,44 @@
 #!/usr/bin/env python3
-"""Equasis Enrichment Daemon v8 — robust round-robin scraping with monitoring.
-Each account: 1 request per 30s, daily limit 200, auto-pause when locked.
-Status file for external monitoring. Runs 24/7 as systemd service.
+"""Equasis Enrichment Daemon v9 — round-robin scraping with monitoring.
+
+Equasis enforces a cumulative PAGE DOWNLOAD limit, not a request-rate limit.
+Slowing down does not help; only fetching fewer pages does. Each ship costs
+PAGES_PER_SHIP page views (Search + ShipInfo), so the budget is counted in
+pages, not ships.
+
+Two distinct block types, never conflate them:
+  rate_locked — "page download limit reached ... locked for 7 days"
+                clears by itself after lock_until.
+  blocked     — "your account is blocked" / "password has expired"
+                NEVER clears by itself; needs a manual Lost-password reset.
+
+Lock state is persisted to STATE_FILE so restarts do not re-attempt logins
+against blocked accounts (failed logins are what triggers `blocked`).
 """
 import sqlite3, urllib.request, urllib.parse, http.cookiejar, ssl, re, time, sys, signal, json, os
 from datetime import datetime, timedelta
 
 DB = "/opt/bulkwatch/db/ships.db"
 STATUS_FILE = "/opt/bulkwatch/equasis-status.json"
+STATE_FILE = "/opt/bulkwatch/equasis-state.json"
 DELAY_BETWEEN_REQUESTS = 30  # seconds between each request (shared across all accounts)
 RESCRAPE_DAYS = 14
 LOG_EVERY = 10  # print progress every N ships
-DAILY_LIMIT_PER_ACCOUNT = 200  # max requests per account per day to avoid locks
+PAGES_PER_SHIP = 2  # Search + ShipInfo — both count against Equasis' page budget
+DAILY_PAGE_LIMIT = 100  # max page views per account per day (= 50 ships)
 
 ACCOUNTS_FILE = "/opt/bulkwatch/config/equasis-accounts.json"
+
+
+def classify_block(html):
+    """Return 'rate_locked', 'blocked' or None. Never substring-match "locked":
+    it also matches "blocked", which is a completely different failure."""
+    low = html.lower()
+    if "page download limit" in low:
+        return "rate_locked"
+    if "account is blocked" in low or "password has expired" in low:
+        return "blocked"
+    return None
 
 def load_accounts():
     """Load accounts from JSON config file. Exit if not found."""
@@ -57,28 +82,68 @@ signal.signal(signal.SIGTERM, handle_signal)
 signal.signal(signal.SIGINT, handle_signal)
 
 
+def nap(seconds):
+    """Sleep in short slices, abortable via SIGTERM.
+
+    Plain time.sleep() resumes after a signal handler returns (PEP 475), so a
+    daemon parked in sleep(7200) ignores `systemctl stop` until systemd SIGKILLs
+    it — which loses the in-memory page counter. Poll `running` instead.
+    """
+    deadline = time.time() + seconds
+    while running and time.time() < deadline:
+        time.sleep(max(0.0, min(2.0, deadline - time.time())))
+
+
 class EquasisSession:
-    """Persistent session for one Equasis account with SSL and daily limit."""
+    """Persistent session for one Equasis account with SSL and daily page budget."""
     def __init__(self, email, password):
         self.email = email
         self.password = password
         self.opener = None
-        self.locked = False
+        self.locked = False        # rate_locked: clears after lock_until
         self.lock_until = None
+        self.blocked = False       # needs manual password reset, never self-clears
         self.consecutive_fails = 0
-        self.daily_count = 0
+        self.pages_today = 0
         self.daily_date = datetime.now().strftime("%Y-%m-%d")
         self.total_enriched = 0
         self.total_errors = 0
 
+    @property
+    def short(self):
+        return self.email.split("@")[0]
+
     def _reset_daily(self):
         today = datetime.now().strftime("%Y-%m-%d")
         if self.daily_date != today:
-            self.daily_count = 0
+            self.pages_today = 0
             self.daily_date = today
 
+    def _apply_block(self, kind):
+        """Record a block. Returns True if this is a state change."""
+        if kind == "blocked":
+            if self.blocked:
+                return False
+            self.blocked = True
+            self.opener = None
+            print(f"  ⛔ BLOCKED: {self.email} — Passwort abgelaufen / zu viele Fehl-Logins. "
+                  f"Manueller Reset via 'Lost password' nötig!", flush=True)
+            return True
+        if kind == "rate_locked":
+            if self.locked:
+                return False
+            self.locked = True
+            self.lock_until = datetime.now() + timedelta(days=7)
+            self.opener = None
+            print(f"  ⚠ RATE-LOCK: {self.email} — Page-Download-Limit, 7 Tage Sperre "
+                  f"(bis {self.lock_until:%Y-%m-%d})", flush=True)
+            return True
+        return False
+
     def login(self):
-        """Create fresh session with SSL and login."""
+        """Create fresh session with SSL and login. Never call on a blocked account."""
+        if self.blocked:
+            return False
         ctx = ssl.create_default_context()
         cj = http.cookiejar.CookieJar()
         self.opener = urllib.request.build_opener(
@@ -91,9 +156,10 @@ class EquasisSession:
             data = urllib.parse.urlencode({"j_email": self.email, "j_password": self.password}).encode()
             r = self.opener.open("https://www.equasis.org/EquasisWeb/authen/HomePage?fs=HomePage", data, timeout=30)
             html = r.read().decode("utf-8", errors="ignore")
-            if "locked" in html.lower():
-                self.locked = True
-                self.lock_until = datetime.now() + timedelta(days=7)
+            kind = classify_block(html)
+            if kind:
+                self._apply_block(kind)
+                self.opener = None
                 return False
             self.locked = False
             self.consecutive_fails = 0
@@ -106,12 +172,14 @@ class EquasisSession:
 
     def is_available(self):
         self._reset_daily()
+        if self.blocked:
+            return False
         if self.locked:
             if self.lock_until and datetime.now() > self.lock_until:
                 self.locked = False
             else:
                 return False
-        if self.daily_count >= DAILY_LIMIT_PER_ACCOUNT:
+        if self.pages_today + PAGES_PER_SHIP > DAILY_PAGE_LIMIT:
             return False
         return True
 
@@ -122,7 +190,8 @@ class EquasisSession:
                 return None
 
         self._reset_daily()
-        self.daily_count += 1
+        # Both requests below are page views and count against Equasis' budget.
+        self.pages_today += PAGES_PER_SHIP
         result = {}
         try:
             # Search
@@ -134,20 +203,18 @@ class EquasisSession:
             r = self.opener.open("https://www.equasis.org/EquasisWeb/restricted/ShipInfo?fs=Search", dd, timeout=20)
             html = r.read().decode("utf-8", errors="ignore")
 
-            if "locked" in html.lower() and "7 days" in html.lower():
-                print(f"  ⚠ LOCKED: {self.email} — 7 Tage Sperre!", flush=True)
-                self.locked = True
-                self.lock_until = datetime.now() + timedelta(days=7)
-                self.opener = None
+            kind = classify_block(html)
+            if kind:
+                self._apply_block(kind)
                 return {"_error": True}
 
             if "CtrlGeneralError" in html or len(html) < 5000:
                 self.consecutive_fails += 1
                 self.total_errors += 1
                 err_detail = "CtrlGeneralError" if "CtrlGeneralError" in html else f"short_response({len(html)})"
-                print(f"  ERR {self.email.split('@')[0]}: IMO {imo} — {err_detail} (fails: {self.consecutive_fails})", flush=True)
+                print(f"  ERR {self.short}: IMO {imo} — {err_detail} (fails: {self.consecutive_fails})", flush=True)
                 if self.consecutive_fails >= 3:
-                    print(f"  → Re-login {self.email.split('@')[0]}...", flush=True)
+                    print(f"  → Re-login {self.short}...", flush=True)
                     self.opener = None
                     self.consecutive_fails = 0
                     if not self.login():
@@ -250,15 +317,14 @@ class EquasisSession:
 
         except urllib.error.HTTPError as e:
             self.total_errors += 1
-            print(f"  ERR {self.email.split('@')[0]}: IMO {imo} — HTTP {e.code}", flush=True)
+            print(f"  ERR {self.short}: IMO {imo} — HTTP {e.code}", flush=True)
             if e.code == 429:
-                self.locked = True
-                self.lock_until = datetime.now() + timedelta(days=7)
+                self._apply_block("rate_locked")
             elif e.code in (404, 403):
                 return {"_error": True}
         except Exception as e:
             self.total_errors += 1
-            print(f"  ERR {self.email.split('@')[0]}: IMO {imo} — {type(e).__name__}: {e}", flush=True)
+            print(f"  ERR {self.short}: IMO {imo} — {type(e).__name__}: {e}", flush=True)
 
         # Sanity check
         real_fields = [k for k in result if k not in ("classification", "equasis_status", "flag_paris_mou", "flag_tokyo_mou")]
@@ -339,6 +405,56 @@ def update_ship(con, imo, dwt, data):
     return len(updates) - 1
 
 
+def save_state(sessions):
+    """Persist lock/block state so a restart does not re-attempt logins.
+    Failed logins against a locked account are what escalates it to `blocked`."""
+    state = {}
+    for s in sessions:
+        state[s.email] = {
+            "locked": s.locked,
+            "lock_until": s.lock_until.isoformat() if s.lock_until else None,
+            "blocked": s.blocked,
+            "pages_today": s.pages_today,
+            "daily_date": s.daily_date,
+        }
+    try:
+        tmp = STATE_FILE + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(state, f, indent=2)
+        os.replace(tmp, STATE_FILE)
+    except Exception as e:
+        print(f"  WARN: could not write {STATE_FILE}: {e}", flush=True)
+
+
+def load_state(sessions):
+    """Restore lock/block state from disk."""
+    if not os.path.exists(STATE_FILE):
+        return
+    try:
+        with open(STATE_FILE) as f:
+            state = json.load(f)
+    except Exception as e:
+        print(f"  WARN: could not read {STATE_FILE}: {e}", flush=True)
+        return
+    today = datetime.now().strftime("%Y-%m-%d")
+    for s in sessions:
+        st = state.get(s.email)
+        if not st:
+            continue
+        s.blocked = st.get("blocked", False)
+        s.locked = st.get("locked", False)
+        lu = st.get("lock_until")
+        s.lock_until = datetime.fromisoformat(lu) if lu else None
+        # Only carry the page budget over within the same calendar day.
+        if st.get("daily_date") == today:
+            s.pages_today = st.get("pages_today", 0)
+            s.daily_date = today
+        if s.locked and s.lock_until and datetime.now() > s.lock_until:
+            s.locked = False
+            s.lock_until = None
+            print(f"  Lock abgelaufen: {s.short}", flush=True)
+
+
 def write_status(sessions, enriched, errors, start_time):
     """Write JSON status file for external monitoring."""
     elapsed = (time.time() - start_time) / 3600
@@ -354,11 +470,21 @@ def write_status(sessions, enriched, errors, start_time):
         "accounts": []
     }
     for s in sessions:
+        if s.blocked:
+            st = "blocked"
+        elif s.locked:
+            st = "rate_locked"
+        elif s.pages_today + PAGES_PER_SHIP > DAILY_PAGE_LIMIT:
+            st = "limit"
+        else:
+            st = "active"
         status["accounts"].append({
             "email": s.email,
-            "status": "locked" if s.locked else ("limit" if s.daily_count >= DAILY_LIMIT_PER_ACCOUNT else "active"),
-            "daily_count": s.daily_count,
-            "daily_limit": DAILY_LIMIT_PER_ACCOUNT,
+            "status": st,
+            "lock_until": s.lock_until.strftime("%Y-%m-%d %H:%M") if s.lock_until else None,
+            "needs_password_reset": s.blocked,
+            "pages_today": s.pages_today,
+            "daily_page_limit": DAILY_PAGE_LIMIT,
             "enriched": s.total_enriched,
             "errors": s.total_errors,
             "consecutive_fails": s.consecutive_fails,
@@ -371,27 +497,46 @@ def write_status(sessions, enriched, errors, start_time):
 
 
 def main():
-    print(f"Equasis Daemon v8 started — {datetime.now().strftime('%Y-%m-%d %H:%M')}", flush=True)
-    print(f"Accounts: {len(ACCOUNTS)}, Delay: {DELAY_BETWEEN_REQUESTS}s, Limit: {DAILY_LIMIT_PER_ACCOUNT}/account/day", flush=True)
+    print(f"Equasis Daemon v9 started — {datetime.now().strftime('%Y-%m-%d %H:%M')}", flush=True)
+    print(f"Accounts: {len(ACCOUNTS)}, Delay: {DELAY_BETWEEN_REQUESTS}s, "
+          f"Budget: {DAILY_PAGE_LIMIT} pages/account/day (= {DAILY_PAGE_LIMIT // PAGES_PER_SHIP} ships)", flush=True)
 
     sessions = [EquasisSession(email, pw) for email, pw in ACCOUNTS]
 
-    # Login with retry for temporary errors (503, timeouts)
+    # Restore persisted locks BEFORE any login attempt.
+    load_state(sessions)
+    for s in sessions:
+        if s.blocked:
+            print(f"  ⛔ BLOCKED (persistiert): {s.email} — braucht Passwort-Reset, kein Login-Versuch", flush=True)
+        elif s.locked:
+            print(f"  ⚠ RATE-LOCK (persistiert): {s.email} — bis {s.lock_until:%Y-%m-%d %H:%M}, kein Login-Versuch", flush=True)
+
+    # Login with retry for temporary errors (503, timeouts).
+    # Skip locked/blocked accounts entirely — failed logins escalate to `blocked`.
     for attempt in range(3):
-        pending = [s for s in sessions if not s.locked and s.opener is None]
+        pending = [s for s in sessions if s.is_available() and s.opener is None]
         if not pending:
             break
         if attempt > 0:
             print(f"  Retry {attempt}/2 in 60s...", flush=True)
-            time.sleep(60)
+            nap(60)
         for s in pending:
             if s.login():
                 print(f"  OK: {s.email}", flush=True)
-            elif s.locked:
-                print(f"  LOCKED: {s.email} (Equasis-Sperre)", flush=True)
+            elif s.blocked or s.locked:
+                pass  # already reported by _apply_block
             else:
                 err = getattr(s, '_last_login_error', 'unknown')
                 print(f"  TEMP-FAIL: {s.email} ({err})", flush=True)
+    save_state(sessions)
+
+    if not any(s.is_available() for s in sessions):
+        blocked = [s.short for s in sessions if s.blocked]
+        if blocked and len(blocked) == len(sessions):
+            print(f"\nAlle Accounts BLOCKED ({', '.join(blocked)}). Passwort-Reset nötig — "
+                  f"Warten hilft nicht. Daemon beendet sich.", flush=True)
+            write_status(sessions, 0, 0, time.time())
+            return
 
     con = sqlite3.connect(DB)
     con.execute("PRAGMA journal_mode=WAL")
@@ -409,23 +554,25 @@ def main():
         now = time.time()
         if now - last_status_write > 60:
             write_status(sessions, enriched, errors, start_time)
+            save_state(sessions)  # survive SIGKILL without losing the page budget
             last_status_write = now
 
-        # Reset daily counters at midnight
+        # Reset daily page budget at midnight
         today = datetime.now().strftime("%Y-%m-%d")
         for s in sessions:
             if s.daily_date != today:
-                old = s.daily_count
-                s.daily_count = 0
+                old = s.pages_today
+                s.pages_today = 0
                 s.daily_date = today
                 if old > 0:
-                    print(f"  Tages-Reset: {s.email.split('@')[0]} ({old} gestern)", flush=True)
+                    print(f"  Tages-Reset: {s.short} ({old} Seiten gestern)", flush=True)
+                save_state(sessions)
 
         # Get next ship
         ship = get_next_ship(con, cutoff)
         if not ship:
             print("No more ships to scrape. Sleeping 1h...", flush=True)
-            time.sleep(3600)
+            nap(3600)
             cutoff = (datetime.now() - timedelta(days=RESCRAPE_DAYS)).strftime("%Y-%m-%d")
             continue
 
@@ -441,32 +588,47 @@ def main():
                 break
 
         if not session:
-            # Check why: all locked or all at daily limit?
-            locked = [s for s in sessions if s.locked]
-            at_limit = [s for s in sessions if s.daily_count >= DAILY_LIMIT_PER_ACCOUNT and not s.locked]
+            save_state(sessions)
+            blocked = [s for s in sessions if s.blocked]
+            locked = [s for s in sessions if s.locked and not s.blocked]
+            at_limit = [s for s in sessions if not s.blocked and not s.locked
+                        and s.pages_today + PAGES_PER_SHIP > DAILY_PAGE_LIMIT]
+
+            if len(blocked) == len(sessions):
+                print(f"  ⛔ Alle {len(blocked)} Accounts BLOCKED — Passwort-Reset nötig. "
+                      f"Warten bringt nichts, Daemon beendet sich.", flush=True)
+                write_status(sessions, enriched, errors, start_time)
+                break
+
             if at_limit and not locked:
-                # All at daily limit — wait until midnight
+                # All at daily page budget — wait until midnight
                 now_dt = datetime.now()
                 tomorrow = (now_dt + timedelta(days=1)).replace(hour=0, minute=5, second=0)
                 wait = (tomorrow - now_dt).total_seconds()
-                print(f"  Alle Accounts am Tageslimit ({DAILY_LIMIT_PER_ACCOUNT}). Pause bis Mitternacht ({wait/3600:.1f}h)...", flush=True)
+                print(f"  Alle Accounts am Tages-Seitenbudget ({DAILY_PAGE_LIMIT}). "
+                      f"Pause bis Mitternacht ({wait/3600:.1f}h)...", flush=True)
                 write_status(sessions, enriched, errors, start_time)
-                time.sleep(min(wait, 7200))
+                nap(min(wait, 7200))
+            elif locked:
+                nxt = min(s.lock_until for s in locked if s.lock_until)
+                print(f"  Alle verfügbaren Accounts rate-locked ({len(locked)} locked, "
+                      f"{len(blocked)} blocked). Nächster frei: {nxt:%Y-%m-%d %H:%M}. Sleeping 2h...", flush=True)
+                nap(7200)
             else:
-                # Check if actually locked or just temporary errors
-                actually_locked = [s for s in sessions if s.locked and s.lock_until]
-                if len(actually_locked) == len(sessions):
-                    print("All accounts locked (Equasis-Sperre). Sleeping 2h...", flush=True)
-                    time.sleep(7200)
-                else:
-                    print(f"All accounts unavailable ({len(actually_locked)} locked, rest temp-fail). Retry in 5min...", flush=True)
-                    time.sleep(300)
-                for s in sessions:
-                    if s.locked and s.lock_until and datetime.now() > s.lock_until:
-                        s.locked = False
-                    if not s.locked and s.opener is None:
-                        if s.login():
-                            print(f"  Back online: {s.email}", flush=True)
+                print(f"  Kein Account verfügbar ({len(blocked)} blocked, rest temp-fail). Retry in 5min...", flush=True)
+                nap(300)
+
+            # Re-login ONLY accounts whose lock genuinely expired. Never clear
+            # `blocked` here — it only clears via a manual password reset.
+            for s in sessions:
+                if s.locked and s.lock_until and datetime.now() > s.lock_until:
+                    s.locked = False
+                    s.lock_until = None
+                    print(f"  Lock abgelaufen: {s.short}", flush=True)
+                if s.is_available() and s.opener is None:
+                    if s.login():
+                        print(f"  Back online: {s.email}", flush=True)
+            save_state(sessions)
             continue
 
         # Scrape
@@ -510,21 +672,23 @@ def main():
                 if data.get("owner"): parts.append(f"O={data['owner'][:20]}")
                 elapsed = (time.time() - start_time) / 3600
                 rate = enriched / elapsed if elapsed > 0 else 0
-                acct = session.email.split('@')[0]
-                print(f"  [{enriched:4d}] {name[:22]:22} [{fields:2d}] {' | '.join(parts[:4])}  ({rate:.0f}/h via {acct}, {session.daily_count}/{DAILY_LIMIT_PER_ACCOUNT})", flush=True)
+                print(f"  [{enriched:4d}] {name[:22]:22} [{fields:2d}] {' | '.join(parts[:4])}  "
+                      f"({rate:.0f}/h via {session.short}, {session.pages_today}/{DAILY_PAGE_LIMIT} Seiten)", flush=True)
         else:
             errors += 1
             consecutive_errors += 1
             if consecutive_errors >= 10:
+                save_state(sessions)
                 available = [s for s in sessions if s.is_available()]
                 if not available:
-                    print(f"  10+ Errors, alle Accounts tot. Sleeping 2h...", flush=True)
-                    time.sleep(7200)
+                    print(f"  10+ Errors, kein Account verfügbar. Sleeping 2h...", flush=True)
+                    nap(7200)
+                    # Drop stale sessions, but never resurrect a lock/block:
+                    # is_available() decides who may log in again.
                     for s in sessions:
-                        s.locked = False
                         s.opener = None
                     for s in sessions:
-                        if s.login():
+                        if s.is_available() and s.login():
                             print(f"  Back online: {s.email}", flush=True)
                 else:
                     for s in available:
@@ -532,10 +696,11 @@ def main():
                 consecutive_errors = 0
 
         # Fixed delay between every request
-        time.sleep(DELAY_BETWEEN_REQUESTS)
+        nap(DELAY_BETWEEN_REQUESTS)
 
     # Shutdown
     write_status(sessions, enriched, errors, start_time)
+    save_state(sessions)
     elapsed = (time.time() - start_time) / 3600
     print(f"\nDaemon stopped. Enriched: {enriched}, Errors: {errors}, Runtime: {elapsed:.1f}h", flush=True)
 

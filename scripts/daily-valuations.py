@@ -233,7 +233,7 @@ def estimate(ship_row, market):
     length = ship_row[11] if len(ship_row) > 11 else None
     beam = ship_row[12] if len(ship_row) > 12 else None
     teu = ship_row[13] if len(ship_row) > 13 else 0
-    stype    = resolve_type(stype or )""
+    stype    = resolve_type(stype or "")
     dwt      = dwt or 0
     builder  = builder or ""
     status   = status or "active"
