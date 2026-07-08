@@ -90,9 +90,16 @@ def flickr_search(name):
 
 def main():
     db = sqlite3.connect(DB)
+    db.execute("CREATE TABLE IF NOT EXISTS flickr_tried(imo TEXT PRIMARY KEY, ts TEXT)")
+    db.commit()
+    # Ships without image, not tried in the last 30 days -> works through the
+    # whole fleet over time instead of re-spinning the same top-1000 nomatches,
+    # while re-checking each ship monthly for newly uploaded photos.
     ships = db.execute(
         "SELECT imo, name FROM ships WHERE (image_url IS NULL OR image_url='') "
-        "AND name IS NOT NULL AND name<>'' ORDER BY dwt DESC LIMIT %d" % PER_RUN).fetchall()
+        "AND name IS NOT NULL AND name<>'' "
+        "AND imo NOT IN (SELECT imo FROM flickr_tried WHERE ts > datetime('now','-30 days')) "
+        "ORDER BY dwt DESC LIMIT %d" % PER_RUN).fetchall()
     print("Flickr-Suche für %d Schiffe (CC, strikt Titelanfang + Vision)" % len(ships), flush=True)
     found = rejected = nomatch = 0
     for i, (imo, name) in enumerate(ships):
@@ -107,6 +114,8 @@ def main():
             print("  OK  %-22s <- %s" % (name[:22], attr), flush=True)
         else:
             rejected += 1
+        db.execute("INSERT OR REPLACE INTO flickr_tried VALUES (?, datetime('now'))", (imo,))
+        db.commit()
         if (i + 1) % 50 == 0:
             print("  [%d/%d] found=%d rejected=%d nomatch=%d" % (i+1, len(ships), found, rejected, nomatch), flush=True)
         time.sleep(DELAY)
