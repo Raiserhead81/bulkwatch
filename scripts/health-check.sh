@@ -1,6 +1,6 @@
 #!/bin/bash
 # BulkWatch Health Check — Cron alle 5 Minuten
-# Prüft ob bulkwatch und equasis-daemon laufen
+# Prüft ob bulkwatch läuft (equasis-Check entfernt 08.07 — Daemon schläft legitim)
 # Sendet Telegram-Alert bei Ausfall
 
 LOG=/var/log/bulkwatch-health.log
@@ -29,11 +29,6 @@ if ! systemctl is-active --quiet bulkwatch; then
   ISSUES=$((ISSUES + 1))
 fi
 
-# Prüfe equasis-daemon
-if ! systemctl is-active --quiet equasis-daemon; then
-  send_alert "equasis-daemon is DOWN!"
-  ISSUES=$((ISSUES + 1))
-fi
 
 # Prüfe HTTP-Response (lokal)
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 http://127.0.0.1:3099/api/version 2>/dev/null)

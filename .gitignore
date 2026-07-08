@@ -68,3 +68,4 @@ config/
 *.bak*
 src.bak.*
 bulkwatch/
+config/datalastic-key.txt

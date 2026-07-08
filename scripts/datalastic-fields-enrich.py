@@ -99,8 +99,8 @@ for i, imo in enumerate(targets):
             db.commit()
         else:
             err += 1
-            if e.code in (401, 403, 429):
-                print("  Auth/Rate %s — Abbruch" % e.code, flush=True); break
+            if e.code in (401, 402, 403, 429):
+                print("  Auth/Rate/Credits %s — sauberer Abbruch" % e.code, flush=True); break
     except Exception as e:
         err += 1
         print("  Fehler IMO %s: %s" % (imo, e), flush=True)
