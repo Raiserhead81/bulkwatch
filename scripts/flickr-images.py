@@ -66,7 +66,10 @@ def flickr_search(name):
     nname = norm(name)
     if len(nname) < 5:
         return None, None  # zu kurze/generische Namen -> überspringen
-    p = {"method": "flickr.photos.search", "api_key": FLICKR_KEY, "text": name + " ship",
+    # Search by NAME only — appending "ship" would require that word in the
+    # photo's text and suppresses many valid matches. Precision instead comes
+    # from the strict first-segment title match + the vision check below.
+    p = {"method": "flickr.photos.search", "api_key": FLICKR_KEY, "text": name,
          "license": LICENSES, "sort": "relevance", "per_page": "10",
          "extras": "owner_name,license,url_l,url_c,url_o", "format": "json", "nojsoncallback": "1"}
     url = "https://api.flickr.com/services/rest/?" + urllib.parse.urlencode(p)
