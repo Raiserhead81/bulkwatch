@@ -1,456 +1,476 @@
 {
-  "version": "4.1",
-  "lastUpdated": "2026-07-07",
-  "note": "Shared model parameters \u2014 Python values are canonical (calibrated against S&P transactions Jun 2026)",
-  "newbuildPrices": {
-    "Capesize": {
-      "dwt": 180000,
-      "nb": 70000000
-    },
-    "Newcastlemax": {
-      "dwt": 210000,
-      "nb": 72000000
-    },
-    "Kamsarmax": {
-      "dwt": 82000,
-      "nb": 38000000
-    },
-    "Panamax": {
-      "dwt": 77000,
-      "nb": 35000000
-    },
-    "Post-Panamax": {
-      "dwt": 95000,
-      "nb": 42000000
-    },
-    "Ultramax": {
-      "dwt": 64000,
-      "nb": 35000000
-    },
-    "Supramax": {
-      "dwt": 58000,
-      "nb": 33000000
-    },
-    "Handymax": {
-      "dwt": 50000,
-      "nb": 32000000
-    },
-    "Handysize": {
-      "dwt": 38000,
-      "nb": 31000000
-    },
-    "Mini-Bulker": {
-      "dwt": 12000,
-      "nb": 18000000
-    },
-    "VLCC": {
-      "dwt": 300000,
-      "nb": 125000000
-    },
-    "Suezmax": {
-      "dwt": 157000,
-      "nb": 85000000
-    },
-    "Aframax": {
-      "dwt": 115000,
-      "nb": 78000000
-    },
-    "Product Tanker": {
-      "dwt": 50000,
-      "nb": 44000000
-    },
-    "Chemical Tanker": {
-      "dwt": 25000,
-      "nb": 42000000
-    },
-    "Crude Oil Tanker": {
-      "dwt": 105000,
-      "nb": 60000000
-    },
-    "Oil/Chemical Tanker": {
-      "dwt": 45000,
-      "nb": 40000000
-    },
-    "Container Ship": {
-      "dwt": 70000,
-      "nb": 95000000
-    },
-    "LNG Tanker": {
-      "dwt": 80000,
-      "nb": 250000000
-    },
-    "LPG Tanker": {
-      "dwt": 50000,
-      "nb": 85000000
-    },
-    "Car Carrier": {
-      "dwt": 15000,
-      "nb": 70000000
-    },
-    "RoRo": {
-      "dwt": 12000,
-      "nb": 45000000
-    },
-    "Reefer": {
-      "dwt": 12000,
-      "nb": 35000000
-    },
-    "Multipurpose": {
-      "dwt": 15000,
-      "nb": 22000000
-    },
-    "Heavy Lift": {
-      "dwt": 20000,
-      "nb": 45000000
-    },
-    "General Cargo": {
-      "dwt": 10000,
-      "nb": 18000000
-    },
-    "Bulk Carrier": {
-      "dwt": 60000,
-      "nb": 34000000
-    },
-    "Other": {
-      "dwt": 10000,
-      "nb": 15000000
-    }
+ "version": "4.1",
+ "lastUpdated": "2026-07-07",
+ "note": "Shared model parameters \u2014 Python values are canonical (calibrated against S&P transactions Jun 2026)",
+ "newbuildPrices": {
+  "Capesize": {
+   "dwt": 180000,
+   "nb": 70000000
   },
-  "fallbackTypeMult": {
-    "Valemax": 1.05,
-    "VLOC": 1.0,
-    "Gearless": 0.98,
-    "Geared": 0.95,
-    "Tanker": 1.1,
-    "ULCV": 1.6,
-    "Neo-Panamax": 1.3,
-    "Feeder": 0.8,
-    "RoPax": 1.8,
-    "Cruise Ship": 4.5,
-    "Passenger": 3.0,
-    "Ferry": 1.6,
-    "OSV": 1.8,
-    "Offshore": 1.6,
-    "Tug": 2.5,
-    "Dredger": 1.5
+  "Newcastlemax": {
+   "dwt": 210000,
+   "nb": 72000000
   },
-  "depreciation": {
-    "comment": "Piecewise linear: [maxAge, startValue, slopePerYear]",
-    "brackets": [
-      {
-        "maxAge": 0,
-        "value": 1.12
-      },
-      {
-        "maxAge": 2,
-        "value": 1.08
-      },
-      {
-        "maxAge": 5,
-        "startValue": 1.0,
-        "slope": 0.02,
-        "fromAge": 2
-      },
-      {
-        "maxAge": 9,
-        "startValue": 0.94,
-        "slope": 0.04,
-        "fromAge": 5
-      },
-      {
-        "maxAge": 14,
-        "startValue": 0.78,
-        "slope": 0.052,
-        "fromAge": 9
-      },
-      {
-        "maxAge": 20,
-        "startValue": 0.52,
-        "slope": 0.037,
-        "fromAge": 14
-      },
-      {
-        "maxAge": 25,
-        "startValue": 0.3,
-        "slope": 0.03,
-        "fromAge": 20
-      },
-      {
-        "maxAge": 99,
-        "startValue": 0.15,
-        "slope": 0.015,
-        "fromAge": 25,
-        "floor": 0.08
-      }
-    ]
+  "Kamsarmax": {
+   "dwt": 82000,
+   "nb": 38000000
   },
-  "segmentGroups": {
-    "capesize": [
-      "Capesize",
-      "Newcastlemax",
-      "Valemax",
-      "VLOC"
-    ],
-    "panamax": [
-      "Panamax",
-      "Kamsarmax",
-      "Gearless"
-    ],
-    "supramax": [
-      "Supramax",
-      "Ultramax",
-      "Geared"
-    ],
-    "handysize": [
-      "Handysize",
-      "Handymax",
-      "Mini-Bulker"
-    ]
+  "Panamax": {
+   "dwt": 77000,
+   "nb": 35000000
   },
-  "marketFactorBaselines": {
-    "capesize": {
-      "defaultRate": 29000,
-      "baseline": 22000
-    },
-    "panamax": {
-      "defaultRate": 21500,
-      "baseline": 16000
-    },
-    "supramax": {
-      "defaultRate": 24000,
-      "baseline": 14000
-    },
-    "handysize": {
-      "defaultRate": 13500,
-      "baseline": 11000
-    },
-    "other": {
-      "defaultRate": 1500,
-      "baseline": 1500
-    }
+  "Post-Panamax": {
+   "dwt": 95000,
+   "nb": 42000000
   },
-  "tankerPremium": {
-    "factor": 1.15,
-    "types": [
-      "VLCC",
-      "Suezmax",
-      "Aframax",
-      "Product Tanker",
-      "Chemical Tanker",
-      "Crude Oil Tanker",
-      "Tanker",
-      "Oil/Chemical Tanker"
-    ]
+  "Ultramax": {
+   "dwt": 64000,
+   "nb": 35000000
   },
-  "builderTiers": {
-    "tier1": {
-      "factor": 1.07,
-      "keywords": [
-        "hyundai",
-        "samsung",
-        "daewoo",
-        "imabari",
-        "oshima",
-        "tsuneishi",
-        "namura",
-        "mitsubishi",
-        "mitsui",
-        "kawasaki",
-        "jmu",
-        "hanjin",
-        "universal shipbuilding",
-        "sanoyas",
-        "shin kurushima"
-      ]
-    },
-    "tier2": {
-      "factor": 1.015,
-      "keywords": [
-        "cosco",
-        "jiangnan",
-        "hudong",
-        "dalian",
-        "yangzijiang",
-        "nantong",
-        "new times",
-        "jinhai",
-        "zhejiang",
-        "cssc",
-        "csic"
-      ]
-    },
-    "tier4": {
-      "factor": 0.925,
-      "keywords": [
-        "huelva",
-        "navantia",
-        "astilleros",
-        "constanta",
-        "mangalia",
-        "gdynia",
-        "split",
-        "uljanik"
-      ]
-    }
+  "Supramax": {
+   "dwt": 58000,
+   "nb": 33000000
   },
-  "ldtRatios": {
-    "Bulk Carrier": 0.17,
-    "Capesize": 0.15,
-    "Newcastlemax": 0.15,
-    "Handymax": 0.18,
-    "Handysize": 0.18,
-    "Supramax": 0.17,
-    "Ultramax": 0.17,
-    "Kamsarmax": 0.16,
-    "Panamax": 0.16,
-    "Post-Panamax": 0.16,
-    "Tanker": 0.18,
-    "VLCC": 0.15,
-    "Suezmax": 0.17,
-    "Aframax": 0.18,
-    "Product Tanker": 0.19,
-    "Chemical Tanker": 0.2,
-    "Crude Oil Tanker": 0.17,
-    "Container Ship": 0.22,
-    "General Cargo": 0.25,
-    "RoRo": 0.3,
-    "Car Carrier": 0.35,
-    "Reefer": 0.28,
-    "LNG Tanker": 0.25,
-    "LPG Tanker": 0.22
+  "Handymax": {
+   "dwt": 50000,
+   "nb": 32000000
   },
-  "ecoBenchmarks": {
-    "Capesize": 35,
-    "Newcastlemax": 37,
-    "Kamsarmax": 28,
-    "Panamax": 26,
-    "Post-Panamax": 30,
-    "Ultramax": 24,
-    "Supramax": 23,
-    "Handymax": 20,
-    "Handysize": 18,
-    "Mini-Bulker": 12,
-    "VLCC": 65,
-    "Suezmax": 45,
-    "Aframax": 38,
-    "Product Tanker": 28,
-    "Chemical Tanker": 22,
-    "Crude Oil Tanker": 40,
-    "LNG Tanker": 80,
-    "LPG Tanker": 40,
-    "Container Ship": 120,
-    "General Cargo": 15
+  "Handysize": {
+   "dwt": 38000,
+   "nb": 31000000
   },
-  "type_aliases": {
-    "General Cargo Ship": "General Cargo",
-    "Self-Discharging Bulk Carrier": "Bulk Carrier",
-    "Ore Carrier": "Capesize",
-    "Cement Carrier": "Handysize",
-    "Aggregates Carrier": "Handysize",
-    "Wood Chips Carrier": "Handymax",
-    "Limestone Carrier": "Handysize",
-    "Urea Carrier": "Handysize",
-    "Palletised Cargo Ship": "General Cargo",
-    "Livestock Carrier": "General Cargo",
-    "Deck Cargo Ship": "General Cargo",
-    "Fish Carrier": "General Cargo",
-    "Bulk Dry Storage Ship": "Bulk Carrier",
-    "Bulk/Oil Carrier": "Bulk Carrier",
-    "Ore/Oil Carrier": "Bulk Carrier",
-    "Bulk/Caustic Soda Carrier (CABU)": "Bulk Carrier",
-    "Bulk/Sulphuric Acid Carrier": "Bulk Carrier",
-    "Vehicles Carrier": "Car Carrier",
-    "Ro-Ro Cargo Ship": "RoRo",
-    "Passenger/Ro-Ro Ship (vehicles)": "RoRo",
-    "Container Ro-Ro Cargo Ship": "RoRo",
-    "Passenger/Ro-Ro Cargo Ship": "RoRo",
-    "Oil Products Tanker": "Product Tanker",
-    "Chemical/Oil Products Tanker": "Oil/Chemical Tanker",
-    "Bunkering Tanker": "Product Tanker",
-    "Asphalt/Bitumen Tanker": "Chemical Tanker",
-    "CO2 Tanker": "LPG Tanker",
-    "FSO, Oil": "Crude Oil Tanker",
-    "Water Tanker": "Product Tanker",
-    "Wine Tanker": "Chemical Tanker",
-    "Fruit juice carrier- refrigerated": "Reefer",
-    "Neo-Panamax": "Container Ship",
-    "ULCV": "Container Ship",
-    "Feeder": "Container Ship",
-    "Refrigerated Cargo Ship": "Reefer",
-    "Offshore Supply Ship": "Multipurpose",
-    "Offshore Support Vessel": "Multipurpose",
-    "Offshore Tug/Supply Ship": "Multipurpose",
-    "Supply Vessel": "Multipurpose",
-    "Heavy Load Carrier": "Heavy Lift",
-    "Passenger (Cruise) Ship": "Multipurpose",
-    "Passenger Ship": "Multipurpose",
-    "Passenger/General Cargo Ship": "Multipurpose",
-    "Landing Craft": "General Cargo",
-    "Nuclear Fuel Carrier": "General Cargo",
-    "Hopper Dredger": "Multipurpose",
-    "Motor Hopper": "Multipurpose",
-    "Research Vessel": "Multipurpose",
-    "Utility Vessel": "Multipurpose",
-    "Work/Repair Vessel": "Multipurpose",
-    "Fish Factory Ship": "Multipurpose",
-    "Fishing Support Vessel": "Multipurpose",
-    "Pusher Tug": "Multipurpose",
-    "Cable-Layer": "Multipurpose",
-    "Buoy/Lighthouse Vessel": "Multipurpose",
-    "Patrol Vessel": "Multipurpose",
-    "Power Station Vessel": "Multipurpose",
-    "Standby-Safety Vessel": "Multipurpose",
-    "Well-Stimulation Vessel": "Multipurpose"
+  "Mini-Bulker": {
+   "dwt": 12000,
+   "nb": 18000000
   },
-  "segment_bias_correction": {
-    "Capesize": 0.89,
-    "Newcastlemax": 0.89,
-    "Handymax": 0.88,
-    "Handysize": 0.88,
-    "Product Tanker": 0.84,
-    "Aframax": 0.85,
-    "Chemical Tanker": 0.87,
-    "VLCC": 0.9,
-    "Suezmax": 0.88,
-    "Crude Oil Tanker": 0.86,
-    "Oil/Chemical Tanker": 0.85,
-    "Container Ship": 0.92,
-    "LNG Tanker": 0.93,
-    "Other": 0.85
+  "VLCC": {
+   "dwt": 300000,
+   "nb": 125000000
   },
-  "containerSegments": {
-    "comment": "Container ship valuation by TEU class. If TEU unknown, derive from DWT/14.",
-    "segments": [
-      {
-        "name": "Feeder",
-        "maxTeu": 3000,
-        "nb": 30000000
-      },
-      {
-        "name": "Sub-Panamax",
-        "maxTeu": 5000,
-        "nb": 45000000
-      },
-      {
-        "name": "Panamax",
-        "maxTeu": 8000,
-        "nb": 65000000
-      },
-      {
-        "name": "Post-Panamax",
-        "maxTeu": 12000,
-        "nb": 95000000
-      },
-      {
-        "name": "Neo-Panamax",
-        "maxTeu": 15000,
-        "nb": 120000000
-      },
-      {
-        "name": "ULCV",
-        "maxTeu": 999999,
-        "nb": 165000000
-      }
-    ]
+  "Suezmax": {
+   "dwt": 157000,
+   "nb": 85000000
+  },
+  "Aframax": {
+   "dwt": 115000,
+   "nb": 78000000
+  },
+  "Product Tanker": {
+   "dwt": 50000,
+   "nb": 44000000
+  },
+  "Chemical Tanker": {
+   "dwt": 25000,
+   "nb": 42000000
+  },
+  "Crude Oil Tanker": {
+   "dwt": 105000,
+   "nb": 60000000
+  },
+  "Oil/Chemical Tanker": {
+   "dwt": 45000,
+   "nb": 40000000
+  },
+  "Container Ship": {
+   "dwt": 70000,
+   "nb": 95000000
+  },
+  "LNG Tanker": {
+   "dwt": 80000,
+   "nb": 250000000
+  },
+  "LPG Tanker": {
+   "dwt": 50000,
+   "nb": 85000000
+  },
+  "Car Carrier": {
+   "dwt": 15000,
+   "nb": 70000000
+  },
+  "RoRo": {
+   "dwt": 12000,
+   "nb": 45000000
+  },
+  "Reefer": {
+   "dwt": 12000,
+   "nb": 35000000
+  },
+  "Multipurpose": {
+   "dwt": 15000,
+   "nb": 22000000
+  },
+  "Heavy Lift": {
+   "dwt": 20000,
+   "nb": 45000000
+  },
+  "General Cargo": {
+   "dwt": 10000,
+   "nb": 18000000
+  },
+  "Bulk Carrier": {
+   "dwt": 60000,
+   "nb": 34000000
+  },
+  "Other": {
+   "dwt": 10000,
+   "nb": 15000000
   }
+ },
+ "fallbackTypeMult": {
+  "Valemax": 1.05,
+  "VLOC": 1.0,
+  "Gearless": 0.98,
+  "Geared": 0.95,
+  "Tanker": 1.1,
+  "ULCV": 1.6,
+  "Neo-Panamax": 1.3,
+  "Feeder": 0.8,
+  "RoPax": 1.8,
+  "Cruise Ship": 4.5,
+  "Passenger": 3.0,
+  "Ferry": 1.6,
+  "OSV": 1.8,
+  "Offshore": 1.6,
+  "Tug": 2.5,
+  "Dredger": 1.5
+ },
+ "depreciation": {
+  "comment": "Piecewise linear: [maxAge, startValue, slopePerYear]",
+  "brackets": [
+   {
+    "maxAge": 0,
+    "value": 1.12
+   },
+   {
+    "maxAge": 2,
+    "value": 1.08
+   },
+   {
+    "maxAge": 5,
+    "startValue": 1.0,
+    "slope": 0.02,
+    "fromAge": 2
+   },
+   {
+    "maxAge": 9,
+    "startValue": 0.94,
+    "slope": 0.04,
+    "fromAge": 5
+   },
+   {
+    "maxAge": 14,
+    "startValue": 0.78,
+    "slope": 0.052,
+    "fromAge": 9
+   },
+   {
+    "maxAge": 20,
+    "startValue": 0.52,
+    "slope": 0.037,
+    "fromAge": 14
+   },
+   {
+    "maxAge": 25,
+    "startValue": 0.3,
+    "slope": 0.03,
+    "fromAge": 20
+   },
+   {
+    "maxAge": 99,
+    "startValue": 0.15,
+    "slope": 0.015,
+    "fromAge": 25,
+    "floor": 0.08
+   }
+  ]
+ },
+ "segmentGroups": {
+  "capesize": [
+   "Capesize",
+   "Newcastlemax",
+   "Valemax",
+   "VLOC"
+  ],
+  "panamax": [
+   "Panamax",
+   "Kamsarmax",
+   "Gearless"
+  ],
+  "supramax": [
+   "Supramax",
+   "Ultramax",
+   "Geared"
+  ],
+  "handysize": [
+   "Handysize",
+   "Handymax",
+   "Mini-Bulker"
+  ]
+ },
+ "marketFactorBaselines": {
+  "capesize": {
+   "defaultRate": 29000,
+   "baseline": 22000
+  },
+  "panamax": {
+   "defaultRate": 21500,
+   "baseline": 16000
+  },
+  "supramax": {
+   "defaultRate": 24000,
+   "baseline": 14000
+  },
+  "handysize": {
+   "defaultRate": 13500,
+   "baseline": 11000
+  },
+  "other": {
+   "defaultRate": 1500,
+   "baseline": 1500
+  }
+ },
+ "tankerPremium": {
+  "factor": 1.15,
+  "types": [
+   "VLCC",
+   "Suezmax",
+   "Aframax",
+   "Product Tanker",
+   "Chemical Tanker",
+   "Crude Oil Tanker",
+   "Tanker",
+   "Oil/Chemical Tanker"
+  ]
+ },
+ "builderTiers": {
+  "tier1": {
+   "factor": 1.07,
+   "keywords": [
+    "hyundai",
+    "samsung",
+    "daewoo",
+    "imabari",
+    "oshima",
+    "tsuneishi",
+    "namura",
+    "mitsubishi",
+    "mitsui",
+    "kawasaki",
+    "jmu",
+    "hanjin",
+    "universal shipbuilding",
+    "sanoyas",
+    "shin kurushima"
+   ]
+  },
+  "tier2": {
+   "factor": 1.015,
+   "keywords": [
+    "cosco",
+    "jiangnan",
+    "hudong",
+    "dalian",
+    "yangzijiang",
+    "nantong",
+    "new times",
+    "jinhai",
+    "zhejiang",
+    "cssc",
+    "csic"
+   ]
+  },
+  "tier4": {
+   "factor": 0.925,
+   "keywords": [
+    "huelva",
+    "navantia",
+    "astilleros",
+    "constanta",
+    "mangalia",
+    "gdynia",
+    "split",
+    "uljanik"
+   ]
+  }
+ },
+ "ldtRatios": {
+  "Bulk Carrier": 0.17,
+  "Capesize": 0.15,
+  "Newcastlemax": 0.15,
+  "Handymax": 0.18,
+  "Handysize": 0.18,
+  "Supramax": 0.17,
+  "Ultramax": 0.17,
+  "Kamsarmax": 0.16,
+  "Panamax": 0.16,
+  "Post-Panamax": 0.16,
+  "Tanker": 0.18,
+  "VLCC": 0.15,
+  "Suezmax": 0.17,
+  "Aframax": 0.18,
+  "Product Tanker": 0.19,
+  "Chemical Tanker": 0.2,
+  "Crude Oil Tanker": 0.17,
+  "Container Ship": 0.22,
+  "General Cargo": 0.25,
+  "RoRo": 0.3,
+  "Car Carrier": 0.35,
+  "Reefer": 0.28,
+  "LNG Tanker": 0.25,
+  "LPG Tanker": 0.22
+ },
+ "ecoBenchmarks": {
+  "Capesize": 35,
+  "Newcastlemax": 37,
+  "Kamsarmax": 28,
+  "Panamax": 26,
+  "Post-Panamax": 30,
+  "Ultramax": 24,
+  "Supramax": 23,
+  "Handymax": 20,
+  "Handysize": 18,
+  "Mini-Bulker": 12,
+  "VLCC": 65,
+  "Suezmax": 45,
+  "Aframax": 38,
+  "Product Tanker": 28,
+  "Chemical Tanker": 22,
+  "Crude Oil Tanker": 40,
+  "LNG Tanker": 80,
+  "LPG Tanker": 40,
+  "Container Ship": 120,
+  "General Cargo": 15
+ },
+ "type_aliases": {
+  "General Cargo Ship": "General Cargo",
+  "Self-Discharging Bulk Carrier": "Bulk Carrier",
+  "Ore Carrier": "Capesize",
+  "Cement Carrier": "Handysize",
+  "Aggregates Carrier": "Handysize",
+  "Wood Chips Carrier": "Handymax",
+  "Limestone Carrier": "Handysize",
+  "Urea Carrier": "Handysize",
+  "Palletised Cargo Ship": "General Cargo",
+  "Livestock Carrier": "General Cargo",
+  "Deck Cargo Ship": "General Cargo",
+  "Fish Carrier": "General Cargo",
+  "Bulk Dry Storage Ship": "Bulk Carrier",
+  "Bulk/Oil Carrier": "Bulk Carrier",
+  "Ore/Oil Carrier": "Bulk Carrier",
+  "Bulk/Caustic Soda Carrier (CABU)": "Bulk Carrier",
+  "Bulk/Sulphuric Acid Carrier": "Bulk Carrier",
+  "Vehicles Carrier": "Car Carrier",
+  "Ro-Ro Cargo Ship": "RoRo",
+  "Passenger/Ro-Ro Ship (vehicles)": "RoRo",
+  "Container Ro-Ro Cargo Ship": "RoRo",
+  "Passenger/Ro-Ro Cargo Ship": "RoRo",
+  "Oil Products Tanker": "Product Tanker",
+  "Chemical/Oil Products Tanker": "Oil/Chemical Tanker",
+  "Bunkering Tanker": "Product Tanker",
+  "Asphalt/Bitumen Tanker": "Chemical Tanker",
+  "CO2 Tanker": "LPG Tanker",
+  "FSO, Oil": "Crude Oil Tanker",
+  "Water Tanker": "Product Tanker",
+  "Wine Tanker": "Chemical Tanker",
+  "Fruit juice carrier- refrigerated": "Reefer",
+  "Neo-Panamax": "Container Ship",
+  "ULCV": "Container Ship",
+  "Feeder": "Container Ship",
+  "Refrigerated Cargo Ship": "Reefer",
+  "Offshore Supply Ship": "Multipurpose",
+  "Offshore Support Vessel": "Multipurpose",
+  "Offshore Tug/Supply Ship": "Multipurpose",
+  "Supply Vessel": "Multipurpose",
+  "Heavy Load Carrier": "Heavy Lift",
+  "Passenger (Cruise) Ship": "Multipurpose",
+  "Passenger Ship": "Multipurpose",
+  "Passenger/General Cargo Ship": "Multipurpose",
+  "Landing Craft": "General Cargo",
+  "Nuclear Fuel Carrier": "General Cargo",
+  "Hopper Dredger": "Multipurpose",
+  "Motor Hopper": "Multipurpose",
+  "Research Vessel": "Multipurpose",
+  "Utility Vessel": "Multipurpose",
+  "Work/Repair Vessel": "Multipurpose",
+  "Fish Factory Ship": "Multipurpose",
+  "Fishing Support Vessel": "Multipurpose",
+  "Pusher Tug": "Multipurpose",
+  "Cable-Layer": "Multipurpose",
+  "Buoy/Lighthouse Vessel": "Multipurpose",
+  "Patrol Vessel": "Multipurpose",
+  "Power Station Vessel": "Multipurpose",
+  "Standby-Safety Vessel": "Multipurpose",
+  "Well-Stimulation Vessel": "Multipurpose",
+  "SUPRA": "Supramax",
+  "UMAX": "Ultramax",
+  "KMAX": "Kamsarmax",
+  "HANDY": "Handysize",
+  "PMAX": "Panamax",
+  "CAPE": "Capesize",
+  "MR2": "Product Tanker",
+  "MR1": "Product Tanker",
+  "LR1": "Product Tanker",
+  "LR2": "Aframax",
+  "MR": "Product Tanker",
+  "Tanker": "Crude Oil Tanker",
+  "Bulker": "Bulk Carrier"
+ },
+ "segment_bias_correction": {
+  "Capesize": 0.955,
+  "Newcastlemax": 0.89,
+  "Handymax": 0.88,
+  "Handysize": 0.942,
+  "Product Tanker": 0.839,
+  "Aframax": 1.011,
+  "Chemical Tanker": 0.87,
+  "VLCC": 1.002,
+  "Suezmax": 0.88,
+  "Crude Oil Tanker": 1.187,
+  "Oil/Chemical Tanker": 0.85,
+  "Container Ship": 0.92,
+  "LNG Tanker": 0.93,
+  "Other": 0.85,
+  "Bulk Carrier": 0.906,
+  "Supramax": 0.957,
+  "Kamsarmax": 0.945,
+  "Ultramax": 1.054,
+  "Panamax": 0.951,
+  "Post-Panamax": 0.711,
+  "VLOC": 1.007
+ },
+ "containerSegments": {
+  "comment": "Container ship valuation by TEU class. If TEU unknown, derive from DWT/14.",
+  "segments": [
+   {
+    "name": "Feeder",
+    "maxTeu": 3000,
+    "nb": 30000000
+   },
+   {
+    "name": "Sub-Panamax",
+    "maxTeu": 5000,
+    "nb": 45000000
+   },
+   {
+    "name": "Panamax",
+    "maxTeu": 8000,
+    "nb": 65000000
+   },
+   {
+    "name": "Post-Panamax",
+    "maxTeu": 12000,
+    "nb": 95000000
+   },
+   {
+    "name": "Neo-Panamax",
+    "maxTeu": 15000,
+    "nb": 120000000
+   },
+   {
+    "name": "ULCV",
+    "maxTeu": 999999,
+    "nb": 165000000
+   }
+  ]
+ }
 }
