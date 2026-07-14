@@ -176,11 +176,12 @@ function initParams() {
 
   const biasCorrection = modelJson?.segment_bias_correction ?? {};
   const containerSegments = modelJson?.containerSegments?.segments ?? [];
+  const ecoPremiumFactor = modelJson?.ecoPremiumFactor ?? 1.0;  // calibrated: market pays ~10% of NPV fuel savings
 
   return {
     nbPrices, fallbackMult, depBrackets, segGroups, mfBaselines,
     tankerPremium, builderTiers, ldtRatios, ecoBenchmarks, market, biasCorrection,
-    containerSegments,
+    containerSegments, ecoPremiumFactor,
   };
 }
 
@@ -198,6 +199,7 @@ const FALLBACK_TYPE_MULT = P.fallbackMult;
 const DEP_BRACKETS       = P.depBrackets as DepBracket[];
 const LDT_RATIOS         = P.ldtRatios;
 const ECO_BENCHMARKS     = P.ecoBenchmarks;
+const ECO_PREMIUM_FACTOR = P.ecoPremiumFactor;
 const MARKET             = P.market;
 
 const CAPESIZE_TYPES  = new Set(P.segGroups.capesize);
@@ -319,7 +321,7 @@ function ecoPremium(fuelConsumption: number | undefined, dwt: number, shipType: 
   for (let t = 1; t <= remainingLife; t++) {
     npv += (dailySavingUSD * 365 * utilization) / Math.pow(1 + discountRate, t);
   }
-  return Math.round(npv);
+  return Math.round(npv * ECO_PREMIUM_FACTOR);
 }
 
 // ═══════════════════════════════════════════════════════════════
