@@ -8,7 +8,7 @@ them, extract the S&P section, and use Claude Haiku to parse each into structure
 transactions — dozens per report vs. the ~1 the RSS regex could get. Deduped
 against sp_transactions and matched to our ships by name for the IMO.
 """
-import sqlite3, urllib.request, re, json, math, subprocess, tempfile, os, time
+import sqlite3, urllib.request, urllib.error, re, json, math, subprocess, tempfile, os, time
 
 DB = "/opt/bulkwatch/db/ships.db"
 UA = {"User-Agent": "Mozilla/5.0 (compatible; BulkWatch/1.0)"}
@@ -72,15 +72,22 @@ def haiku_deals(chunk):
               "total sale price in millions. Unknown -> null. Return ONLY the JSON array.\n\n" + chunk)
     body = json.dumps({"model": "claude-haiku-4-5-20251001", "max_tokens": 3000,
                        "messages": [{"role": "user", "content": prompt}]}).encode()
-    try:
-        r = json.loads(urllib.request.urlopen(urllib.request.Request(
-            "https://api.anthropic.com/v1/messages", data=body,
-            headers={"Content-Type": "application/json", "x-api-key": KEY,
-                     "anthropic-version": "2023-06-01"}), timeout=90).read())
-        m = re.search(r"\[.*\]", r["content"][0]["text"], re.S)
-        return json.loads(m.group(0)) if m else []
-    except Exception as e:
-        print("  Haiku-Fehler:", e); return []
+    req = urllib.request.Request(
+        "https://api.anthropic.com/v1/messages", data=body,
+        headers={"Content-Type": "application/json", "x-api-key": KEY,
+                 "anthropic-version": "2023-06-01"})
+    for attempt in range(4):
+        try:
+            r = json.loads(urllib.request.urlopen(req, timeout=90).read())
+            m = re.search(r"\[.*\]", r["content"][0]["text"], re.S)
+            return json.loads(m.group(0)) if m else []
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 500, 502, 503, 529) and attempt < 3:
+                time.sleep(5 * (attempt + 1))  # 5s,10s,15s backoff on rate-limit/overload
+                continue
+            print("  Haiku-Fehler:", e); return []
+        except Exception as e:
+            print("  Haiku-Fehler:", e); return []
 
 def norm(s):
     return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9]", " ", (s or "").lower())).strip()

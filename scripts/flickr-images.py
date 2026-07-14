@@ -9,7 +9,7 @@ Searches Flickr by ship name, restricted to commercially-reusable CC licenses
   2. Claude Haiku VISION — confirms the image really shows one cargo ship.
 Stores image_url + attribution (photographer + license). Only fills empty images.
 """
-import sqlite3, urllib.request, urllib.parse, json, re, time, base64
+import sqlite3, urllib.request, urllib.parse, urllib.error, json, re, time, base64
 
 DB = "/opt/bulkwatch/db/ships.db"
 LICENSES = "4,5,7,9,10"  # commercial-OK: CC-BY, CC-BY-SA, no-known-restr, CC0, PD-Mark
@@ -43,11 +43,19 @@ def is_cargo_ship(image_url):
                 {"type": "image", "source": {"type": "base64", "media_type": media, "data": b64}},
                 {"type": "text", "text": "Is this a color photo showing a single cargo ship, bulk carrier, tanker, or container ship as the main subject? YES or NO only."}
             ]}]}).encode()
-        resp = json.loads(urllib.request.urlopen(urllib.request.Request(
+        req = urllib.request.Request(
             "https://api.anthropic.com/v1/messages", data=body, headers={
                 "Content-Type": "application/json", "x-api-key": API_KEY,
-                "anthropic-version": "2023-06-01"}), timeout=30).read())
-        return "YES" in resp.get("content", [{}])[0].get("text", "").strip().upper()
+                "anthropic-version": "2023-06-01"})
+        for attempt in range(4):
+            try:
+                resp = json.loads(urllib.request.urlopen(req, timeout=30).read())
+                return "YES" in resp.get("content", [{}])[0].get("text", "").strip().upper()
+            except urllib.error.HTTPError as e:
+                if e.code in (429, 500, 502, 503, 529) and attempt < 3:
+                    time.sleep(5 * (attempt + 1))  # 5s,10s,15s backoff on rate-limit/overload
+                    continue
+                raise
     except Exception as e:
         print("  Vision-Fehler: %s" % e, flush=True)
         return False
