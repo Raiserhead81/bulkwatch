@@ -188,8 +188,23 @@ function initParams() {
 const P = initParams();
 const TYPE_ALIASES: Record<string, string> = (tryLoadJson("/opt/bulkwatch/db/model_params.json") ?? {}).type_aliases ?? {};
 
+const STRIP_SUFFIXES = [" Bulk Carrier", " Tanker", " Bulk", " Carrier"];
+
 function resolveType(rawType: string): string {
-  return TYPE_ALIASES[rawType] ?? rawType;
+  // Handles broker shorthand plus case variants and compound forms like
+  // 'SUPRA Bulk Carrier' / 'Mini Cape' so they fold into the canonical segment.
+  if (!rawType) return rawType;
+  if (TYPE_ALIASES[rawType]) return TYPE_ALIASES[rawType];
+  for (const suf of STRIP_SUFFIXES) {
+    if (rawType.endsWith(suf)) {
+      const base = rawType.slice(0, -suf.length).trim();
+      if (TYPE_ALIASES[base]) return TYPE_ALIASES[base];
+      if (TYPE_ALIASES[base.toUpperCase()]) return TYPE_ALIASES[base.toUpperCase()];
+      if (NEWBUILD_PRICES[base]) return base;   // already canonical, e.g. 'Supramax Bulk Carrier'
+    }
+  }
+  if (TYPE_ALIASES[rawType.toUpperCase()]) return TYPE_ALIASES[rawType.toUpperCase()];
+  return rawType;
 }
 
 const BIAS_CORRECTION: Record<string, number> = P.biasCorrection;
