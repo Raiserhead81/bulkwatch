@@ -19,16 +19,34 @@ NEW_ALIASES = {
     "Tanker": "Crude Oil Tanker", "Bulker": "Bulk Carrier",
 }
 
+# Plausibility filter (identical to calibrate-model.py / stats route.ts): drop parse-error
+# and placeholder-dwt deals so we refit against clean data.
+DUMMY_DWT = {5000,10000,12000,15000,18000,20000,45000,46000,47000,50000,55000}
+def is_plausible_deal(dwt, price, age):
+    if not dwt or not price or dwt <= 0 or price <= 0 or dwt in DUMMY_DWT: return False
+    per_dwt = price / dwt
+    if per_dwt > 2500 or per_dwt < 40: return False
+    if age > 30 and price > 15e6: return False
+    if price > 250e6: return False
+    return True
+
 db = sqlite3.connect("/opt/bulkwatch/db/ships.db")
-deals = db.execute("""SELECT ship_name, ship_type, dwt, year_built, sale_price_usd
-    FROM sp_transactions WHERE sale_date LIKE '2026%' AND dwt>0 AND year_built>1900
-    AND sale_price_usd>1e6 AND ship_type IS NOT NULL""").fetchall()
+# Full S&P set with REAL enrichment (builder/status/fuel/dims) — same inputs the deployed
+# model and dashboard use, so the refit targets the actually-observed error.
+deals = db.execute("""SELECT sp.ship_name, sp.ship_type, sp.dwt, sp.year_built, sp.sale_price_usd,
+       s.builder, s.flag, s.status, s.has_scrubber, s.fuel_consumption_tons_day,
+       s.class_society, s.length, s.beam, s.teu
+    FROM sp_transactions sp LEFT JOIN ships s ON s.imo = sp.imo
+    WHERE sp.dwt>0 AND sp.year_built>1970 AND sp.sale_price_usd>0 AND sp.ship_type IS NOT NULL""").fetchall()
 
 def measure():
     """Return (median_abs_err, within10, per_segment_ratios) using current dv globals."""
     errs, seg = [], {}
-    for name, stype, dwt, year, price in deals:
-        row = (None, name, stype, dwt, year, None, None, "active", None, None, None, None, None, 0)
+    for (name, stype, dwt, year, price, builder, flag, status,
+         has_scrubber, fuel, cls, length, beam, teu) in deals:
+        if not is_plausible_deal(dwt, price, 2026 - (year or 2016)): continue
+        row = (None, name, stype, dwt, year, builder, flag or "PA", status or "active",
+               has_scrubber, fuel, cls, length, beam, teu or 0)
         est, _ = dv.estimate(row, market)
         if est <= 0: continue
         errs.append(abs(est - price) / price)

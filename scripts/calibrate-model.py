@@ -48,12 +48,18 @@ def main():
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     
-    # Get all transactions with enough data
+    # Get all transactions with enough data. LEFT JOIN ships so we can feed the model the
+    # REAL enrichment inputs (builder, status, fuel, dims) for IMO-matched vessels — exactly
+    # like production daily-valuations.main() and the admin dashboard do. Feeding placeholders
+    # here understated the error by ~1.5pp (no builder factor / eco premium applied).
     txs = con.execute("""
-        SELECT ship_name, imo, ship_type, dwt, year_built, sale_price_usd, sale_date
-        FROM sp_transactions
-        WHERE dwt > 0 AND year_built > 1970 AND sale_price_usd > 0
-        AND ship_type IS NOT NULL
+        SELECT sp.ship_name, sp.imo, sp.ship_type, sp.dwt, sp.year_built, sp.sale_price_usd, sp.sale_date,
+               s.builder, s.flag, s.status, s.has_scrubber, s.fuel_consumption_tons_day,
+               s.class_society, s.length, s.beam, s.teu
+        FROM sp_transactions sp
+        LEFT JOIN ships s ON s.imo = sp.imo
+        WHERE sp.dwt > 0 AND sp.year_built > 1970 AND sp.sale_price_usd > 0
+        AND sp.ship_type IS NOT NULL
     """).fetchall()
     
     print(f"Calibrating against {len(txs)} transactions...\n")
@@ -65,11 +71,14 @@ def main():
     print("-" * 90)
     
     skipped = 0
-    for name, imo, stype, dwt, yb, real_price, sale_date in txs:
+    for (name, imo, stype, dwt, yb, real_price, sale_date,
+         builder, flag, status, has_scrubber, fuel, cls, length, beam, teu) in txs:
         if not is_plausible_deal(dwt, real_price, 2026 - (yb or 2016)):
             skipped += 1
             continue
-        row = (imo, name, stype, dwt, yb, None, "PA", "active")
+        # Full 14-field row with real enrichment (falls back to safe defaults when unmatched)
+        row = (imo, name, stype, dwt, yb, builder, flag or "PA", status or "active",
+               has_scrubber, fuel, cls, length, beam, teu or 0)
         market_data = mod.load_market_data()
         result = mod.estimate(row, market_data)
         model_val = result[0] if isinstance(result, tuple) else result

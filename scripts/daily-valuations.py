@@ -22,15 +22,35 @@ PARAMS = load_model_params()
 
 TYPE_ALIASES       = PARAMS.get("type_aliases", {})
 
+_STRIP_SUFFIXES = (" Bulk Carrier", " Tanker", " Bulk", " Carrier")
+
 def resolve_type(raw_type):
-    """Resolve raw ship type to known segment via aliases."""
-    return TYPE_ALIASES.get(raw_type, raw_type)
+    """Resolve raw ship type to a known segment via aliases.
+    Handles broker shorthand plus case variants and compound forms like
+    'SUPRA Bulk Carrier' / 'Mini Cape' so they fold into the canonical segment."""
+    if not raw_type:
+        return raw_type
+    if raw_type in TYPE_ALIASES:
+        return TYPE_ALIASES[raw_type]
+    for suf in _STRIP_SUFFIXES:
+        if raw_type.endswith(suf):
+            base = raw_type[:-len(suf)].strip()
+            if base in TYPE_ALIASES:
+                return TYPE_ALIASES[base]
+            if base.upper() in TYPE_ALIASES:
+                return TYPE_ALIASES[base.upper()]
+            if base in NEWBUILD_PRICES:          # already canonical, e.g. 'Supramax Bulk Carrier'
+                return base
+    if raw_type.upper() in TYPE_ALIASES:
+        return TYPE_ALIASES[raw_type.upper()]
+    return raw_type
 
 NEWBUILD_PRICES    = PARAMS["newbuildPrices"]
 FALLBACK_TYPE_MULT = PARAMS["fallbackTypeMult"]
 LDT_RATIOS         = PARAMS["ldtRatios"]
 ECO_BENCHMARKS     = PARAMS["ecoBenchmarks"]
 BIAS_CORRECTION    = PARAMS.get("segment_bias_correction", {})
+ECO_PREMIUM_FACTOR = PARAMS.get("ecoPremiumFactor", 1.0)  # calibrated: market pays ~10% of NPV fuel savings
 CONTAINER_SEGMENTS = PARAMS.get("containerSegments", {}).get("segments", [])
 
 # Segment groupings from shared params
@@ -160,7 +180,7 @@ def eco_premium(fuel_consumption, dwt, ship_type, age, fuel_price=550):
         daily_saving_usd * 365 * utilization / (1 + discount_rate) ** t
         for t in range(1, remaining_life + 1)
     )
-    return round(npv)
+    return round(npv * ECO_PREMIUM_FACTOR)
 
 
 # ═══════════════════════════════════════════════════════════════

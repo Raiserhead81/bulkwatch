@@ -425,30 +425,31 @@
   "SMALL": "Handysize",
   "FEEDER": "Container Ship",
   "J19": "Product Tanker",
-  "VLGC": "LPG Tanker"
+  "VLGC": "LPG Tanker",
+  "HMAX": "Handymax"
  },
  "segment_bias_correction": {
-  "Capesize": 0.955,
+  "Capesize": 0.89,
   "Newcastlemax": 0.89,
-  "Handymax": 0.88,
-  "Handysize": 0.942,
-  "Product Tanker": 0.839,
-  "Aframax": 1.011,
+  "Handymax": 1.015,
+  "Handysize": 0.924,
+  "Product Tanker": 1.078,
+  "Aframax": 1.064,
   "Chemical Tanker": 0.87,
-  "VLCC": 1.002,
-  "Suezmax": 0.88,
-  "Crude Oil Tanker": 1.187,
+  "VLCC": 0.903,
+  "Suezmax": 1.08,
+  "Crude Oil Tanker": 1.235,
   "Oil/Chemical Tanker": 0.85,
   "Container Ship": 0.92,
   "LNG Tanker": 0.93,
   "Other": 0.85,
-  "Bulk Carrier": 0.906,
-  "Supramax": 0.957,
-  "Kamsarmax": 0.945,
-  "Ultramax": 1.054,
-  "Panamax": 0.951,
-  "Post-Panamax": 0.711,
-  "VLOC": 1.007
+  "Bulk Carrier": 0.894,
+  "Supramax": 0.964,
+  "Kamsarmax": 0.884,
+  "Ultramax": 0.951,
+  "Panamax": 0.874,
+  "Post-Panamax": 0.707,
+  "VLOC": 0.985
  },
  "containerSegments": {
   "comment": "Container ship valuation by TEU class. If TEU unknown, derive from DWT/14.",
@@ -484,5 +485,6 @@
     "nb": 165000000
    }
   ]
- }
+ },
+ "ecoPremiumFactor": 0.1
 }
