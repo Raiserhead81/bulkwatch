@@ -413,7 +413,19 @@
   "LR2": "Aframax",
   "MR": "Product Tanker",
   "Tanker": "Crude Oil Tanker",
-  "Bulker": "Bulk Carrier"
+  "Bulker": "Bulk Carrier",
+  "NEWCASTLEMAX": "Capesize",
+  "POST PMAX": "Post-Panamax",
+  "MR Tanker": "Product Tanker",
+  "MR1 Tanker": "Product Tanker",
+  "MR2 Tanker": "Product Tanker",
+  "AFRA": "Aframax",
+  "SUEZ": "Suezmax",
+  "MINI CAPE": "Capesize",
+  "SMALL": "Handysize",
+  "FEEDER": "Container Ship",
+  "J19": "Product Tanker",
+  "VLGC": "LPG Tanker"
  },
  "segment_bias_correction": {
   "Capesize": 0.955,

@@ -8,6 +8,23 @@ sys.path.insert(0, "/opt/bulkwatch")
 
 DB = "/opt/bulkwatch/db/ships.db"
 
+# Plausibility filter: auto-scraped S&P deals contain parse errors (enbloc/fleet prices,
+# swapped columns) and placeholder dwt from enrichment. Drop implausible deals so we don't
+# measure the model against garbage. Kept in sync with src/app/api/admin/stats/route.ts.
+DUMMY_DWT = {5000,10000,12000,15000,18000,20000,45000,46000,47000,50000,55000}
+
+def is_plausible_deal(dwt, price, age):
+    if not dwt or not price or dwt <= 0 or price <= 0 or dwt in DUMMY_DWT:
+        return False
+    per_dwt = price / dwt
+    if per_dwt > 2500 or per_dwt < 40:        # $/dwt sanity -> kills parse errors
+        return False
+    if age > 30 and price > 15e6:             # old ship, absurdly expensive
+        return False
+    if price > 250e6:                          # above any bulker/tanker
+        return False
+    return True
+
 def load_market():
     try:
         with open("/opt/bulkwatch/db/opex_rates.json") as f:
@@ -47,7 +64,11 @@ def main():
     print(f"{'Ship':25} {'Type':15} {'DWT':>8} {'Age':>4} {'Real':>10} {'Model':>10} {'Err':>7}")
     print("-" * 90)
     
+    skipped = 0
     for name, imo, stype, dwt, yb, real_price, sale_date in txs:
+        if not is_plausible_deal(dwt, real_price, 2026 - (yb or 2016)):
+            skipped += 1
+            continue
         row = (imo, name, stype, dwt, yb, None, "PA", "active")
         market_data = mod.load_market_data()
         result = mod.estimate(row, market_data)
@@ -70,7 +91,7 @@ def main():
     
     print("\n" + "=" * 90)
     print("OVERALL METRICS")
-    print(f"  Transactions: {len(all_errors)}")
+    print(f"  Transactions: {len(all_errors)}  (skipped as implausible: {skipped})")
     print(f"  Mean abs error:   {sum(all_errors)/len(all_errors):.1f}%")
     print(f"  Median abs error: {sorted(all_errors)[len(all_errors)//2]:.1f}%")
     w10 = sum(1 for e in all_errors if e <= 10)

@@ -101,15 +101,34 @@ export async function GET(req: NextRequest) {
     // S&P transactions
     const spCount = (db.prepare("SELECT COUNT(*) as n FROM sp_transactions").get() as { n: number }).n;
 
-    // Model accuracy: compare sp_transactions with estimatePrice (shared model)
+    // Model accuracy: compare sp_transactions with estimatePrice (shared model).
+    // Use the FULL S&P set (sp.* primary, ships.* only for optional enrichment) so the
+    // metric reflects the model's true quality, not just the small IMO-matched subset.
     const spRows = db.prepare(
-      `SELECT s.imo, s.name, s.type as ship_type, s.dwt, s.year_built, s.flag, s.status,
-              s.builder, s.length, s.beam, s.draft, s.operator, s.fuel_consumption_tons_day,
-              s.classification, s.mmsi, sp.sale_price_usd
+      `SELECT sp.imo,
+              COALESCE(s.name, sp.ship_name)                 as name,
+              COALESCE(NULLIF(sp.ship_type,''), s.type)      as ship_type,
+              COALESCE(sp.dwt, s.dwt)                        as dwt,
+              COALESCE(sp.year_built, s.year_built)          as year_built,
+              s.flag, s.status, s.builder, s.length, s.beam, s.draft, s.operator,
+              s.fuel_consumption_tons_day, s.classification, s.mmsi, sp.sale_price_usd
        FROM sp_transactions sp
-       JOIN ships s ON s.imo = sp.imo
-       WHERE s.type IS NOT NULL AND s.dwt IS NOT NULL AND s.year_built IS NOT NULL AND sp.sale_price_usd > 0`
+       LEFT JOIN ships s ON s.imo = sp.imo
+       WHERE sp.dwt > 0 AND sp.year_built > 1970 AND sp.ship_type IS NOT NULL AND sp.sale_price_usd > 0`
     ).all() as Array<Record<string, unknown>>;
+
+    // Plausibility filter: auto-scraped S&P deals contain parse errors (enbloc/fleet prices,
+    // swapped columns) and placeholder dwt from enrichment. Drop implausible deals so we
+    // don't measure the model against garbage. Mirrors the filter in calibrate-model.py.
+    const DUMMY_DWT = new Set([5000,10000,12000,15000,18000,20000,45000,46000,47000,50000,55000]);
+    const isPlausibleDeal = (dwt: number, price: number, age: number): boolean => {
+      if (dwt <= 0 || price <= 0 || DUMMY_DWT.has(dwt)) return false;
+      const perDwt = price / dwt;                 // $/dwt sanity → kills parse errors
+      if (perDwt > 2500 || perDwt < 40) return false;
+      if (age > 30 && price > 15e6) return false; // old ship, absurdly expensive
+      if (price > 250e6) return false;            // above any bulker/tanker
+      return true;
+    };
 
     let modelAccuracy: { meanAbsError: number; medianAbsError: number; within10pct: number; within15pct: number; within20pct: number; bias: number } | null = null;
     if (spRows.length >= 3) {
@@ -117,17 +136,22 @@ export async function GET(req: NextRequest) {
       const biases: number[] = [];
 
       for (const sp of spRows) {
+        const dwt = (sp.dwt as number) || 0;
+        const yearBuilt = (sp.year_built as number) || 0;
+        const actual = sp.sale_price_usd as number;
+        const age = 2026 - (yearBuilt || 2016);
+        if (!isPlausibleDeal(dwt, actual, age)) continue;
         const ship = {
           id: `imo-${sp.imo}`,
           imo: sp.imo as string,
           name: sp.name as string,
           mmsi: (sp.mmsi as string) || "",
           type: sp.ship_type as string,
-          dwt: (sp.dwt as number) || 0,
+          dwt,
           length: (sp.length as number) || 0,
           beam: (sp.beam as number) || 0,
           draft: (sp.draft as number) || 0,
-          yearBuilt: (sp.year_built as number) || 0,
+          yearBuilt,
           builder: (sp.builder as string) || "",
           flag: (sp.flag as string) || "Unknown",
           operator: (sp.operator as string) || "",
@@ -138,7 +162,6 @@ export async function GET(req: NextRequest) {
         const est = estimatePrice(ship as any);
         const modelVal = est.estimatedValueUSD;
         if (modelVal <= 0) continue;
-        const actual = sp.sale_price_usd as number;
         const absErr = Math.abs(modelVal - actual) / actual;
         const bias = (modelVal - actual) / actual;
         errors.push(absErr);
