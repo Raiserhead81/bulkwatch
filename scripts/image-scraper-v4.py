@@ -2,7 +2,7 @@
 """Image scraper v4 — strict matching + Claude Vision verification.
 Finds Wikimedia images for ships without photos, then verifies each
 image actually shows a cargo ship via Claude Haiku Vision."""
-import sqlite3, urllib.request, urllib.parse, json, time, re, sys, base64
+import sqlite3, urllib.request, urllib.parse, urllib.error, json, time, re, sys, base64
 
 DB = "/opt/bulkwatch/db/ships.db"
 DELAY = 2.0
@@ -103,9 +103,16 @@ def verify_ship_image(image_url):
             "x-api-key": API_KEY,
             "anthropic-version": "2023-06-01",
         })
-        resp = json.loads(urllib.request.urlopen(req2, timeout=30).read())
-        answer = resp.get("content", [{}])[0].get("text", "").strip().upper()
-        return "YES" in answer
+        for attempt in range(4):
+            try:
+                resp = json.loads(urllib.request.urlopen(req2, timeout=30).read())
+                answer = resp.get("content", [{}])[0].get("text", "").strip().upper()
+                return "YES" in answer
+            except urllib.error.HTTPError as e:
+                if e.code in (429, 500, 502, 503, 529) and attempt < 3:
+                    time.sleep(5 * (attempt + 1))  # 5s,10s,15s backoff on rate-limit/overload
+                    continue
+                raise
     except Exception as e:
         print(f"  Vision check error: {e}", flush=True)
         return True  # keep on error, don't delete

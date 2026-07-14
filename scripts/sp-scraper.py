@@ -3,12 +3,12 @@
 Sources: Shipping Herald RSS, Frontline RSS, Scorpio Tankers RSS, SEC EDGAR 6-K filings.
 Cron: 0 8 * * * (daily at 08:00 UTC)"""
 
-import sqlite3, re, time, json, urllib.request, urllib.parse
+import sqlite3, re, time, json, urllib.request, urllib.parse, urllib.error
 from xml.etree import ElementTree as ET
 from datetime import datetime
 
 DB = "/opt/bulkwatch/db/ships.db"
-USER_AGENT = "Mozilla/5.0 (compatible; BulkWatch/1.0; ship-research)"
+USER_AGENT = "BulkWatch/1.0 (kayconrad81@googlemail.com)"  # SEC fair-access requires a contact e-mail
 
 # Ship type patterns for classification
 TYPE_PATTERNS = [
@@ -32,14 +32,22 @@ def classify_type(text):
             return pattern[1]
     return None
 
-def fetch_url(url):
+def fetch_url(url, retries=3):
+    """Fetch with retry/backoff on transient errors (429 rate-limit, 5xx server hiccups)."""
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    try:
-        with urllib.request.urlopen(req, timeout=30) as r:
-            return r.read().decode("utf-8", errors="ignore")
-    except Exception as e:
-        print(f"  Fetch error {url}: {e}")
-        return None
+    for attempt in range(retries):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                return r.read().decode("utf-8", errors="ignore")
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 500, 502, 503, 504) and attempt < retries - 1:
+                time.sleep(2 * (attempt + 1))  # 2s, 4s backoff
+                continue
+            print(f"  Fetch error {url}: {e}")
+            return None
+        except Exception as e:
+            print(f"  Fetch error {url}: {e}")
+            return None
 
 def parse_price(text):
     """Extract USD price from text. Returns price in USD or None."""
@@ -195,16 +203,23 @@ def scrape_edgar():
     """Scrape SEC EDGAR 6-K filings for vessel sale announcements."""
     print("\n=== SEC EDGAR 6-K ===")
     
-    # Search for vessel sale announcements
+    # Search for vessel sale announcements (EDGAR full-text search API).
+    # q must be URL-encoded; phrase search uses double quotes. dateRange=custom is not a
+    # valid EFTS param (caused HTTP 400) — only startdt/enddt are needed.
     queries = [
-        '"sale+of+vessel"+"million"',
-        '"vessel+acquisition"+"million"',
-        '"sold+vessel"+"million"',
+        '"sale of vessel" "million"',
+        '"vessel acquisition" "million"',
+        '"sold vessel" "million"',
     ]
-    
+    enddt = datetime.utcnow().strftime("%Y-%m-%d")
+
     all_tx = []
     for query in queries:
-        url = f"https://efts.sec.gov/LATEST/search-index?q={query}&forms=6-K&dateRange=custom&startdt=2025-01-01&enddt=2026-07-02&from=0&size=20"
+        params = urllib.parse.urlencode({
+            "q": query, "forms": "6-K",
+            "startdt": "2025-01-01", "enddt": enddt, "from": 0, "size": 20,
+        })
+        url = f"https://efts.sec.gov/LATEST/search-index?{params}"
         data = fetch_url(url)
         if not data:
             continue

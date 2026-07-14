@@ -103,6 +103,13 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Internal service token — local cron jobs (e.g. ais_persist) call protected API
+  // endpoints with this shared secret instead of a session cookie.
+  const internalToken = process.env.INTERNAL_API_TOKEN;
+  if (internalToken && req.headers.get("x-internal-token") === internalToken) {
+    return NextResponse.next();
+  }
+
   // All other API endpoints require auth
   if (pathname.startsWith("/api")) {
     const cookie = req.cookies.get("vessel_session")?.value;

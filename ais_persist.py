@@ -1,16 +1,33 @@
 #!/usr/bin/env python3
-"""AIS Persist v2 — matches by IMO AND by name, accumulates positions over time."""
-import sqlite3, requests, time
+"""AIS Persist v2 — matches by IMO AND by name, accumulates positions over time.
+Calls the protected /api/ais endpoint with the internal service token (the API requires
+auth since the 2026-07 security hardening)."""
+import sqlite3, requests, time, os, re
 
 DB_PATH = "/opt/bulkwatch/db/ships.db"
 API_URL = "http://localhost:3099/api/ais"
+ENV_PATH = "/opt/bulkwatch/.env"
+
+def load_token():
+    tok = os.environ.get("INTERNAL_API_TOKEN")
+    if tok:
+        return tok
+    try:
+        m = re.search(r'^INTERNAL_API_TOKEN=(.+)$', open(ENV_PATH).read(), re.M)
+        return m.group(1).strip() if m else ""
+    except Exception:
+        return ""
 
 try:
-    resp = requests.get(API_URL, timeout=10)
+    token = load_token()
+    resp = requests.get(API_URL, headers={"x-internal-token": token}, timeout=10)
+    if resp.status_code != 200:
+        raise SystemExit(f"Error: /api/ais returned HTTP {resp.status_code}: {resp.text[:120]}")
     data = resp.json()
-    ships = data.get("ships", []) if isinstance(data, dict) else data
-    if not ships and isinstance(data, dict):
-        ships = list(data.values())
+    ships = data.get("ships") if isinstance(data, dict) else data
+    if not isinstance(ships, list):
+        raise SystemExit(f"Error: unexpected /api/ais response shape: {str(data)[:120]}")
+    ships = [s for s in ships if isinstance(s, dict)]
 
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA journal_mode=WAL")
