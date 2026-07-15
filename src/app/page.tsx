@@ -152,7 +152,7 @@ export default function Home() {
             <div>
               {currentUser && currentUser.username !== "kay" && currentUser.username !== "admin" ? (
                 <div className="flex items-center gap-3">
-                  <img src={/arklow/i.test(currentUser.company) ? "/logos/arklow-crest.png" : "/logos/oldendorff.svg"} alt="" className="h-8" onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
+                  <img src={/arklow/i.test(currentUser.company) ? "/logos/arklow-crest.png" : /oldendorff|barenthin/i.test(currentUser.company) ? "/logos/oldendorff.svg" : "/logos/gemivo.svg"} alt="" className="h-8" onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
                   <span className="text-lg font-bold">{currentUser.company}</span>
                 </div>
               ) : (
