@@ -133,7 +133,7 @@ export default function LoginPage() {
               type={showPw ? "text" : "password"}
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="Enter password"
+              placeholder="Enter password" autoComplete="current-password"
               required
               style={{
                 width: "100%", padding: "16px 48px 16px 46px",

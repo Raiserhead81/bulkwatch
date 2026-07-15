@@ -123,7 +123,7 @@ export default function UsersPage() {
           <form onSubmit={addUser} className="flex flex-wrap gap-3 items-end">
             <div>
               <label className="text-xs text-slate-400 block mb-1">Username</label>
-              <input className={inp} value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} required placeholder="username" />
+              <input className={inp} value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} required placeholder="username" autoComplete="off" />
             </div>
             <div>
               <label className="text-xs text-slate-400 block mb-1">Password</label>
@@ -134,7 +134,7 @@ export default function UsersPage() {
                   value={newUser.password}
                   onChange={e => setNewUser({...newUser, password: e.target.value})}
                   required
-                  placeholder="password"
+                  placeholder="password" autoComplete="new-password"
                 />
                 <button
                   type="button"
@@ -239,7 +239,7 @@ export default function UsersPage() {
                           type={showChangePw ? "text" : "password"}
                           value={changePwValue}
                           onChange={e => setChangePwValue(e.target.value)}
-                          placeholder="New password"
+                          placeholder="New password" autoComplete="new-password"
                           autoFocus
                         />
                         <button
