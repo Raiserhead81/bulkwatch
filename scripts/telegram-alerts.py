@@ -180,15 +180,21 @@ def main():
                 f'<a href="https://ships.gemivo.de">Vessel Database</a>'
             )
 
-    # Send alerts
+    # [alertfilter 04.08.2026] Routine-Vessel-Meldungen (neue/gelieferte Schiffe,
+    # Status-Wechsel, BDI-Bewegung) sind NICHT systemisch -> kein Telegram mehr.
+    # Kay: nur alarmieren, wenn die Plattform/Pipeline kaputt ist. Die Vessel-
+    # PIPELINE (AIS eingefroren = Quelle tot) ueberwacht systemisch der Stockbot-
+    # Watchdog (check_vessel -> freshness:vessel_ais). Hier nur noch still ins Log;
+    # State wird weiter gepflegt, damit die Baseline aktuell bleibt.
+    ROUTINE_TELEGRAM = False
     sent = 0
-    if can_send:
+    if ROUTINE_TELEGRAM and can_send:
         for alert in alerts:
             msg = f"Vessel Database Alert\n{'=' * 28}\n{alert}"
             if send_telegram(token, chat_id, msg):
                 sent += 1
     elif alerts:
-        log(f"Token not configured — {len(alerts)} alerts would have been sent")
+        log(f"{len(alerts)} Routine-Alert(s) unterdrueckt (nicht systemisch, nur Log)")
 
     # Always save state (even without token, to build baseline)
     state["ships"] = current_ships
