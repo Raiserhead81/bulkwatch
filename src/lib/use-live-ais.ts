@@ -68,6 +68,10 @@ export function useAllLiveShips(refreshMs = 30000) {
   const [ships, setShips] = useState<LiveAISShip[]>([]);
   const [stats, setStats] = useState<AISStats | null>(null);
   const [loading, setLoading] = useState(true);
+  // degraded = Live-Feed ausgefallen (AISStream); staleSince = ms der juengsten
+  // bekannten Position aus dem DB-Fallback.
+  const [degraded, setDegraded] = useState(false);
+  const [staleSince, setStaleSince] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -79,7 +83,11 @@ export function useAllLiveShips(refreshMs = 30000) {
         ]);
         if (shipsRes.ok) {
           const data = await shipsRes.json();
-          if (!cancelled) setShips(data.ships || []);
+          if (!cancelled) {
+            setShips(data.ships || []);
+            setDegraded(!!data.degraded);
+            setStaleSince(data.staleSince || 0);
+          }
         }
         if (statsRes.ok) {
           if (!cancelled) setStats(await statsRes.json());
@@ -98,5 +106,5 @@ export function useAllLiveShips(refreshMs = 30000) {
     };
   }, [refreshMs]);
 
-  return { ships, stats, loading };
+  return { ships, stats, loading, degraded, staleSince };
 }

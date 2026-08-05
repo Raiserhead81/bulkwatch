@@ -37,17 +37,23 @@ export default function AISLivePanel() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [operatorSearch, setOperatorSearch] = useState("");
+  // degraded = Live-Feed ausgefallen, Tabelle zeigt letzte bekannte DB-Positionen.
+  const [degraded, setDegraded] = useState(false);
+  const [staleSince, setStaleSince] = useState(0);
   const shipByImo = new Map(SHIPS.map((s) => [s.imo, s]));
 
   const fetchData = async () => {
     try {
       const [shipsRes, statsRes] = await Promise.all([
-        fetch("/api/ais", { signal: AbortSignal.timeout(8000) }),
+        // fallback=1 -> bei AISStream-Ausfall letzte bekannte Positionen aus DB.
+        fetch("/api/ais?fallback=1", { signal: AbortSignal.timeout(8000) }),
         fetch("/api/ais/stats", { signal: AbortSignal.timeout(5000) }),
       ]);
       if (shipsRes.ok) {
         const data = await shipsRes.json();
         setShips(data.ships || []);
+        setDegraded(!!data.degraded);
+        setStaleSince(data.staleSince || 0);
       }
       if (statsRes.ok) {
         setStats(await statsRes.json());
@@ -115,24 +121,47 @@ export default function AISLivePanel() {
 
   return (
     <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-blue-950 border border-cyan-500/30 overflow-hidden">
+      {/* Stale-Banner: Live-Feed gestoert (z.B. AISStream-Ausfall) -> Tabelle
+          zeigt letzte bekannte Positionen aus der Datenbank. */}
+      {degraded && (
+        <div className="bg-amber-500/15 border-b border-amber-500/40 px-5 py-2.5 flex items-center gap-2 text-xs text-amber-200">
+          <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
+          <span>
+            AIS-Live-Feed vorübergehend gestört – gezeigt werden die{" "}
+            <strong>letzten bekannten Positionen</strong>
+            {staleSince > 0 && (
+              <> (Stand: {new Date(staleSince).toLocaleString("de-DE")})</>
+            )}
+            . Aktualisiert automatisch, sobald der Feed zurück ist.
+          </span>
+        </div>
+      )}
       {/* Header */}
       <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border-b border-cyan-500/20 px-5 py-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <div className="relative">
             <Radio className="h-5 w-5 text-cyan-400" />
-            {stats?.wsConnected && (
+            {!degraded && stats?.wsConnected && (
               <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             )}
           </div>
           <div>
             <h3 className="font-bold text-white text-sm flex items-center gap-2">
               Live AIS Stream
-              <span className="text-[10px] font-mono uppercase text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/30">
-                {stats?.wsConnected ? "CONNECTED" : "OFFLINE"}
+              <span
+                className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-full border ${
+                  degraded
+                    ? "text-amber-300 bg-amber-500/10 border-amber-500/40"
+                    : "text-cyan-300 bg-cyan-500/10 border-cyan-500/30"
+                }`}
+              >
+                {degraded ? "DEGRADED" : stats?.wsConnected ? "CONNECTED" : "OFFLINE"}
               </span>
             </h3>
             <p className="text-[10px] text-cyan-300/70 font-mono">
-              AISStream.io · WebSocket · {ships.length} ships cached
+              {degraded
+                ? `letzte bekannte Positionen · ${ships.length} Schiffe`
+                : `AISStream.io · WebSocket · ${ships.length} ships cached`}
             </p>
           </div>
         </div>

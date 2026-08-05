@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import WebSocket from "ws";
 
+import { getDb } from "@/lib/db";
 import "@/types/ais";
 
 declare global {
@@ -156,19 +157,77 @@ if (API_KEY) {
   startHeartbeat();
 }
 
-export async function GET() {
+// Letzte bekannte Positionen aus der DB — Gratis-Fallback fuer den Fall, dass
+// der Live-Feed leer ist (AISStream-Provider-Ausfall, z.B. 2026-08-05). Liefert
+// die zuletzt gesehenen Schiffe, damit Tabelle/Karte nicht leer sind. timestamp
+// in ms (wie im Live-Cache), aus last_seen (Sekunden) hochgerechnet.
+function getFallbackPositions() {
+  const db = getDb();
+  const rows = db
+    .prepare(
+      `SELECT imo, name, mmsi, lat, lon, last_seen, speed_knots
+         FROM ships
+        WHERE lat IS NOT NULL AND lon IS NOT NULL AND lat != 0
+          AND last_seen IS NOT NULL
+        ORDER BY last_seen DESC
+        LIMIT 5000`,
+    )
+    .all() as Array<{
+    imo: string;
+    name: string | null;
+    mmsi: string | null;
+    lat: number;
+    lon: number;
+    last_seen: number;
+    speed_knots: number | null;
+  }>;
+  return rows.map((r) => ({
+    mmsi: r.mmsi || String(r.imo),
+    imo: r.imo,
+    name: r.name || "",
+    lat: r.lat,
+    lon: r.lon,
+    sog: r.speed_knots ?? undefined,
+    timestamp: (r.last_seen || 0) * 1000,
+  }));
+}
+
+export async function GET(request: Request) {
   const cache = getCache();
   const now = Date.now();
   const recent = Array.from(cache.values())
     .filter((s) => now - s.timestamp < CACHE_TTL_SEC * 1000 && s.lat && s.lon && (s.shipType == null || (s.shipType >= 70 && s.shipType <= 79)))
     .sort((a, b) => b.timestamp - a.timestamp);
 
+  // Live-Feed leer = AISStream liefert nichts (Ausfall). Dann als "degraded"
+  // markieren; bei ?fallback=1 zusaetzlich DB-Positionen liefern (nur die
+  // Tabelle unter /live braucht das — die Karte hat bereits einen DB-Basislayer).
+  const degraded = recent.length === 0;
+  let ships: unknown[] = recent;
+  let source = "live";
+  let staleSince = 0;
+  if (degraded && new URL(request.url).searchParams.get("fallback") === "1") {
+    try {
+      const rows = getFallbackPositions();
+      if (rows.length > 0) {
+        ships = rows;
+        source = "db";
+        staleSince = rows.reduce((m, r) => Math.max(m, r.timestamp), 0);
+      }
+    } catch (err) {
+      console.error("[AIS] DB-Fallback fehlgeschlagen:", err);
+    }
+  }
+
   return NextResponse.json({
-    ships: recent,
-    count: recent.length,
+    ships,
+    count: ships.length,
     timestamp: now,
     wsConnected: globalThis.__aisWs?.readyState === WebSocket.OPEN,
     lastMessage: globalThis.__aisLastMsg || 0,
     uptime: globalThis.__aisStarted ? now - globalThis.__aisStarted : 0,
+    degraded,
+    source,
+    staleSince,
   });
 }
