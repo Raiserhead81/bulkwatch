@@ -8,10 +8,16 @@ declare global {
   var __aisLastMsg: number | undefined;
   // eslint-disable-next-line no-var
   var __aisStarted: number | undefined;
+  // eslint-disable-next-line no-var
+  var __aisHeartbeat: ReturnType<typeof setInterval> | undefined;
 }
 
 const CACHE_TTL_SEC = 30 * 60; // 30 min
 const API_KEY = process.env.AISSTREAM_API_KEY || "";
+// Stiller Stall-Schutz: AISStream laesst den Socket bei Provider-Ausfaellen OPEN,
+// liefert aber keine Nachrichten (kein close-Event). Erkannt am 2026-08-05-Outage,
+// bei dem der AIS-Cache ~6h unbemerkt einfror, obwohl wsConnected==true blieb.
+const STALE_MS = 3 * 60 * 1000; // 3 min ohne Nachricht => Zombie-Socket => Reconnect
 
 function getCache() {
   if (!globalThis.__aisCache) {
@@ -35,6 +41,9 @@ function connectAIS() {
 
     ws.on("open", () => {
       console.log("[AIS] ✓ WebSocket connected");
+      // Verbindungsaufbau als Aktivitaets-Baseline, damit der Stall-Check erst nach
+      // echter Stille (nicht sofort) greift.
+      globalThis.__aisLastMsg = Date.now();
       const subscription = {
         APIKey: API_KEY,
         BoundingBoxes: [[[-90, -180], [90, 180]]],
@@ -114,9 +123,37 @@ function connectAIS() {
   }
 }
 
+// Heartbeat: erkennt stille Provider-Stalls (OPEN-Socket ohne Nachrichten) und
+// erzwingt Reconnect. Ohne dies fror der AIS-Cache am 2026-08-05 ~6h unbemerkt ein.
+function startHeartbeat() {
+  if (globalThis.__aisHeartbeat) return;
+  globalThis.__aisHeartbeat = setInterval(() => {
+    const ws = globalThis.__aisWs;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      const silent = Date.now() - (globalThis.__aisLastMsg || 0);
+      if (silent > STALE_MS) {
+        console.warn(
+          `[AIS] Stall erkannt: ${Math.round(silent / 1000)}s ohne Nachricht -> terminate + reconnect`,
+        );
+        try {
+          ws.terminate();
+        } catch {
+          // ignore
+        }
+        // close-Handler setzt __aisWs=null und reconnectet in 5s
+      }
+    } else if (!ws) {
+      connectAIS();
+    }
+  }, 60 * 1000);
+}
+
 // Start connection on first request (lazy)
 if (API_KEY && !globalThis.__aisWs) {
   connectAIS();
+}
+if (API_KEY) {
+  startHeartbeat();
 }
 
 export async function GET() {
