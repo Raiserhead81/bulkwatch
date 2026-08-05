@@ -180,7 +180,7 @@ export default function WorldMap({ ships, height = "100%", typeFilter = "", focu
   const [selectedType, setSelectedType] = useState("");
   const [cursor, setCursor] = useState<{ lat: number; lon: number } | null>(null);
 
-  const { ships: liveShips, stats } = useAllLiveShips(120000); // 2-min refresh — ships barely move at world-zoom
+  const { ships: liveShips, stats, degraded } = useAllLiveShips(120000); // 2-min refresh — ships barely move at world-zoom
 
   // Index DB ships by IMO and by name for fast lookup
   const dbByImo = useMemo(() => {
@@ -416,6 +416,14 @@ export default function WorldMap({ ships, height = "100%", typeFilter = "", focu
 
   return (
     <div className="relative w-full" style={{ height }}>
+      {/* AIS-Live-Feed gestoert (z.B. AISStream-Ausfall): Karte zeigt letzte
+          bekannte Positionen statt Live-Daten. */}
+      {degraded && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-2 rounded-full bg-amber-500/90 px-4 py-1.5 text-xs font-medium text-amber-950 shadow-lg backdrop-blur-sm">
+          <span className="h-2 w-2 rounded-full bg-amber-950 animate-pulse" />
+          AIS-Live-Feed gestört – letzte bekannte Positionen
+        </div>
+      )}
       {/* ── Inject popup dark-theme CSS ── */}
       <style>{`
         .vessel-popup .leaflet-popup-content-wrapper {
