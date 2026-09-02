@@ -77,7 +77,7 @@ export default function RootLayout({
           {children}
           <Toaster />
         </I18nProvider>
-        <script dangerouslySetInnerHTML={{ __html: `if("serviceWorker"in navigator){navigator.serviceWorker.getRegistrations().then(function(regs){regs.forEach(function(r){try{r.update()}catch(e){};r.unregister()})});navigator.serviceWorker.addEventListener("controllerchange",function(){window.location.reload()});caches.keys().then(function(k){k.forEach(function(n){caches.delete(n)})})};if(window.applicationCache){try{window.applicationCache.swapCache()}catch(e){}}` }} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){function l(src,cb){var s=document.createElement("script");s.src=src;s.onload=cb;document.head.appendChild(s)}l("/gemivo-update-client.js",function(){window.GemivoUpdate&&window.GemivoUpdate.init({sw:"/sw.js"})});l("/gemivo-push-client.js",function(){window.GemivoPush&&window.GemivoPush.init({app:"bulkwatch"})})})();` }} />
       </body>
     </html>
   );

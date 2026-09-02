@@ -5,6 +5,9 @@ cd /opt/bulkwatch
 echo "=== Building Maritime AI ==="
 bun run build
 
+echo "=== Stempel Service Worker ==="
+sed -i "s/^const SW_VERSION = .*/const SW_VERSION = \"$(date +%s)\";/" /opt/bulkwatch/public/sw.js
+
 echo "=== Restarting service ==="
 systemctl restart bulkwatch
 

@@ -119,7 +119,7 @@ def verify_ship_image(image_url):
 
 
 def main():
-    db = sqlite3.connect(DB)
+    db = sqlite3.connect(DB, timeout=300); db.execute("PRAGMA busy_timeout=300000")
     ships = db.execute(
         "SELECT imo, name FROM ships WHERE (image_url IS NULL OR image_url = '') ORDER BY dwt DESC LIMIT 1000"
     ).fetchall()

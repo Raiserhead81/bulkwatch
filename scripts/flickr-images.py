@@ -100,7 +100,7 @@ def flickr_search(name):
     return None, None
 
 def main():
-    db = sqlite3.connect(DB)
+    db = sqlite3.connect(DB, timeout=300); db.execute("PRAGMA busy_timeout=300000")
     db.execute("CREATE TABLE IF NOT EXISTS flickr_tried(imo TEXT PRIMARY KEY, ts TEXT)")
     db.commit()
     # Ships without image, not tried in the last 30 days -> works through the
