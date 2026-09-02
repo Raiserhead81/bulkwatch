@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import GlobalNav from "@/components/global-nav";
 import MarketTicker from "@/components/market-ticker";
 import { I18nProvider } from "@/lib/i18n";
+import { GemivoPushInit } from "@/components/GemivoPush";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -77,7 +78,7 @@ export default function RootLayout({
           {children}
           <Toaster />
         </I18nProvider>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){function l(src,cb){var s=document.createElement("script");s.src=src;s.onload=cb;document.head.appendChild(s)}l("/gemivo-update-client.js",function(){window.GemivoUpdate&&window.GemivoUpdate.init({sw:"/sw.js"})});l("/gemivo-push-client.js",function(){window.GemivoPush&&window.GemivoPush.init({app:"bulkwatch"})})})();` }} />
+        <GemivoPushInit app="bulkwatch" />
       </body>
     </html>
   );
