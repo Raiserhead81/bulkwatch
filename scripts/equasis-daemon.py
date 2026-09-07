@@ -209,6 +209,11 @@ class EquasisSession:
                 return {"_error": True}
 
             if "CtrlGeneralError" in html or len(html) < 5000:
+                if "CtrlGeneralError" in html and "has been found" in html:
+                    # IMO valide, aber Equasis kennt sie nicht (abgewrackt / Daten-Muell).
+                    # Markieren statt Budget verbrennen — sonst bleibt der Daemon haengen.
+                    print(f"  ⊘ {self.short}: IMO {imo} nicht bei Equasis (no result)", flush=True)
+                    return {"_error": True, "_not_found": True}
                 self.consecutive_fails += 1
                 self.total_errors += 1
                 err_detail = "CtrlGeneralError" if "CtrlGeneralError" in html else f"short_response({len(html)})"
@@ -334,23 +339,41 @@ class EquasisSession:
         return result
 
 
+def imo_valid(imo):
+    """IMO-Checkdigit (7 Ziffern: Summe der ersten 6 mal 7..2 mod 10 == 7. Ziffer).
+    False fuer Import-Muell (8/9-stellig etc.) — spart Equasis-Seiten."""
+    s = str(imo).strip()
+    if not (len(s) == 7 and s.isdigit()):
+        return False
+    return sum(int(s[i]) * (7 - i) for i in range(6)) % 10 == int(s[6])
+
+
 def get_next_ship(con, cutoff):
-    """Get next ship to scrape. Prioritizes: 1) never scraped + no year_built, 
-    2) never scraped, 3) needs re-scrape + no year_built, 4) needs re-scrape."""
-    return con.execute("""
-        SELECT imo, name, dwt FROM ships
-        WHERE imo NOT LIKE 'cat-%'
-        AND (equasis_last_scraped IS NULL OR equasis_last_scraped < ?)
-        ORDER BY
-            CASE 
-                WHEN equasis_last_scraped IS NULL AND (year_built IS NULL OR year_built = 0) THEN 0
-                WHEN equasis_last_scraped IS NULL THEN 1
-                WHEN year_built IS NULL OR year_built = 0 THEN 2
-                ELSE 3
-            END,
-            RANDOM()
-        LIMIT 1
-    """, (cutoff,)).fetchone()
+    """Get next ship to scrape. Prioritizes: 1) never scraped + no year_built,
+    2) never scraped, 3) needs re-scrape + no year_built, 4) needs re-scrape.
+    Markiert IMOs mit ungueltiger Checkdigit direkt als scraped (ohne Seiten)."""
+    for _ in range(200):
+        row = con.execute("""
+            SELECT imo, name, dwt FROM ships
+            WHERE imo NOT LIKE 'cat-%'
+            AND (equasis_last_scraped IS NULL OR equasis_last_scraped < ?)
+            ORDER BY
+                CASE
+                    WHEN equasis_last_scraped IS NULL AND (year_built IS NULL OR year_built = 0) THEN 0
+                    WHEN equasis_last_scraped IS NULL THEN 1
+                    WHEN year_built IS NULL OR year_built = 0 THEN 2
+                    ELSE 3
+                END,
+                RANDOM()
+            LIMIT 1
+        """, (cutoff,)).fetchone()
+        if not row or imo_valid(row[0]):
+            return row
+        con.execute("UPDATE ships SET equasis_last_scraped = ? WHERE imo = ?",
+                    (cutoff if cutoff else datetime.now().strftime("%Y-%m-%d"), row[0]))
+        con.commit()
+        print(f"  ⊘ IMO {row[0]} ({str(row[1] or '')[:20]}) Checkdigit ungueltig — markiert, ohne Seite", flush=True)
+    return None
 
 
 def update_ship(con, imo, dwt, data):
@@ -674,6 +697,12 @@ def main():
                 rate = enriched / elapsed if elapsed > 0 else 0
                 print(f"  [{enriched:4d}] {name[:22]:22} [{fields:2d}] {' | '.join(parts[:4])}  "
                       f"({rate:.0f}/h via {session.short}, {session.pages_today}/{DAILY_PAGE_LIMIT} Seiten)", flush=True)
+        elif data and data.get("_not_found"):
+            # Equasis kennt die IMO nicht — als "gescrapet" markieren, damit die
+            # Klasse-0-Prioritaet weiterrotiert und das Budget echte Schiffe erreicht.
+            con.execute("UPDATE ships SET equasis_last_scraped = ? WHERE imo = ?",
+                        (datetime.now().strftime("%Y-%m-%d"), imo))
+            con.commit()
         else:
             errors += 1
             consecutive_errors += 1
