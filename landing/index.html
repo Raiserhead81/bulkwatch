@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="de" data-lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maritime AI von gemivo: Schiffsdaten, Bewertung, Live-Positionen</title>
+<meta name="description" content="Maritime AI: 23.700+ Schiffe mit Eigentümer-, Manager- und Klassifikationsdaten, Live-Positionen, Bewertung und KI-Assistent. Demo-Zugang, Lizenz auf Anfrage.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Maritime AI">
+<meta property="og:title" content="Maritime AI von gemivo: Schiffsdaten, Bewertung, Live-Positionen">
+<meta property="og:description" content="23.700+ Schiffe, Bewertung mit Konfidenz, OPEX, KI-Chat. Demo-Zugang, Lizenz auf Anfrage.">
+<meta property="og:image" content="https://maritimeai.gemivo.de/img/dashboard.jpg">
+<meta property="og:url" content="https://maritimeai.gemivo.de/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/img/icon-maritime-ai.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --papier:#f7f5f2; --tinte:#1a1c1e; --stein:#b8422e;
+    --linie:#d8d4cf; --muted:#5c5f63;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --papier:#171412; --tinte:#ece9e4; --stein:#cf5a42; --linie:#332e2a; --muted:#a39d97; }
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    background:var(--papier); color:var(--tinte);
+    font-family:'Satoshi',ui-sans-serif,sans-serif;
+    font-size:17px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:1140px; margin:0 auto; padding:0 24px; }
+  h1,h2,h3,.wortmarke{ font-family:'Fraunces',ui-serif,Georgia,serif; font-weight:600; letter-spacing:-0.01em; }
+  a{ color:var(--stein); }
+  img{ max-width:100%; display:block; }
+
+  .sec-head::after{
+    content:""; display:block; margin-top:14px;
+    border-top:3px solid var(--stein);
+    box-shadow:0 4px 0 -3px var(--tinte);
+  }
+  .sec-head{ font-size:clamp(1.6rem,4vw,2.2rem); margin-bottom:28px; }
+
+  /* Englisch: klare Sans-Headlines statt Fraunces (internationaler B2B-Ton) */
+  html[data-lang="en"] h1, html[data-lang="en"] h2, html[data-lang="en"] h3,
+  html[data-lang="en"] .kz b, html[data-lang="en"] .big, html[data-lang="en"] .wer,
+  html[data-lang="en"] .faq summary{
+    font-family:'Satoshi',ui-sans-serif,sans-serif;
+    letter-spacing:-0.02em;
+  }
+  html[data-lang="en"] h1 em{ font-style:normal; }
+
+  header{ border-bottom:1px solid var(--linie); position:sticky; top:0; background:var(--papier); z-index:50; }
+  .nav{ display:flex; align-items:center; justify-content:space-between; padding:14px 0; }
+  .wortmarke{ font-size:1.3rem; display:flex; align-items:center; gap:10px; }
+  .wortmarke img{ width:34px; height:34px; border-radius:2px; }
+  .wortmarke em{ color:var(--stein); font-style:italic; }
+  .nav-links{ display:flex; gap:18px; align-items:center; font-size:.95rem; }
+  .nav-links a{ text-decoration:none; color:var(--tinte); }
+  .nav-links a.login{ color:var(--stein); font-weight:700; border:1px solid var(--stein); padding:6px 14px; border-radius:2px; }
+  .lang-btn{
+    cursor:pointer; border:1px solid var(--linie); background:transparent; color:var(--tinte);
+    font-family:inherit; font-size:.85rem; font-weight:700; padding:6px 10px; border-radius:2px;
+    letter-spacing:.06em; min-width:52px;
+  }
+  .lang-btn:hover{ border-color:var(--stein); color:var(--stein); }
+  @media (max-width:560px){ .nav-links a.hide-s{ display:none; } }
+
+  .hero{ padding:64px 0 56px; }
+  .hero-grid{ display:grid; grid-template-columns:1.05fr .95fr; gap:48px; align-items:center; }
+  @media (max-width:900px){ .hero-grid{ grid-template-columns:1fr; } }
+  .hero h1{ font-size:clamp(2.1rem,5.2vw,3.6rem); line-height:1.08; }
+  .hero h1 em{ font-style:italic; color:var(--stein); }
+  .hero .doppelt{ margin:22px 0 24px; border-top:3px solid var(--stein); box-shadow:0 5px 0 -4px var(--tinte); max-width:340px; }
+  .hero p{ color:var(--muted); font-size:1.1rem; }
+  .cta-row{ display:flex; gap:14px; flex-wrap:wrap; margin-top:30px; }
+  .btn{
+    display:inline-block; padding:13px 26px; border-radius:2px;
+    font-weight:700; text-decoration:none; font-size:1rem;
+    border:1.5px solid var(--stein);
+  }
+  .btn.solid{ background:var(--stein); color:var(--papier); }
+  .btn.ghost{ color:var(--stein); background:transparent; }
+
+  .shot{ border:1px solid var(--linie); border-radius:2px; overflow:hidden; background:#0e0f12; }
+  .shot img{ width:100%; }
+  .shot figcaption{ padding:10px 14px; font-size:.85rem; color:var(--muted); background:var(--papier); border-top:1px solid var(--linie); }
+
+  .kennzahlen{ border-top:1px solid var(--linie); border-bottom:1px solid var(--linie); }
+  .kennzahlen .row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); }
+  .kz{ padding:28px 18px; border-left:1px solid var(--linie); }
+  .kz:first-child{ border-left:none; }
+  .kz b{ font-family:'Fraunces',serif; font-size:2rem; font-weight:600; display:block; }
+  .kz span{ color:var(--muted); font-size:.92rem; }
+
+  section{ padding:64px 0; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:22px; }
+  .card{ border:1px solid var(--linie); border-radius:2px; padding:26px; }
+  .card h3{ font-size:1.15rem; margin-bottom:10px; }
+  .card h3::after{
+    content:""; display:block; margin-top:10px;
+    border-top:3px solid var(--stein); box-shadow:0 3px 0 -2px var(--tinte); width:64px;
+  }
+  .card p{ color:var(--muted); font-size:.98rem; }
+  .card .tag{ display:inline-block; margin-bottom:14px; font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; color:var(--stein); font-weight:700; }
+
+  .blicke{ padding-top:0; }
+  .blicke .duo{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  @media (max-width:900px){ .blicke .duo{ grid-template-columns:1fr; } }
+
+  .ziel .zeile{ display:flex; gap:18px; padding:20px 0; border-bottom:1px solid var(--linie); align-items:baseline; }
+  .ziel .zeile:last-child{ border-bottom:none; }
+  .ziel .wer{ font-family:'Fraunces',serif; font-size:1.25rem; font-weight:600; min-width:180px; }
+  .ziel .was{ color:var(--muted); }
+
+  .demo-band{ background:#1a1c1e; color:#ece9e4; }
+  @media (prefers-color-scheme: dark){ .demo-band{ background:#241f1b; } }
+  .demo-band .sec-head{ color:#ece9e4; }
+  .demo-band .card{ border-color:rgba(128,120,110,.35); }
+  .demo-band .card p{ color:rgba(236,233,228,.72); }
+  .demo-band .lizenz{ color:rgba(236,233,228,.85); }
+  .demo-band .card h3{ color:#ece9e4; }
+  .creds{ font-family:ui-monospace,'SF Mono',Menlo,monospace; font-size:1rem; padding:14px 18px; border:1px dashed rgba(207,90,66,.7); border-radius:2px; margin:14px 0; display:grid; gap:6px; }
+  .creds b{ color:var(--stein); font-weight:700; }
+  .lizenz{
+    margin-top:26px; padding:20px 24px; border-left:4px solid var(--stein);
+    background:rgba(207,90,66,.08); font-size:1rem;
+  }
+  .lizenz strong{ color:var(--stein); }
+  .demo-band .btn.solid{ color:#171412; }
+
+  .faq .frage{ border-bottom:1px solid var(--linie); }
+  .faq details{ padding:18px 0; }
+  .faq summary{ cursor:pointer; font-weight:700; list-style:none; display:flex; justify-content:space-between; gap:16px; }
+  .faq summary::after{ content:"+"; color:var(--stein); font-weight:400; font-size:1.4rem; line-height:1; }
+  .faq details[open] summary::after{ content:"\2212"; }
+  .faq .antwort{ color:var(--muted); margin-top:10px; max-width:70ch; }
+
+  .preis{ text-align:center; }
+  .preis .big{ font-family:'Fraunces',serif; font-size:clamp(1.9rem,5vw,3rem); margin:10px 0 6px; }
+  .preis .u{ color:var(--muted); max-width:60ch; margin:0 auto; }
+  .preis .btn{ margin-top:30px; }
+
+  footer{ border-top:1px solid var(--linie); padding:34px 0; color:var(--muted); font-size:.9rem; }
+  footer .row{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+  footer a{ color:var(--muted); }
+
+  @media (prefers-reduced-motion: no-preference){
+    .rv{ opacity:0; transform:translateY(14px); transition:opacity .55s ease, transform .55s ease; }
+    .rv.in{ opacity:1; transform:none; }
+  }
+  @media (prefers-reduced-motion: reduce){ html{ scroll-behavior:auto; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <div class="wortmarke"><img src="/img/icon-maritime-ai.png" alt="" onerror="this.style.display='none'">Maritime <em>AI</em></div>
+    <nav class="nav-links">
+      <a href="#funktionen" class="hide-s" data-de="Funktionen" data-en="Features">Funktionen</a>
+      <a href="#blicke" class="hide-s" data-de="Blick in die App" data-en="Inside the app">Blick in die App</a>
+      <a href="#demo" class="hide-s" data-de="Demo" data-en="Demo">Demo</a>
+      <button id="langBtn" class="lang-btn" type="button" aria-label="Sprache wechseln">EN</button>
+      <a class="login" href="https://vessels.gemivo.de/login" data-de="Anmelden" data-en="Sign in">Anmelden</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap hero">
+  <div class="hero-grid">
+    <div>
+      <h1><span data-de="Schiffe finden, bewerten," data-en="Find ships, value them,">Schiffe finden, bewerten,</span> <em data-de="im Blick behalten." data-en="keep them in view.">im Blick behalten.</em></h1>
+      <div class="doppelt"></div>
+      <p data-de="Maritime AI bündelt 23.700+ Handelsschiffe mit technischen Daten, Eigentümern, Managern, Klassifikation, P&amp;I und letzten Positionen. Ein KI-Assistent beantwortet Fragen zu Flotten, Bewertungen und Betrieb aus dem eigenen Datenbestand." data-en="Maritime AI brings together 23,700+ commercial vessels with technical data, owners, managers, classification, P&amp;I and latest positions. An AI assistant answers questions about fleets, valuations and operations from the database itself.">Maritime AI bündelt 23.700+ Handelsschiffe mit technischen Daten, Eigentümern, Managern, Klassifikation, P&amp;I und letzten Positionen. Ein KI-Assistent beantwortet Fragen zu Flotten, Bewertungen und Betrieb aus dem eigenen Datenbestand.</p>
+      <div class="cta-row">
+        <a class="btn solid" href="https://vessels.gemivo.de/login" data-de="Demo ansehen" data-en="View demo">Demo ansehen</a>
+        <a class="btn ghost" href="mailto:hallo@gemivo.de?subject=Maritime%20AI%20Lizenz%20anfragen" class="mail-cta" data-de="Preis auf Anfrage" data-en="Price on request">Preis auf Anfrage</a>
+      </div>
+    </div>
+    <figure class="shot rv">
+      <img src="/img/dashboard.jpg" alt="Maritime AI Schiffssuche mit Marktticker und Kennzahlen" loading="eager">
+      <figcaption data-de="Schiffsübersicht mit Marktticker. Tatsächlicher Stand der Datenbank." data-en="Fleet overview with market ticker. Actual database figures.">Schiffsübersicht mit Marktticker. Tatsächlicher Stand der Datenbank.</figcaption>
+    </figure>
+  </div>
+</div>
+
+<div class="kennzahlen">
+  <div class="wrap row">
+    <div class="kz"><b>23.761</b><span data-de="Schiffe in der Datenbank" data-en="Ships in the database">Schiffe in der Datenbank</span></div>
+    <div class="kz"><b>11.868</b><span data-de="mit Eigentümer, Manager und Klasse" data-en="with owner, manager and class">mit Eigentümer, Manager und Klasse</span></div>
+    <div class="kz"><b>22.406</b><span data-de="mit letzter GPS-Position" data-en="with latest GPS position">mit letzter GPS-Position</span></div>
+    <div class="kz"><b>24/7</b><span data-de="Live-AIS-Aktualisierung" data-en="Live AIS updates">Live-AIS-Aktualisierung</span></div>
+  </div>
+</div>
+
+<section id="blicke" class="wrap blicke">
+  <h2 class="sec-head rv" data-de="Ein Blick in die App" data-en="Inside the app">Ein Blick in die App</h2>
+  <div class="duo">
+    <figure class="shot rv">
+      <img src="/img/profil.jpg" alt="Schiffsprofil mit Technik, Finanzdaten und Bewertung" loading="lazy">
+      <figcaption data-de="Schiffsprofil: Technik, Finanzkennzahlen und Bewertung auf einer Seite." data-en="Ship profile: technicals, financials and valuation on one page.">Schiffsprofil: Technik, Finanzkennzahlen und Bewertung auf einer Seite.</figcaption>
+    </figure>
+    <div class="rv" style="align-self:center;">
+      <h3 style="font-size:1.5rem; margin-bottom:14px;" data-de="Jedes Schiff als komplettes Dossier." data-en="Every ship as a full dossier.">Jedes Schiff als komplettes Dossier.</h3>
+      <p style="color:var(--muted);" data-de="Wert mit Konfidenz, Nettoergebnis pro Tag, ROI, Charter- und OPEX-Sätze. Motor, Tragfähigkeit, Geschwindigkeit, Crew. Letzte Position mit Koordinaten. Alles ein Klick voneinander entfernt, exportierbar als PDF." data-en="Value with confidence, net earnings per day, ROI, charter and OPEX rates. Engine, deadweight, speed, crew. Latest position with coordinates. One click apart, exportable as PDF.">Wert mit Konfidenz, Nettoergebnis pro Tag, ROI, Charter- und OPEX-Sätze. Motor, Tragfähigkeit, Geschwindigkeit, Crew. Letzte Position mit Koordinaten. Alles ein Klick voneinander entfernt, exportierbar als PDF.</p>
+      <p style="color:var(--muted); margin-top:14px;" data-de="Und wenn zwanzig Schiffe nebeneinander liegen sollen: vergleichen, filtern, Sortierlisten ziehen. Der KI-Assistent beantwortet Fragen über den ganzen Datenbestand." data-en="And when twenty ships need to sit side by side: compare, filter, build shortlists. The AI assistant answers questions across the whole database.">Und wenn zwanzig Schiffe nebeneinander liegen sollen: vergleichen, filtern, Sortierlisten ziehen. Der KI-Assistent beantwortet Fragen über den ganzen Datenbestand.</p>
+    </div>
+  </div>
+</section>
+
+<section id="funktionen" class="wrap">
+  <h2 class="sec-head rv" data-de="Was in der Lizenz steckt" data-en="What the licence includes">Was in der Lizenz steckt</h2>
+  <div class="grid">
+    <div class="card rv"><span class="tag" data-de="Datenbasis" data-en="Database">Datenbasis</span><h3 data-de="Schiffsdatenbank" data-en="Ship database">Schiffsdatenbank</h3>
+      <p data-de="Typ, DWT, Baujahr, Flagge, MMSI, Call Sign. Angereichert um Reederei, Manager, ISM-Manager, Klassifikationsgesellschaft und Paris/Tokyo-MOU-Bewertung." data-en="Type, DWT, year built, flag, MMSI, call sign. Enriched with owner, manager, ISM manager, classification society and Paris/Tokyo MOU rating.">Typ, DWT, Baujahr, Flagge, MMSI, Call Sign. Angereichert um Reederei, Manager, ISM-Manager, Klassifikationsgesellschaft und Paris/Tokyo-MOU-Bewertung.</p></div>
+    <div class="card rv"><span class="tag" data-de="Tracking" data-en="Tracking">Tracking</span><h3 data-de="Live-Karte &amp; AIS" data-en="Live map &amp; AIS">Live-Karte &amp; AIS</h3>
+      <p data-de="Positionsdaten werden rund um die Uhr aus mehreren AIS-Quellen gespeist. Suchen, beobachten, Flotten auf der Weltkarte verfolgen." data-en="Positions are fed around the clock from several AIS sources. Search, watch, follow fleets on the world map.">Positionsdaten werden rund um die Uhr aus mehreren AIS-Quellen gespeist. Suchen, beobachten, Flotten auf der Weltkarte verfolgen.</p></div>
+    <div class="card rv"><span class="tag" data-de="Wert" data-en="Value">Wert</span><h3 data-de="Schiffsbewertung" data-en="Ship valuation">Schiffsbewertung</h3>
+      <p data-de="Wertschätzung je Schiff aus Markt- und Baualtersdaten, inklusive Preishistorie. Grundlage für Kauf, Verkauf und Buchwerte." data-en="A value per ship from market and age data, including price history. The basis for purchase, sale and book values.">Wertschätzung je Schiff aus Markt- und Baualtersdaten, inklusive Preishistorie. Grundlage für Kauf, Verkauf und Buchwerte.</p></div>
+    <div class="card rv"><span class="tag" data-de="Betrieb" data-en="Operations">Betrieb</span><h3 data-de="OPEX- &amp; Voyage-Kalkulator" data-en="OPEX &amp; voyage calculator">OPEX- &amp; Voyage-Kalkulator</h3>
+      <p data-de="Tages- und Reisekosten je Schiffstyp kalkulieren: Crew, Versicherung, Reparatur, Bunker. Szenarien direkt vergleichbar." data-en="Daily and voyage costs per ship type: crew, insurance, repairs, bunkers. Scenarios compare directly.">Tages- und Reisekosten je Schiffstyp kalkulieren: Crew, Versicherung, Reparatur, Bunker. Szenarien direkt vergleichbar.</p></div>
+    <div class="card rv"><span class="tag" data-de="KI" data-en="AI">KI</span><h3 data-de="AI-Chat" data-en="AI chat">AI-Chat</h3>
+      <p data-de="„Welche Capesizes sind über 15 Jahre alt und in Paris-MOU White?“ Der Assistent antwortet aus dem eigenen Datenbestand, nicht aus dem Internet." data-en="&quot;Which capesizes are over 15 years old and Paris MOU White?&quot; The assistant answers from the database itself, not from the internet.">„Welche Capesizes sind über 15 Jahre alt und in Paris-MOU White?“ Der Assistent antwortet aus dem eigenen Datenbestand, nicht aus dem Internet.</p></div>
+    <div class="card rv"><span class="tag" data-de="Monitoring" data-en="Monitoring">Monitoring</span><h3 data-de="Watchlist &amp; Newbuilds" data-en="Watchlist &amp; newbuilds">Watchlist &amp; Newbuilds</h3>
+      <p data-de="Flotten beobachten, Neubauten verfolgen, Telegram-Alerts bei kritischen Änderungen. Für Broker, Banken und Reedereien." data-en="Watch fleets, track newbuilds, get Telegram alerts on critical changes. For brokers, banks and shipowners.">Flotten beobachten, Neubauten verfolgen, Telegram-Alerts bei kritischen Änderungen. Für Broker, Banken und Reedereien.</p></div>
+    <div class="card rv"><span class="tag" data-de="Reederei" data-en="Shipowner">Reederei</span><h3 data-de="Eigene Flotte" data-en="Your own fleet">Eigene Flotte</h3>
+      <p data-de="Die Flotte der eigenen Reederei pflegen: eigene Schifffotos hochladen, Angaben zu Zustand und Ausstattung ergänzen. Pro Schiff oder für die ganze Flotte ein fertiges Dossier als PDF. So wird die eigene Flotte aufgewertet und an Charterer, Banken und Käufer präsentiert." data-en="Maintain the fleet of your own shipping company: upload your own ship photos, add condition and outfitting details. Produce a finished dossier as PDF per ship or for the whole fleet. That upgrades your fleet for presentation to charterers, banks and buyers.">Die Flotte der eigenen Reederei pflegen: eigene Schifffotos hochladen, Angaben zu Zustand und Ausstattung ergänzen. Pro Schiff oder für die ganze Flotte ein fertiges Dossier als PDF. So wird die eigene Flotte aufgewertet und an Charterer, Banken und Käufer präsentiert.</p></div>
+  </div>
+</section>
+
+<section class="wrap ziel">
+  <h2 class="sec-head rv" data-de="Für wen das gebaut ist" data-en="Built for">Für wen das gebaut ist</h2>
+  <div class="rv">
+    <div class="zeile"><div class="wer" data-de="Broker" data-en="Brokers">Broker</div><div class="was" data-de="Kandidaten fürs Handling finden, Zustand und Wert prüfen, Compare-Sheets für den Kunden ziehen." data-en="Find candidates for the sale list, check condition and value, pull comparison sheets for the client.">Kandidaten fürs Handling finden, Zustand und Wert prüfen, Compare-Sheets für den Kunden ziehen.</div></div>
+    <div class="zeile"><div class="wer" data-de="Reedereien" data-en="Shipowners">Reedereien</div><div class="was" data-de="Fremde Flotten beobachten, Konkurrenzpositionen tracken, Marktwerte der eigenen Schiffe im Auge behalten." data-en="Watch other fleets, track competitors' positions, keep an eye on market values of your own ships.">Fremde Flotten beobachten, Konkurrenzpositionen tracken, Marktwerte der eigenen Schiffe im Auge behalten.</div></div>
+    <div class="zeile"><div class="wer" data-de="Banken &amp; Investoren" data-en="Banks &amp; investors">Banken &amp; Investoren</div><div class="was" data-de="Buchwerte hinterfragen: Bewertung mit Konfidenz, Preishistorie, Alter und Zustand je Einzelschiff." data-en="Question book values: valuation with confidence, price history, age and condition per individual ship.">Buchwerte hinterfragen: Bewertung mit Konfidenz, Preishistorie, Alter und Zustand je Einzelschiff.</div></div>
+    <div class="zeile"><div class="wer" data-de="Charterer" data-en="Charterers">Charterer</div><div class="was" data-de="Verfügbare Einheiten nach Typ, Tragfähigkeit und Alter filtern, OPEX und Reisekosten durchrechnen." data-en="Filter available units by type, deadweight and age, work through OPEX and voyage costs.">Verfügbare Einheiten nach Typ, Tragfähigkeit und Alter filtern, OPEX und Reisekosten durchrechnen.</div></div>
+  </div>
+</section>
+
+<section id="demo" class="demo-band">
+  <div class="wrap">
+    <h2 class="sec-head rv" data-de="Demo-Zugang" data-en="Demo access">Demo-Zugang</h2>
+    <div class="grid">
+      <div class="card rv">
+        <h3 data-de="Anmelden unter vessels.gemivo.de" data-en="Sign in at vessels.gemivo.de">Anmelden unter vessels.gemivo.de</h3>
+        <p data-de="Vollzugriff auf Datenbank, Karte und KI-Chat. Keine Installation, läuft im Browser." data-en="Full access to the database, map and AI chat. No install, runs in the browser.">Vollzugriff auf Datenbank, Karte und KI-Chat. Keine Installation, läuft im Browser.</p>
+        <div class="creds">
+          <div><span data-de="Benutzer:" data-en="User:">Benutzer:</span> <b>demo</b></div>
+          <div><span data-de="Passwort:" data-en="Password:">Passwort:</span> <b>MaritimeDemo2026!</b></div>
+        </div>
+        <a class="btn solid" href="https://vessels.gemivo.de/login" data-de="Zur Demo-Anmeldung" data-en="Go to demo sign-in">Zur Demo-Anmeldung</a>
+      </div>
+      <div class="card rv">
+        <h3 data-de="Was die Demo zeigt" data-en="What the demo shows">Was die Demo zeigt</h3>
+        <p data-de="Der komplette Datenbestand: Schiffsprofile mit Veredlungsdaten, Bewertung, OPEX-Kalkulator, Watchlist und der KI-Chat über Ihre eigenen Fragen." data-en="The full database: ship profiles with enrichment data, valuation, OPEX calculator, watchlist and the AI chat on your own questions.">Der komplette Datenbestand: Schiffsprofile mit Veredlungsdaten, Bewertung, OPEX-Kalkulator, Watchlist und der KI-Chat über Ihre eigenen Fragen.</p>
+        <div class="lizenz">
+          <strong data-de="Hinweis:" data-en="Note:">Hinweis:</strong> <span data-de="Live-AIS-Positionen in Echtzeit sind Teil der bezahlten Lizenz. Im Demo-Zugang sehen Sie den Datenbestand und die Funktionsweise. Den Live-Feed schalten wir mit Erwerb einer Lizenz frei." data-en="Live AIS positions in real time are part of the paid licence. The demo shows the database and how everything works. We switch on the live feed once you acquire a licence.">Live-AIS-Positionen in Echtzeit sind Teil der bezahlten Lizenz. Im Demo-Zugang sehen Sie den Datenbestand und die Funktionsweise. Den Live-Feed schalten wir mit Erwerb einer Lizenz frei.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap faq">
+  <h2 class="sec-head rv" data-de="Häufige Fragen" data-en="Common questions">Häufige Fragen</h2>
+  <div class="rv">
+    <div class="frage">
+      <details>
+        <summary data-de="Wie aktuell sind die Positionen?" data-en="How fresh are the positions?">Wie aktuell sind die Positionen?</summary>
+        <div class="antwort" data-de="Mehrere AIS-Quellen schreiben rund um die Uhr in die Datenbank. Wie viele Schiffe gerade einen frischen Stand haben, sehen Sie oben in den Kennzahlen. Der Echtzeit-Feed gehört zur Lizenz, die Demo zeigt den gespeicherten Bestand." data-en="Several AIS sources write into the database around the clock. The figures at the top show how many ships have a fresh fix right now. The real-time feed is part of the licence; the demo shows the stored data.">Mehrere AIS-Quellen schreiben rund um die Uhr in die Datenbank. Wie viele Schiffe gerade einen frischen Stand haben, sehen Sie oben in den Kennzahlen. Der Echtzeit-Feed gehört zur Lizenz, die Demo zeigt den gespeicherten Bestand.</div>
+      </details>
+    </div>
+    <div class="frage">
+      <details>
+        <summary data-de="Welche Schiffe sind drin?" data-en="Which ships are included?">Welche Schiffe sind drin?</summary>
+        <div class="antwort" data-de="23.761 Schiffe aller Typen: Bulk Carrier, Container, Tanker, LNG/LPG, General Cargo, RoRo und mehr. Knapp die Hälfte trägt zusätzlich Eigentümer, Manager und Klassifikationsdaten, die Zahl wächst täglich." data-en="23,761 ships of all types: bulk carriers, containers, tankers, LNG/LPG, general cargo, RoRo and more. Almost half additionally carry owner, manager and classification data, and that number grows daily.">23.761 Schiffe aller Typen: Bulk Carrier, Container, Tanker, LNG/LPG, General Cargo, RoRo und mehr. Knapp die Hälfte trägt zusätzlich Eigentümer, Manager und Klassifikationsdaten, die Zahl wächst täglich.</div>
+      </details>
+    </div>
+    <div class="frage">
+      <details>
+        <summary data-de="Kann ich meine eigene Flotte beobachten?" data-en="Can I keep an eye on my own fleet?">Kann ich meine eigene Flotte beobachten?</summary>
+        <div class="antwort" data-de="Ja. Schiffe auf die Watchlist legen, Telegram-Alerts bei kritischen Änderungen bekommen, Flottenansicht für Ihre Einheiten." data-en="Yes. Put ships on the watchlist, get Telegram alerts on critical changes, use the fleet view for your own units.">Ja. Schiffe auf die Watchlist legen, Telegram-Alerts bei kritischen Änderungen bekommen, Flottenansicht für Ihre Einheiten.</div>
+      </details>
+    </div>
+    <div class="frage">
+      <details>
+        <summary data-de="Können wir unsere eigene Flotte mit eigenen Fotos präsentieren?" data-en="Can we present our own fleet with our own photos?">Können wir unsere eigene Flotte mit eigenen Fotos präsentieren?</summary>
+        <div class="antwort" data-de="Ja. Sie legen die Flotte Ihrer Reederei an, laden eigene Schifffotos hoch und ergänzen Angaben zu Zustand und Ausstattung. Aus jedem Schiff oder der ganzen Flotte erzeugen Sie ein fertiges Dossier als PDF für Charterer, Banken und Käufer." data-en="Yes. You set up your shipping company's fleet, upload your own ship photos and add condition and outfitting details. From any ship or the whole fleet you produce a finished dossier as PDF for charterers, banks and buyers.">Ja. Sie legen die Flotte Ihrer Reederei an, laden eigene Schifffotos hoch und ergänzen Angaben zu Zustand und Ausstattung. Aus jedem Schiff oder der ganzen Flotte erzeugen Sie ein fertiges Dossier als PDF für Charterer, Banken und Käufer.</div>
+      </details>
+    </div>
+    <div class="frage">
+      <details>
+        <summary data-de="Wie läuft die Lizenz?" data-en="How does the licence work?">Wie läuft die Lizenz?</summary>
+        <div class="antwort" data-de="Pro Unternehmen, nach Umfang: Nutzerzahl, Live-AIS, Update-Tiefe. Preis auf Anfrage, wir melden uns mit einem konkreten Angebot." data-en="Per company, sized to your needs: number of users, live AIS, update depth. Price on request, we come back with a concrete offer.">Pro Unternehmen, nach Umfang: Nutzerzahl, Live-AIS, Update-Tiefe. Preis auf Anfrage, wir melden uns mit einem konkreten Angebot.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section id="lizenz" class="wrap preis">
+  <h2 class="sec-head rv" style="max-width:max-content;margin-left:auto;margin-right:auto;" data-de="Lizenz" data-en="Licence">Lizenz</h2>
+  <div class="big rv" data-de="Preis auf Anfrage." data-en="Price on request.">Preis auf Anfrage.</div>
+  <p class="u rv" data-de="Maritime AI wird pro Unternehmen lizenziert. Umfang (Anzahl Nutzer, Live-AIS, Update-Tiefe) richtet sich nach Ihrem Bedarf. Schreiben Sie uns, wir melden uns mit einem konkreten Angebot." data-en="Maritime AI is licensed per company. Scope (number of users, live AIS, update depth) follows your needs. Write to us and we come back with a concrete offer.">Maritime AI wird pro Unternehmen lizenziert. Umfang (Anzahl Nutzer, Live-AIS, Update-Tiefe) richtet sich nach Ihrem Bedarf. Schreiben Sie uns, wir melden uns mit einem konkreten Angebot.</p>
+  <a class="btn solid rv" href="mailto:hallo@gemivo.de?subject=Maritime%20AI%20Lizenz%20anfragen" class="mail-cta" data-de="Lizenz anfragen" data-en="Request a licence">Lizenz anfragen</a>
+</section>
+
+<footer>
+  <div class="wrap row">
+    <div><span data-de="Maritime AI ist ein Produkt von" data-en="Maritime AI is a product of">Maritime AI ist ein Produkt von</span> <a href="https://gemivo.de">gemivo</a></div>
+    <div><a href="https://gemivo.de/impressum.html" data-de="Impressum" data-en="Imprint">Impressum</a> · hallo@gemivo.de</div>
+  </div>
+</footer>
+
+<script>
+  // Sprachumschalter: data-de/data-en auf Textblättern, Standard Deutsch (ohne JS)
+  var langBtn = document.getElementById('langBtn');
+  function setLang(l){
+    document.documentElement.setAttribute('data-lang', l);
+    document.documentElement.setAttribute('lang', l === 'en' ? 'en' : 'de');
+    document.querySelectorAll('[data-de]').forEach(function(el){
+      el.textContent = (l === 'en') ? el.getAttribute('data-en') : el.getAttribute('data-de');
+      document.querySelectorAll('a.mail-cta').forEach(function(a){
+        a.href = 'mailto:hallo@gemivo.de?subject=' + (l === 'en' ? 'Maritime%20AI%20licence%20request' : 'Maritime%20AI%20Lizenz%20anfragen');
+      });
+    });
+    langBtn.textContent = (l === 'en') ? 'DE' : 'EN';
+    try { localStorage.setItem('mai-lang', l); } catch(e){}
+  }
+  var start = 'de';
+  try { start = localStorage.getItem('mai-lang') || 'de'; } catch(e){}
+  setLang(start);
+  langBtn.addEventListener('click', function(){
+    setLang(document.documentElement.getAttribute('data-lang') === 'en' ? 'de' : 'en');
+  });
+
+  // dezente Reveals
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: .12 });
+  document.querySelectorAll('.rv').forEach(function(el){ io.observe(el); });
+</script>
+
+</body>
+</html>

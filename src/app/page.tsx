@@ -89,6 +89,7 @@ export default function Home() {
   const [dwtRange, setDwtRange] = useState(0);
   const [statusFilter, setStatusFilter] = useState("");
   const [operatorFilter, setOperatorFilter] = useState("");
+  const [onlyImages, setOnlyImages] = useState(true);
   const [sortBy, setSortBy] = useState("name");
   const [loading, setLoading] = useState(true);
   const [flags, setFlags] = useState<string[]>([]);
@@ -117,6 +118,7 @@ export default function Home() {
     if (flagFilter) p.set("flag", flagFilter);
     if (statusFilter) p.set("status", statusFilter);
     if (operatorFilter) p.set("operator", operatorFilter);
+    if (onlyImages) p.set("has_image", "true");
     const age = AGE_RANGES[ageRange];
     if (age.min) p.set("age_min", age.min);
     if (age.max) p.set("age_max", age.max);
@@ -127,10 +129,10 @@ export default function Home() {
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) { setShips(d.ships || []); setTotal(d.total || 0); setTotalPages(d.totalPages || 0); } setLoading(false); })
       .catch(() => setLoading(false));
-  }, [page, search, typeFilter, flagFilter, sortBy, ageRange, dwtRange, statusFilter, operatorFilter]);
+  }, [page, search, typeFilter, flagFilter, sortBy, ageRange, dwtRange, statusFilter, operatorFilter, onlyImages]);
 
   useEffect(() => { const t = setTimeout(fetchShips, search ? 300 : 0); return () => clearTimeout(t); }, [fetchShips]);
-  useEffect(() => { setPage(1); }, [search, typeFilter, flagFilter, sortBy, ageRange, dwtRange, statusFilter, operatorFilter]);
+  useEffect(() => { setPage(1); }, [search, typeFilter, flagFilter, sortBy, ageRange, dwtRange, statusFilter, operatorFilter, onlyImages]);
 
   const activeFilterCount = [typeFilter, flagFilter, statusFilter, operatorFilter, ageRange > 0 ? "x" : "", dwtRange > 0 ? "x" : ""].filter(Boolean).length;
   const fmtDwt = (d: number) => d > 0 ? `${(d/1000).toFixed(0)}k` : "";
@@ -235,6 +237,12 @@ export default function Home() {
             <option value="dwt">DWT</option>
             <option value="year">Year</option>
           </select>
+          <button onClick={() => setOnlyImages(!onlyImages)}
+            className={`${inputCls} cursor-pointer flex items-center gap-2 ${onlyImages ? "!bg-sky-500 !text-white !border-sky-500" : ""}`}
+            title="Nur Schiffe mit Foto anzeigen">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            Nur mit Foto
+          </button>
           <button onClick={() => setShowFilters(!showFilters)}
             className={`${inputCls} cursor-pointer flex items-center gap-2 ${showFilters ? "!bg-sky-500 !text-white !border-sky-500" : ""}`}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>

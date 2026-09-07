@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
   const operator = searchParams.get("operator") || "";
   const sort = searchParams.get("sort") || "name";
   const hasPosition = searchParams.get("has_position") === "true";
+  const hasImage = searchParams.get("has_image") === "true";
   const offset = (page - 1) * limit;
 
   const db = getDb();
@@ -35,6 +36,9 @@ export async function GET(request: NextRequest) {
   }
   if (hasPosition) {
     conditions.push("lat IS NOT NULL AND lat != 0");
+  }
+  if (hasImage) {
+    conditions.push("image_url IS NOT NULL AND image_url != ''");
   }
 
   const status = searchParams.get("status") || "";
