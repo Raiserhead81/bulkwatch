@@ -84,7 +84,8 @@ export default function GlobalNav() {
     <>
       {/* Mobile overlay */}
       {menuOpen && <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setMenuOpen(false)} />}
-      {/* Mobile menu */}
+      {/* Mobile menu (nur fuer eingeloggte Nutzer) */}
+      {currentUser && (
       <div className={`fixed top-0 right-0 h-full w-64 bg-slate-900 border-l border-slate-800 z-50 transform transition-transform ${menuOpen ? "translate-x-0" : "translate-x-full"}`}>
         <button onClick={() => setMenuOpen(false)} className="absolute top-4 right-4 text-slate-400 text-xl">✕</button>
         <div className="pt-14 px-4 space-y-1">
@@ -112,6 +113,7 @@ export default function GlobalNav() {
           <a href="/api/auth/logout" className="block px-3 py-2 text-sm text-slate-500 hover:text-red-400 mt-2">Logout</a>
         </div>
       </div>
+      )}
       {/* Fixed top bar */}
       <nav className="sticky top-0 z-30 border-b border-slate-400 dark:border-slate-800 bg-white dark:bg-slate-950">
         <div className="max-w-[95%] mx-auto px-4 py-2 flex items-center justify-between">
@@ -123,6 +125,7 @@ export default function GlobalNav() {
           </div>
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-0.5">
+            {currentUser && (<>
             <PushBell className="text-slate-500 hover:text-slate-200" />
             {mainLinks.map(([label, href, icon]) => (
               <a key={href} href={href}
@@ -148,9 +151,11 @@ export default function GlobalNav() {
                 </div>
               )}
             </div>
+            </>)}
             <button onClick={toggleTheme} className="ml-1 px-1.5 py-1 rounded border border-slate-700 text-sm cursor-pointer" title="Toggle theme">
               {theme === "dark" ? "☀️" : "🌙"}
             </button>
+            {currentUser && (<>
             <button onClick={togglePush} className="ml-1 px-1.5 py-1 rounded border border-slate-700 text-sm cursor-pointer" title={pushOn ? "Benachrichtigungen aktiv" : "Benachrichtigungen aktivieren"}>
               {pushOn ? "🔔" : "🔕"}
             </button>
@@ -160,9 +165,14 @@ export default function GlobalNav() {
               className={`ml-1 text-base leading-none ${path === "/settings" ? "text-blue-400" : "text-slate-500 hover:text-slate-200"}`}>
               ⚙️
             </a>
+            </>)}
           </div>
-          {/* Mobile hamburger */}
-          <button className="md:hidden text-xl text-slate-400" onClick={() => setMenuOpen(true)}>☰</button>
+          {/* Mobile hamburger (ausgeloggt: stattdessen Theme-Toggle) */}
+          {currentUser ? (
+            <button className="md:hidden text-xl text-slate-400" onClick={() => setMenuOpen(true)}>☰</button>
+          ) : (
+            <button onClick={toggleTheme} className="md:hidden px-1.5 py-1 rounded border border-slate-700 text-sm cursor-pointer" title="Toggle theme">{theme === "dark" ? "☀️" : "🌙"}</button>
+          )}
         </div>
       </nav>
     </>
