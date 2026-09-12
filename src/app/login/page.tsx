@@ -178,6 +178,9 @@ export default function LoginPage() {
         <p style={{ textAlign: "center", marginTop: 24, fontSize: 12, color: "#475569" }}>
           Authorized personnel only. Contact <a href="mailto:hallo@gemivo.de" style={{ color: "#38bdf8" }}>hallo@gemivo.de</a> for access.
         </p>
+        <p style={{ textAlign: "center", marginTop: 12, fontSize: 12, color: "#475569" }}>
+          <a href="https://maritimeai.gemivo.de" target="_blank" rel="noopener noreferrer" style={{ color: "#38bdf8" }}>Learn more about Maritime AI</a>
+        </p>
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
