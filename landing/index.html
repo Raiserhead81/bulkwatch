@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de" data-lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,337 +13,696 @@
 <meta property="og:url" content="https://maritimeai.gemivo.de/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/img/icon-maritime-ai.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&display=swap" rel="stylesheet">
-<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<script>document.documentElement.classList.add('js');</script>
 <style>
   :root{
-    --papier:#f7f5f2; --tinte:#1a1c1e; --stein:#b8422e;
-    --linie:#d8d4cf; --muted:#5c5f63;
+    --akzent:#ff6b1a;
+    --akzent-hell:#ff8a3d;
+    --akzent-tief:#c24f0e;
+    --tinte:#1a0d04;
+    --bg:#04070d;
+    --bg2:#070b13;
+    --panel:#0b111c;
+    --panel2:#080d16;
+    --linie:#16202f;
+    --linie2:#1f2c40;
+    --text:#eef3f9;
+    --grau:#8fa0b4;
+    --stahl:rgba(130,170,220,.16);
   }
-  @media (prefers-color-scheme: dark){
-    :root{ --papier:#171412; --tinte:#ece9e4; --stein:#cf5a42; --linie:#332e2a; --muted:#a39d97; }
-  }
-  *{ margin:0; padding:0; box-sizing:border-box; }
-  html{ scroll-behavior:smooth; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
   body{
-    background:var(--papier); color:var(--tinte);
-    font-family:'Satoshi',ui-sans-serif,sans-serif;
-    font-size:17px; line-height:1.6;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    color:var(--text);
+    background:var(--bg);
+    line-height:1.55;
     -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
   }
-  .wrap{ max-width:1140px; margin:0 auto; padding:0 24px; }
-  h1,h2,h3,.wortmarke{ font-family:'Fraunces',ui-serif,Georgia,serif; font-weight:600; letter-spacing:-0.01em; }
-  a{ color:var(--stein); }
-  img{ max-width:100%; display:block; }
+  ::selection{background:var(--akzent);color:var(--tinte)}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+  a:focus-visible{outline:2px solid var(--akzent);outline-offset:3px;border-radius:4px}
 
-  .sec-head::after{
-    content:""; display:block; margin-top:14px;
-    border-top:3px solid var(--stein);
-    box-shadow:0 4px 0 -3px var(--tinte);
+  /* ---------- Topbar ---------- */
+  .topbar{position:sticky;top:0;z-index:60;background:rgba(4,7,13,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--linie)}
+  .topbar-in{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px;max-width:1160px;margin:0 auto}
+  .marke{display:flex;align-items:center;gap:11px;font-weight:900;font-size:19px;letter-spacing:-.02em;text-decoration:none;color:var(--text);white-space:nowrap}
+  .marke em{font-style:normal;color:var(--akzent)}
+  .marke-mini{width:27px;height:27px;border-radius:50%;flex:none;position:relative;overflow:hidden;
+    background:radial-gradient(circle at 35% 32%, #12203a 0%, #0a1322 70%);
+    border:1px solid rgba(130,170,220,.35);
+    box-shadow:0 0 12px rgba(255,107,26,.25)}
+  .marke-mini::before{content:"";position:absolute;inset:0;border-radius:50%;
+    background:conic-gradient(from 20deg, rgba(255,138,61,.85), rgba(255,107,26,.15) 40%, transparent 55%, transparent 360deg);
+    animation:mini-dreh 4s linear infinite}
+  .marke-mini::after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;transform:translate(-50%,-50%);
+    border-radius:50%;background:var(--akzent-hell);box-shadow:0 0 6px rgba(255,138,61,.9)}
+  @keyframes mini-dreh{to{transform:rotate(360deg)}}
+
+  /* ---------- Buttons ---------- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;background:var(--akzent);color:var(--tinte);font-weight:900;text-decoration:none;
+    padding:15px 32px;border-radius:6px;font-size:17px;letter-spacing:.01em;white-space:nowrap;
+    transition:transform .15s ease,box-shadow .15s ease,background .15s ease;
+    box-shadow:0 0 0 1px rgba(255,255,255,.08) inset,0 10px 30px rgba(255,107,26,.28)}
+  .btn:hover{transform:translateY(-2px);background:var(--akzent-hell);box-shadow:0 0 0 1px rgba(255,255,255,.12) inset,0 14px 38px rgba(255,107,26,.42)}
+  .btn:active{transform:translateY(1px)}
+  .btn-klein{padding:10px 20px;font-size:14.5px;letter-spacing:.02em}
+  .ghost{display:inline-flex;align-items:center;gap:9px;color:#a9bacd;font-weight:700;text-decoration:none;font-size:16px;padding:14px 6px;transition:color .15s ease}
+  .ghost:hover{color:var(--text)}
+  .ghost .pfeil{color:var(--akzent);font-weight:900;transition:transform .2s ease}
+  .ghost:hover .pfeil{transform:translateY(3px)}
+
+  /* ---------- Hero ---------- */
+  .hero{position:relative;overflow:hidden;padding:64px 0 76px;
+    background:
+      radial-gradient(1000px 560px at 80% 22%, rgba(255,107,26,.14), transparent 62%),
+      radial-gradient(760px 520px at 8% 88%, rgba(103,183,255,.05), transparent 60%),
+      linear-gradient(180deg,#050a13 0%,var(--bg) 100%);}
+  .hero-grid{display:grid;grid-template-columns:1.12fr .88fr;gap:40px;align-items:center}
+  .live-badge{display:inline-flex;align-items:center;gap:10px;background:rgba(255,107,26,.1);border:1px solid rgba(255,107,26,.45);
+    color:#ffd9bd;font-weight:800;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;
+    padding:8px 16px;border-radius:999px;margin-bottom:30px}
+  .live-punkt{width:9px;height:9px;border-radius:50%;background:var(--akzent-hell);animation:puls 2s ease-out infinite}
+  @keyframes puls{0%{box-shadow:0 0 0 0 rgba(255,138,61,.6)}70%{box-shadow:0 0 0 11px rgba(255,138,61,0)}100%{box-shadow:0 0 0 0 rgba(255,138,61,0)}}
+  h1{font-weight:900;letter-spacing:-.035em;line-height:.92;text-transform:uppercase}
+  h1 .z{display:block;font-size:clamp(44px,9.6vw,116px)}
+  h1 .z.akzent{color:var(--akzent);text-shadow:0 0 46px rgba(255,107,26,.42)}
+  h1 .z.outline{color:transparent;-webkit-text-stroke:3px var(--text)}
+  @supports not (-webkit-text-stroke:2px #fff){h1 .z.outline{color:var(--text)}}
+  h1 .sub{display:block;text-transform:none;letter-spacing:normal;line-height:1.5;
+    font-size:clamp(15.5px,2vw,18px);font-weight:600;color:var(--grau);max-width:540px;margin-top:26px}
+  h1 .sub b{color:var(--text);font-weight:800}
+  .hero-text{color:var(--grau);font-size:16.5px;max-width:620px;margin-top:16px}
+  .hero-text b{color:var(--text)}
+  .hero-cta{margin-top:36px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+  .gratis{font-size:13.5px;color:#a9bacd;font-weight:600;letter-spacing:.02em}
+  .gratis b{color:var(--text)}
+
+  /* ---------- Radar ---------- */
+  .buehne{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:420px;perspective:900px}
+  .radar-wrap{--r:clamp(230px,25vw,352px);position:relative;width:var(--r);height:var(--r);animation:schweben 6s ease-in-out infinite}
+  .scope{position:absolute;inset:0;border-radius:50%;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(255,107,26,.06), transparent 58%),
+      radial-gradient(circle at 36% 30%, #0e1728 0%, #0a121f 55%, #070d18 100%);
+    border:1px solid rgba(130,170,220,.3);
+    box-shadow:
+      0 0 70px rgba(255,107,26,.16),
+      0 0 170px rgba(255,107,26,.05),
+      inset 0 0 64px rgba(2,5,10,.85),
+      inset 0 0 0 1px rgba(255,255,255,.03);}
+  .ringe{position:absolute;inset:0;border-radius:50%}
+  .ringe i{position:absolute;border:1px solid var(--stahl);border-radius:50%}
+  .ringe i:nth-child(1){inset:12.5%}
+  .ringe i:nth-child(2){inset:25%}
+  .ringe i:nth-child(3){inset:37.5%}
+  .kreuz{position:absolute;inset:0;border-radius:50%;overflow:hidden}
+  .kreuz::before,.kreuz::after{content:"";position:absolute;background:rgba(130,170,220,.13)}
+  .kreuz::before{left:50%;top:0;bottom:0;width:1px}
+  .kreuz::after{top:50%;left:0;right:0;height:1px}
+  .ticks{position:absolute;inset:0;border-radius:50%;
+    background:repeating-conic-gradient(rgba(140,175,220,.28) 0deg .6deg, transparent .6deg 6deg);
+    -webkit-mask:radial-gradient(circle, transparent 0 90%, #000 90.5%);
+    mask:radial-gradient(circle, transparent 0 90%, #000 90.5%)}
+  .nord{position:absolute;top:5.5%;left:50%;transform:translateX(-50%);font-size:10px;font-weight:900;
+    letter-spacing:.18em;color:rgba(140,175,220,.55)}
+  .sweep{position:absolute;inset:0;border-radius:50%;overflow:hidden}
+  .sweep::before{content:"";position:absolute;inset:0;border-radius:50%;
+    background:conic-gradient(from 0deg, rgba(255,138,61,.55) 0deg, rgba(255,107,26,.2) 16deg, transparent 30deg, transparent 360deg);
+    animation:dreh 4.5s linear infinite}
+  @keyframes dreh{to{transform:rotate(360deg)}}
+  .zentrum{position:absolute;left:50%;top:50%;width:10px;height:10px;transform:translate(-50%,-50%);border-radius:50%;
+    background:#ffd9b8;box-shadow:0 0 12px rgba(255,140,60,.95),0 0 32px rgba(255,107,26,.5)}
+  .blip{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--akzent-hell);
+    box-shadow:0 0 10px rgba(255,122,47,.9)}
+  .blip::after{content:"";position:absolute;inset:-7px;border:1.5px solid rgba(255,122,47,.75);border-radius:50%;
+    animation:ping 3.2s cubic-bezier(0,.5,.4,1) infinite;animation-delay:inherit}
+  .blip.b1{left:29%;top:26%}
+  .blip.b2{left:63%;top:42%;animation-delay:.9s}
+  .blip.b3{left:44%;top:67%;animation-delay:1.8s}
+  .blip.b4{left:70%;top:66%;animation-delay:2.5s}
+  @keyframes ping{0%{transform:scale(.35);opacity:1}75%,100%{transform:scale(3.4);opacity:0}}
+  @keyframes schweben{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px)}}
+  .radar-schatten{width:64%;height:26px;margin-top:40px;border-radius:50%;
+    background:radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,.7), transparent 70%);
+    filter:blur(7px);animation:schatten 6s ease-in-out infinite}
+  @keyframes schatten{0%,100%{transform:scaleX(1);opacity:.8}50%{transform:scaleX(.78);opacity:.45}}
+  .arena-licht{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(560px 380px at 50% 12%, rgba(255,255,255,.04), transparent 70%)}
+
+  /* ---------- Kennzahlen ---------- */
+  .kennzahlen{border-top:1px solid var(--linie);border-bottom:1px solid var(--linie);background:var(--bg2)}
+  .kennzahlen .row{display:grid;grid-template-columns:repeat(3,1fr)}
+  .kz{padding:34px 26px;border-left:1px solid var(--linie);text-align:center}
+  .kz:first-child{border-left:none}
+  .kz b{display:block;font-size:clamp(40px,5.4vw,66px);font-weight:900;letter-spacing:-.03em;line-height:1;
+    font-variant-numeric:tabular-nums;text-shadow:0 0 34px rgba(255,107,26,.22)}
+  .kz b .plus{color:var(--akzent)}
+  .kz b .einheit{font-size:.44em;font-weight:900;letter-spacing:.06em;color:var(--grau);margin-left:.18em}
+  .kz > span{display:block;color:var(--grau);font-size:14.5px;font-weight:700;margin-top:10px;letter-spacing:.04em}
+  .kz .mini{display:block;color:rgba(143,160,180,.62);font-size:12.5px;margin-top:3px}
+
+  /* ---------- Ticker ---------- */
+  .ticker{border-bottom:1px solid var(--linie);background:rgba(6,10,17,.7);position:relative}
+  .tick{overflow:hidden;white-space:nowrap}
+  .tick + .tick{border-top:1px solid rgba(22,32,47,.6)}
+  .tick-track{display:inline-flex;animation:marquee 46s linear infinite;will-change:transform}
+  .reihe2 .tick-track{animation-duration:38s;animation-direction:reverse}
+  @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .tick-gruppe{display:flex;align-items:center;gap:14px;padding:13px 7px}
+  .chip{display:inline-flex;align-items:center;gap:10px;background:#0b111c;border:1px solid var(--linie2);
+    border-radius:999px;padding:8px 16px;font-size:14px;color:var(--grau);font-weight:600}
+  .chip b{color:var(--text);font-weight:800;letter-spacing:.01em}
+  .chip .score{font-variant-numeric:tabular-nums;color:#c9d4e2;font-weight:700}
+  .lab{font-size:10.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;border-radius:4px;padding:3px 7px}
+  .lab.ais{background:var(--akzent);color:var(--tinte)}
+  .lab.typ{background:transparent;color:#aebfd3;border:1px solid var(--linie2)}
+
+  /* ---------- Sektionen allgemein ---------- */
+  .sektion{padding:104px 0}
+  .bereich-kopf{margin-bottom:14px}
+  .k-label{display:inline-block;color:var(--akzent);font-weight:900;font-size:12.5px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:14px}
+  .bereich-kopf h2{font-size:clamp(30px,4.4vw,48px);font-weight:900;letter-spacing:-.025em;line-height:1.04;text-transform:uppercase}
+  .bereich-kopf p{color:var(--grau);font-size:17px;max-width:640px;margin-top:14px}
+
+  /* ---------- Screenshots ---------- */
+  .screens{background:
+      radial-gradient(800px 480px at 50% 0%, rgba(255,107,26,.06), transparent 62%),
+      var(--bg2);
+    border-top:1px solid var(--linie);border-bottom:1px solid var(--linie)}
+  .shots{display:grid;grid-template-columns:repeat(2,1fr);gap:30px;margin-top:52px;align-items:end;max-width:1020px}
+  .shot{--tilt:0deg;--neig:0deg;transform:perspective(1600px) rotateY(var(--tilt)) rotateX(var(--neig));
+    transition:transform .55s cubic-bezier(.2,.75,.25,1)}
+  .shot:hover{transform:perspective(1600px) rotateY(0deg) rotateX(0deg) translateY(-10px)}
+  .shot:nth-child(1){--tilt:9deg;--neig:3deg}
+  .shot:nth-child(2){--tilt:-9deg;--neig:3deg}
+  .rahmen{position:relative;border-radius:16px;padding:10px;background:linear-gradient(160deg,#152236,#0a121f);
+    border:1px solid #263650;
+    box-shadow:0 34px 70px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.02) inset;
+    transition:box-shadow .55s ease}
+  .shot:hover .rahmen{box-shadow:0 40px 84px rgba(0,0,0,.68),0 0 46px rgba(255,107,26,.14),0 0 0 1px rgba(255,255,255,.03) inset}
+  .chrome{display:flex;align-items:center;gap:10px;padding:6px 6px 10px}
+  .punkte{display:flex;gap:6px;padding-left:4px}
+  .punkte i{width:10px;height:10px;border-radius:50%;background:#1f2f47}
+  .adresse{flex:1;max-width:320px;margin:0 auto;background:#0a111d;border:1px solid var(--linie);
+    border-radius:999px;font-size:11.5px;color:var(--grau);font-weight:600;letter-spacing:.03em;
+    padding:4px 14px;text-align:center}
+  .rahmen img{width:100%;height:auto;display:block;border-radius:8px;background:#000}
+  .shot figcaption{display:flex;align-items:center;justify-content:center;gap:8px;text-align:center;
+    font-size:13px;color:var(--grau);font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-top:18px}
+  .shot figcaption::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--akzent);box-shadow:0 0 10px rgba(255,107,26,.8)}
+
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:34px;margin-top:64px;align-items:start}
+  .duo h3{font-size:clamp(22px,2.6vw,30px);font-weight:900;letter-spacing:-.02em;line-height:1.15;text-transform:uppercase}
+  .duo h3 .strich{display:block;width:64px;border-top:4px solid var(--akzent);margin-top:14px}
+  .duo p{color:var(--grau);font-size:16px;margin-top:18px}
+  .duo p b{color:var(--text)}
+
+  /* ---------- Features ---------- */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:48px}
+  .karte{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--linie);
+    border-top:4px solid var(--akzent);border-radius:10px;padding:30px 26px;
+    transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+  .karte:hover{transform:translateY(-6px);border-color:var(--linie2);border-top-color:var(--akzent-hell);
+    box-shadow:0 24px 48px rgba(0,0,0,.5),0 0 0 1px rgba(255,107,26,.26),0 0 34px rgba(255,107,26,.1)}
+  .karte .nr{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:8px;
+    background:var(--akzent);color:var(--tinte);font-weight:900;font-size:19px;margin-bottom:18px;
+    box-shadow:0 8px 22px rgba(255,107,26,.3)}
+  .karte h3{font-size:20px;font-weight:900;letter-spacing:-.01em;margin-bottom:9px}
+  .karte p{color:var(--grau);font-size:15.5px}
+  .karte.breit{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1.4fr;gap:26px;align-items:center;
+    border-top:4px solid var(--akzent)}
+  .karte.breit .kopf{display:flex;flex-direction:column;align-items:flex-start}
+  .karte.breit .tag{display:inline-block;font-weight:900;font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--akzent);margin-bottom:12px}
+  .karte.breit p{font-size:16px}
+
+  /* ---------- Fuer wen ---------- */
+  .fuerwen{background:var(--bg2);border-top:1px solid var(--linie);border-bottom:1px solid var(--linie)}
+  .ziel-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;margin-top:48px}
+  .ziel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--linie);border-radius:10px;padding:28px 24px;
+    transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+  .ziel:hover{transform:translateY(-6px);border-color:rgba(255,107,26,.45);box-shadow:0 24px 48px rgba(0,0,0,.5),0 0 30px rgba(255,107,26,.1)}
+  .ziel .badge{display:inline-block;font-weight:900;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--akzent);margin-bottom:12px}
+  .ziel h3{font-size:20px;font-weight:900;margin-bottom:9px}
+  .ziel p{color:var(--grau);font-size:15px}
+
+  /* ---------- Demo ---------- */
+  .demo-band{background:
+      radial-gradient(700px 380px at 18% 0%, rgba(255,107,26,.07), transparent 62%),
+      var(--bg2);
+    border-top:1px solid var(--linie);border-bottom:1px solid var(--linie)}
+  .demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:48px}
+  .demo-card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--linie);border-radius:10px;padding:30px 28px}
+  .demo-card h3{font-size:21px;font-weight:900;margin-bottom:10px}
+  .demo-card p{color:var(--grau);font-size:15.5px}
+  .creds{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:15px;padding:16px 18px;
+    border:1px dashed rgba(255,107,26,.6);border-radius:8px;margin:18px 0 22px;display:grid;gap:7px}
+  .creds b{color:var(--akzent-hell);font-weight:700}
+  .lizenz{margin-top:18px;padding:18px 20px;border-left:4px solid var(--akzent);
+    background:rgba(255,107,26,.07);border-radius:0 8px 8px 0;font-size:15px;color:var(--grau)}
+  .lizenz strong{color:var(--text)}
+
+  /* ---------- FAQ ---------- */
+  .faq .frage{border-bottom:1px solid var(--linie)}
+  .faq details{padding:20px 0}
+  .faq summary{cursor:pointer;font-weight:800;font-size:17.5px;list-style:none;display:flex;justify-content:space-between;gap:16px;align-items:baseline}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"+";color:var(--akzent);font-weight:400;font-size:1.6rem;line-height:1;flex:none}
+  .faq details[open] summary::after{content:"\2212"}
+  .faq .antwort{color:var(--grau);margin-top:12px;max-width:72ch;font-size:15.5px}
+
+  /* ---------- Abschlussband ---------- */
+  .band{position:relative;overflow:hidden;background:
+      repeating-linear-gradient(-45deg, rgba(0,0,0,.05) 0 2px, transparent 2px 28px),
+      linear-gradient(160deg,#ff8a3d 0%,var(--akzent) 45%,#e05a0d 100%);
+    color:var(--tinte);padding:96px 0;text-align:center}
+  .band::before{content:"";position:absolute;inset:0;background:radial-gradient(700px 340px at 50% 0%, rgba(255,255,255,.22), transparent 70%);pointer-events:none}
+  .band h2{font-size:clamp(32px,5.4vw,58px);font-weight:900;letter-spacing:-.03em;line-height:1;text-transform:uppercase;position:relative}
+  .band p{margin-top:16px;font-size:17.5px;font-weight:700;position:relative;max-width:620px;margin-left:auto;margin-right:auto}
+  .band .btn{background:#0a1626;color:var(--akzent-hell);margin-top:34px;position:relative;
+    box-shadow:0 14px 34px rgba(0,0,0,.32)}
+  .band .btn:hover{background:#101f36;box-shadow:0 18px 44px rgba(0,0,0,.4)}
+  .band .ghost{color:rgba(26,13,4,.75);font-weight:800}
+  .band .ghost:hover{color:var(--tinte)}
+  .band .ghost .pfeil{color:var(--tinte)}
+  .band-cta{display:flex;align-items:center;justify-content:center;gap:26px;flex-wrap:wrap;position:relative}
+
+  /* ---------- Footer ---------- */
+  .footer{border-top:1px solid var(--linie);padding:38px 0 46px;background:var(--bg)}
+  .footer-in{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+  .footer nav{display:flex;gap:24px;flex-wrap:wrap}
+  .footer a{color:var(--grau);text-decoration:none;font-weight:700;font-size:15px;transition:color .15s ease}
+  .footer a:hover{color:var(--akzent-hell)}
+  .produkt{font-size:13px;color:var(--grau);font-weight:700;letter-spacing:.06em}
+  .produkt b{color:var(--text);letter-spacing:.18em}
+
+  /* ---------- Scroll-Reveal ---------- */
+  html.js .rv{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.75,.25,1);transition-delay:var(--d,0ms)}
+  html.js .rv.an{opacity:1;transform:none}
+
+  /* ---------- Responsiv ---------- */
+  @media (max-width:980px){
+    .hero-grid{grid-template-columns:1fr;gap:12px}
+    .buehne{min-height:0;padding-top:48px}
+    .shots{grid-template-columns:1fr;gap:40px;max-width:640px}
+    .shot:nth-child(1){--tilt:0deg;--neig:2deg}
+    .shot:nth-child(2){--tilt:0deg;--neig:2deg}
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .karte.breit{grid-column:1 / -1;grid-template-columns:1fr;gap:6px}
+    .ziel-grid{grid-template-columns:repeat(2,1fr)}
+    .duo{grid-template-columns:1fr;gap:8px}
+    .demo-grid{grid-template-columns:1fr}
+    .kennzahlen .row{grid-template-columns:1fr}
+    .kz{border-left:none;border-top:1px solid var(--linie);padding:26px 18px}
+    .kz:first-child{border-top:none}
   }
-  .sec-head{ font-size:clamp(1.6rem,4vw,2.2rem); margin-bottom:28px; }
-
-  /* Englisch: klare Sans-Headlines statt Fraunces (internationaler B2B-Ton) */
-  html[data-lang="en"] h1, html[data-lang="en"] h2, html[data-lang="en"] h3,
-  html[data-lang="en"] .kz b, html[data-lang="en"] .big, html[data-lang="en"] .wer,
-  html[data-lang="en"] .faq summary{
-    font-family:'Satoshi',ui-sans-serif,sans-serif;
-    letter-spacing:-0.02em;
+  @media (max-width:560px){
+    .hero{padding:56px 0 64px}
+    .sektion{padding:68px 0}
+    .wrap{padding:0 18px}
+    .topbar-in{padding:11px 18px}
+    .marke{font-size:16.5px}
+    .shots{gap:34px}
+    .shot{--tilt:0deg !important;--neig:2deg}
+    .rahmen{border-radius:12px;padding:7px}
+    .rahmen img{border-radius:6px}
+    .adresse{font-size:10.5px}
+    .shot figcaption{font-size:11px;margin-top:12px;letter-spacing:.08em}
+    .grid{grid-template-columns:1fr}
+    .ziel-grid{grid-template-columns:1fr}
+    .hero-cta .btn{width:100%;justify-content:center}
+    .hero-cta{gap:6px}
+    .ghost{width:100%;justify-content:center;padding:12px 6px}
+    .band{padding:72px 0}
+    .band-cta .btn{width:100%;justify-content:center}
+    .band-cta{gap:4px}
   }
-  html[data-lang="en"] h1 em{ font-style:normal; }
 
-  header{ border-bottom:1px solid var(--linie); position:sticky; top:0; background:var(--papier); z-index:50; }
-  .nav{ display:flex; align-items:center; justify-content:space-between; padding:14px 0; }
-  .wortmarke{ font-size:1.3rem; display:flex; align-items:center; gap:10px; }
-  .wortmarke img{ width:34px; height:34px; border-radius:2px; }
-  .wortmarke em{ color:var(--stein); font-style:italic; }
-  .nav-links{ display:flex; gap:18px; align-items:center; font-size:.95rem; }
-  .nav-links a{ text-decoration:none; color:var(--tinte); }
-  .nav-links a.login{ color:var(--stein); font-weight:700; border:1px solid var(--stein); padding:6px 14px; border-radius:2px; }
-  .lang-btn{
-    cursor:pointer; border:1px solid var(--linie); background:transparent; color:var(--tinte);
-    font-family:inherit; font-size:.85rem; font-weight:700; padding:6px 10px; border-radius:2px;
-    letter-spacing:.06em; min-width:52px;
+  /* ---------- Reduced Motion ---------- */
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none !important;transition:none !important}
+    html{scroll-behavior:auto}
+    html.js .rv{opacity:1;transform:none}
+    .tick{overflow-x:auto}
   }
-  .lang-btn:hover{ border-color:var(--stein); color:var(--stein); }
-  @media (max-width:560px){ .nav-links a.hide-s{ display:none; } }
-
-  .hero{ padding:64px 0 56px; }
-  .hero-grid{ display:grid; grid-template-columns:1.05fr .95fr; gap:48px; align-items:center; }
-  @media (max-width:900px){ .hero-grid{ grid-template-columns:1fr; } }
-  .hero h1{ font-size:clamp(2.1rem,5.2vw,3.6rem); line-height:1.08; }
-  .hero h1 em{ font-style:italic; color:var(--stein); }
-  .hero .doppelt{ margin:22px 0 24px; border-top:3px solid var(--stein); box-shadow:0 5px 0 -4px var(--tinte); max-width:340px; }
-  .hero p{ color:var(--muted); font-size:1.1rem; }
-  .cta-row{ display:flex; gap:14px; flex-wrap:wrap; margin-top:30px; }
-  .btn{
-    display:inline-block; padding:13px 26px; border-radius:2px;
-    font-weight:700; text-decoration:none; font-size:1rem;
-    border:1.5px solid var(--stein);
-  }
-  .btn.solid{ background:var(--stein); color:var(--papier); }
-  .btn.ghost{ color:var(--stein); background:transparent; }
-
-  .shot{ border:1px solid var(--linie); border-radius:2px; overflow:hidden; background:#0e0f12; }
-  .shot img{ width:100%; }
-  .shot figcaption{ padding:10px 14px; font-size:.85rem; color:var(--muted); background:var(--papier); border-top:1px solid var(--linie); }
-
-  .kennzahlen{ border-top:1px solid var(--linie); border-bottom:1px solid var(--linie); }
-  .kennzahlen .row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); }
-  .kz{ padding:28px 18px; border-left:1px solid var(--linie); }
-  .kz:first-child{ border-left:none; }
-  .kz b{ font-family:'Fraunces',serif; font-size:2rem; font-weight:600; display:block; }
-  .kz span{ color:var(--muted); font-size:.92rem; }
-
-  section{ padding:64px 0; }
-  .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:22px; }
-  .card{ border:1px solid var(--linie); border-radius:2px; padding:26px; }
-  .card h3{ font-size:1.15rem; margin-bottom:10px; }
-  .card h3::after{
-    content:""; display:block; margin-top:10px;
-    border-top:3px solid var(--stein); box-shadow:0 3px 0 -2px var(--tinte); width:64px;
-  }
-  .card p{ color:var(--muted); font-size:.98rem; }
-  .card .tag{ display:inline-block; margin-bottom:14px; font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; color:var(--stein); font-weight:700; }
-
-  .blicke{ padding-top:0; }
-  .blicke .duo{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
-  @media (max-width:900px){ .blicke .duo{ grid-template-columns:1fr; } }
-
-  .ziel .zeile{ display:flex; gap:18px; padding:20px 0; border-bottom:1px solid var(--linie); align-items:baseline; }
-  .ziel .zeile:last-child{ border-bottom:none; }
-  .ziel .wer{ font-family:'Fraunces',serif; font-size:1.25rem; font-weight:600; min-width:180px; }
-  .ziel .was{ color:var(--muted); }
-
-  .demo-band{ background:#1a1c1e; color:#ece9e4; }
-  @media (prefers-color-scheme: dark){ .demo-band{ background:#241f1b; } }
-  .demo-band .sec-head{ color:#ece9e4; }
-  .demo-band .card{ border-color:rgba(128,120,110,.35); }
-  .demo-band .card p{ color:rgba(236,233,228,.72); }
-  .demo-band .lizenz{ color:rgba(236,233,228,.85); }
-  .demo-band .card h3{ color:#ece9e4; }
-  .creds{ font-family:ui-monospace,'SF Mono',Menlo,monospace; font-size:1rem; padding:14px 18px; border:1px dashed rgba(207,90,66,.7); border-radius:2px; margin:14px 0; display:grid; gap:6px; }
-  .creds b{ color:var(--stein); font-weight:700; }
-  .lizenz{
-    margin-top:26px; padding:20px 24px; border-left:4px solid var(--stein);
-    background:rgba(207,90,66,.08); font-size:1rem;
-  }
-  .lizenz strong{ color:var(--stein); }
-  .demo-band .btn.solid{ color:#171412; }
-
-  .faq .frage{ border-bottom:1px solid var(--linie); }
-  .faq details{ padding:18px 0; }
-  .faq summary{ cursor:pointer; font-weight:700; list-style:none; display:flex; justify-content:space-between; gap:16px; }
-  .faq summary::after{ content:"+"; color:var(--stein); font-weight:400; font-size:1.4rem; line-height:1; }
-  .faq details[open] summary::after{ content:"\2212"; }
-  .faq .antwort{ color:var(--muted); margin-top:10px; max-width:70ch; }
-
-  .preis{ text-align:center; }
-  .preis .big{ font-family:'Fraunces',serif; font-size:clamp(1.9rem,5vw,3rem); margin:10px 0 6px; }
-  .preis .u{ color:var(--muted); max-width:60ch; margin:0 auto; }
-  .preis .btn{ margin-top:30px; }
-
-  footer{ border-top:1px solid var(--linie); padding:34px 0; color:var(--muted); font-size:.9rem; }
-  footer .row{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; }
-  footer a{ color:var(--muted); }
-
-  @media (prefers-reduced-motion: no-preference){
-    .rv{ opacity:0; transform:translateY(14px); transition:opacity .55s ease, transform .55s ease; }
-    .rv.in{ opacity:1; transform:none; }
-  }
-  @media (prefers-reduced-motion: reduce){ html{ scroll-behavior:auto; } }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="wrap nav">
-    <div class="wortmarke"><img src="/img/icon-maritime-ai.png" alt="" onerror="this.style.display='none'">Maritime <em>AI</em></div>
-    <nav class="nav-links">
-      <a href="#funktionen" class="hide-s" data-de="Funktionen" data-en="Features">Funktionen</a>
-      <a href="#blicke" class="hide-s" data-de="Blick in die App" data-en="Inside the app">Blick in die App</a>
-      <a href="#demo" class="hide-s" data-de="Demo" data-en="Demo">Demo</a>
-      <button id="langBtn" class="lang-btn" type="button" aria-label="Sprache wechseln">EN</button>
-      <a class="login" href="https://vessels.gemivo.de/login" data-de="Anmelden" data-en="Sign in">Anmelden</a>
-    </nav>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="marke" href="/"><span class="marke-mini" aria-hidden="true"></span>Maritime <em>AI</em></a>
+    <a class="btn btn-klein" href="https://vessels.gemivo.de/login">Sign in</a>
   </div>
 </header>
 
-<div class="wrap hero">
-  <div class="hero-grid">
+<section class="hero">
+  <div class="arena-licht" aria-hidden="true"></div>
+  <div class="wrap hero-grid">
     <div>
-      <h1><span data-de="Schiffe finden, bewerten," data-en="Find ships, value them,">Schiffe finden, bewerten,</span> <em data-de="im Blick behalten." data-en="keep them in view.">im Blick behalten.</em></h1>
-      <div class="doppelt"></div>
-      <p data-de="Maritime AI bündelt 23.700+ Handelsschiffe mit technischen Daten, Eigentümern, Managern, Klassifikation, P&amp;I und letzten Positionen. Ein KI-Assistent beantwortet Fragen zu Flotten, Bewertungen und Betrieb aus dem eigenen Datenbestand." data-en="Maritime AI brings together 23,700+ commercial vessels with technical data, owners, managers, classification, P&amp;I and latest positions. An AI assistant answers questions about fleets, valuations and operations from the database itself.">Maritime AI bündelt 23.700+ Handelsschiffe mit technischen Daten, Eigentümern, Managern, Klassifikation, P&amp;I und letzten Positionen. Ein KI-Assistent beantwortet Fragen zu Flotten, Bewertungen und Betrieb aus dem eigenen Datenbestand.</p>
-      <div class="cta-row">
-        <a class="btn solid" href="https://vessels.gemivo.de/login" data-de="Demo ansehen" data-en="View demo">Demo ansehen</a>
-        <a class="btn ghost" href="mailto:hallo@gemivo.de?subject=Maritime%20AI%20Lizenz%20anfragen" class="mail-cta" data-de="Preis auf Anfrage" data-en="Price on request">Preis auf Anfrage</a>
+      <span class="live-badge"><span class="live-punkt" aria-hidden="true"></span>Live AIS · positions refreshed every 5 minutes</span>
+      <h1>
+        <span class="z">Ships.</span>
+        <span class="z akzent">Live.</span>
+        <span class="z outline">Everywhere.</span>
+        <span class="sub">The <b>vessel tracking</b> and <b>ship database</b> platform: live AIS positions, technical data, owners and valuations in one workspace.</span>
+      </h1>
+      <p class="hero-text">Maritime AI brings together the global merchant fleet: <b>59,000+ ships</b> with technical details, owners, managers, classification, P&amp;I and valuations. An AI assistant answers questions about fleets, values and operations straight from the database.</p>
+      <div class="hero-cta">
+        <a class="btn" href="https://vessels.gemivo.de/login">Open the app</a>
+        <a class="ghost" href="#inside">Inside the app <span class="pfeil" aria-hidden="true">&darr;</span></a>
+        <span class="gratis"><b>Demo access included</b> · runs in the browser · no installation</span>
       </div>
     </div>
-    <figure class="shot rv">
-      <img src="/img/dashboard.jpg" alt="Maritime AI Schiffssuche mit Marktticker und Kennzahlen" loading="eager">
-      <figcaption data-de="Schiffsübersicht mit Marktticker. Tatsächlicher Stand der Datenbank." data-en="Fleet overview with market ticker. Actual database figures.">Schiffsübersicht mit Marktticker. Tatsächlicher Stand der Datenbank.</figcaption>
-    </figure>
+    <div class="buehne" aria-hidden="true">
+      <div class="radar-wrap">
+        <div class="scope"></div>
+        <div class="ringe"><i></i><i></i><i></i></div>
+        <div class="ticks"></div>
+        <div class="kreuz"></div>
+        <span class="nord">N</span>
+        <div class="sweep"></div>
+        <span class="zentrum"></span>
+        <span class="blip b1"></span>
+        <span class="blip b2"></span>
+        <span class="blip b3"></span>
+        <span class="blip b4"></span>
+      </div>
+      <div class="radar-schatten"></div>
+    </div>
   </div>
-</div>
+</section>
 
 <div class="kennzahlen">
   <div class="wrap row">
-    <div class="kz"><b>23.761</b><span data-de="Schiffe in der Datenbank" data-en="Ships in the database">Schiffe in der Datenbank</span></div>
-    <div class="kz"><b>11.868</b><span data-de="mit Eigentümer, Manager und Klasse" data-en="with owner, manager and class">mit Eigentümer, Manager und Klasse</span></div>
-    <div class="kz"><b>22.406</b><span data-de="mit letzter GPS-Position" data-en="with latest GPS position">mit letzter GPS-Position</span></div>
-    <div class="kz"><b>24/7</b><span data-de="Live-AIS-Aktualisierung" data-en="Live AIS updates">Live-AIS-Aktualisierung</span></div>
+    <div class="kz rv">
+      <b><span class="count" data-ziel="59000">0</span><span class="plus">+</span></b>
+      <span>ships in the database</span>
+      <span class="mini">technical data, owners, class</span>
+    </div>
+    <div class="kz rv" style="--d:90ms">
+      <b><span class="count" data-ziel="5600">0</span><span class="plus">+</span></b>
+      <span>with live AIS position</span>
+      <span class="mini">fed by several AIS sources</span>
+    </div>
+    <div class="kz rv" style="--d:180ms">
+      <b><span class="count" data-ziel="5">0</span><span class="einheit">MIN</span></b>
+      <span>AIS refresh cycle</span>
+      <span class="mini">around the clock, 24/7</span>
+    </div>
   </div>
 </div>
 
-<section id="blicke" class="wrap blicke">
-  <h2 class="sec-head rv" data-de="Ein Blick in die App" data-en="Inside the app">Ein Blick in die App</h2>
-  <div class="duo">
-    <figure class="shot rv">
-      <img src="/img/profil.jpg" alt="Schiffsprofil mit Technik, Finanzdaten und Bewertung" loading="lazy">
-      <figcaption data-de="Schiffsprofil: Technik, Finanzkennzahlen und Bewertung auf einer Seite." data-en="Ship profile: technicals, financials and valuation on one page.">Schiffsprofil: Technik, Finanzkennzahlen und Bewertung auf einer Seite.</figcaption>
-    </figure>
-    <div class="rv" style="align-self:center;">
-      <h3 style="font-size:1.5rem; margin-bottom:14px;" data-de="Jedes Schiff als komplettes Dossier." data-en="Every ship as a full dossier.">Jedes Schiff als komplettes Dossier.</h3>
-      <p style="color:var(--muted);" data-de="Wert mit Konfidenz, Nettoergebnis pro Tag, ROI, Charter- und OPEX-Sätze. Motor, Tragfähigkeit, Geschwindigkeit, Crew. Letzte Position mit Koordinaten. Alles ein Klick voneinander entfernt, exportierbar als PDF." data-en="Value with confidence, net earnings per day, ROI, charter and OPEX rates. Engine, deadweight, speed, crew. Latest position with coordinates. One click apart, exportable as PDF.">Wert mit Konfidenz, Nettoergebnis pro Tag, ROI, Charter- und OPEX-Sätze. Motor, Tragfähigkeit, Geschwindigkeit, Crew. Letzte Position mit Koordinaten. Alles ein Klick voneinander entfernt, exportierbar als PDF.</p>
-      <p style="color:var(--muted); margin-top:14px;" data-de="Und wenn zwanzig Schiffe nebeneinander liegen sollen: vergleichen, filtern, Sortierlisten ziehen. Der KI-Assistent beantwortet Fragen über den ganzen Datenbestand." data-en="And when twenty ships need to sit side by side: compare, filter, build shortlists. The AI assistant answers questions across the whole database.">Und wenn zwanzig Schiffe nebeneinander liegen sollen: vergleichen, filtern, Sortierlisten ziehen. Der KI-Assistent beantwortet Fragen über den ganzen Datenbestand.</p>
+<div class="ticker" aria-hidden="true">
+  <div class="tick reihe1">
+    <div class="tick-track">
+      <ul class="tick-gruppe" style="list-style:none">
+        <li class="chip"><span class="lab ais">AIS</span><b>MV Arctic Lady</b><span class="score">position update · 12.4 kn</span></li>
+        <li class="chip"><span class="lab typ">Bulk</span><b>MV Nordwind</b><span class="score">departed Singapore</span></li>
+        <li class="chip"><span class="lab typ">Tanker</span><b>crude carrier</b><span class="score">north of Rotterdam · 11.2 kn</span></li>
+        <li class="chip"><span class="lab ais">AIS</span><b>MV Pacific Star</b><span class="score">position update · 14.8 kn</span></li>
+        <li class="chip"><span class="lab typ">Box</span><b>container ship</b><span class="score">anchored off Fujairah</span></li>
+        <li class="chip"><span class="lab typ">LNG</span><b>LNG carrier</b><span class="score">passed Gibraltar</span></li>
+      </ul>
+      <ul class="tick-gruppe" style="list-style:none">
+        <li class="chip"><span class="lab ais">AIS</span><b>MV Arctic Lady</b><span class="score">position update · 12.4 kn</span></li>
+        <li class="chip"><span class="lab typ">Bulk</span><b>MV Nordwind</b><span class="score">departed Singapore</span></li>
+        <li class="chip"><span class="lab typ">Tanker</span><b>crude carrier</b><span class="score">north of Rotterdam · 11.2 kn</span></li>
+        <li class="chip"><span class="lab ais">AIS</span><b>MV Pacific Star</b><span class="score">position update · 14.8 kn</span></li>
+        <li class="chip"><span class="lab typ">Box</span><b>container ship</b><span class="score">anchored off Fujairah</span></li>
+        <li class="chip"><span class="lab typ">LNG</span><b>LNG carrier</b><span class="score">passed Gibraltar</span></li>
+      </ul>
     </div>
   </div>
-</section>
-
-<section id="funktionen" class="wrap">
-  <h2 class="sec-head rv" data-de="Was in der Lizenz steckt" data-en="What the licence includes">Was in der Lizenz steckt</h2>
-  <div class="grid">
-    <div class="card rv"><span class="tag" data-de="Datenbasis" data-en="Database">Datenbasis</span><h3 data-de="Schiffsdatenbank" data-en="Ship database">Schiffsdatenbank</h3>
-      <p data-de="Typ, DWT, Baujahr, Flagge, MMSI, Call Sign. Angereichert um Reederei, Manager, ISM-Manager, Klassifikationsgesellschaft und Paris/Tokyo-MOU-Bewertung." data-en="Type, DWT, year built, flag, MMSI, call sign. Enriched with owner, manager, ISM manager, classification society and Paris/Tokyo MOU rating.">Typ, DWT, Baujahr, Flagge, MMSI, Call Sign. Angereichert um Reederei, Manager, ISM-Manager, Klassifikationsgesellschaft und Paris/Tokyo-MOU-Bewertung.</p></div>
-    <div class="card rv"><span class="tag" data-de="Tracking" data-en="Tracking">Tracking</span><h3 data-de="Live-Karte &amp; AIS" data-en="Live map &amp; AIS">Live-Karte &amp; AIS</h3>
-      <p data-de="Positionsdaten werden rund um die Uhr aus mehreren AIS-Quellen gespeist. Suchen, beobachten, Flotten auf der Weltkarte verfolgen." data-en="Positions are fed around the clock from several AIS sources. Search, watch, follow fleets on the world map.">Positionsdaten werden rund um die Uhr aus mehreren AIS-Quellen gespeist. Suchen, beobachten, Flotten auf der Weltkarte verfolgen.</p></div>
-    <div class="card rv"><span class="tag" data-de="Wert" data-en="Value">Wert</span><h3 data-de="Schiffsbewertung" data-en="Ship valuation">Schiffsbewertung</h3>
-      <p data-de="Wertschätzung je Schiff aus Markt- und Baualtersdaten, inklusive Preishistorie. Grundlage für Kauf, Verkauf und Buchwerte." data-en="A value per ship from market and age data, including price history. The basis for purchase, sale and book values.">Wertschätzung je Schiff aus Markt- und Baualtersdaten, inklusive Preishistorie. Grundlage für Kauf, Verkauf und Buchwerte.</p></div>
-    <div class="card rv"><span class="tag" data-de="Betrieb" data-en="Operations">Betrieb</span><h3 data-de="OPEX- &amp; Voyage-Kalkulator" data-en="OPEX &amp; voyage calculator">OPEX- &amp; Voyage-Kalkulator</h3>
-      <p data-de="Tages- und Reisekosten je Schiffstyp kalkulieren: Crew, Versicherung, Reparatur, Bunker. Szenarien direkt vergleichbar." data-en="Daily and voyage costs per ship type: crew, insurance, repairs, bunkers. Scenarios compare directly.">Tages- und Reisekosten je Schiffstyp kalkulieren: Crew, Versicherung, Reparatur, Bunker. Szenarien direkt vergleichbar.</p></div>
-    <div class="card rv"><span class="tag" data-de="KI" data-en="AI">KI</span><h3 data-de="AI-Chat" data-en="AI chat">AI-Chat</h3>
-      <p data-de="„Welche Capesizes sind über 15 Jahre alt und in Paris-MOU White?“ Der Assistent antwortet aus dem eigenen Datenbestand, nicht aus dem Internet." data-en="&quot;Which capesizes are over 15 years old and Paris MOU White?&quot; The assistant answers from the database itself, not from the internet.">„Welche Capesizes sind über 15 Jahre alt und in Paris-MOU White?“ Der Assistent antwortet aus dem eigenen Datenbestand, nicht aus dem Internet.</p></div>
-    <div class="card rv"><span class="tag" data-de="Monitoring" data-en="Monitoring">Monitoring</span><h3 data-de="Watchlist &amp; Newbuilds" data-en="Watchlist &amp; newbuilds">Watchlist &amp; Newbuilds</h3>
-      <p data-de="Flotten beobachten, Neubauten verfolgen, Telegram-Alerts bei kritischen Änderungen. Für Broker, Banken und Reedereien." data-en="Watch fleets, track newbuilds, get Telegram alerts on critical changes. For brokers, banks and shipowners.">Flotten beobachten, Neubauten verfolgen, Telegram-Alerts bei kritischen Änderungen. Für Broker, Banken und Reedereien.</p></div>
-    <div class="card rv"><span class="tag" data-de="Reederei" data-en="Shipowner">Reederei</span><h3 data-de="Eigene Flotte" data-en="Your own fleet">Eigene Flotte</h3>
-      <p data-de="Die Flotte der eigenen Reederei pflegen: eigene Schifffotos hochladen, Angaben zu Zustand und Ausstattung ergänzen. Pro Schiff oder für die ganze Flotte ein fertiges Dossier als PDF. So wird die eigene Flotte aufgewertet und an Charterer, Banken und Käufer präsentiert." data-en="Maintain the fleet of your own shipping company: upload your own ship photos, add condition and outfitting details. Produce a finished dossier as PDF per ship or for the whole fleet. That upgrades your fleet for presentation to charterers, banks and buyers.">Die Flotte der eigenen Reederei pflegen: eigene Schifffotos hochladen, Angaben zu Zustand und Ausstattung ergänzen. Pro Schiff oder für die ganze Flotte ein fertiges Dossier als PDF. So wird die eigene Flotte aufgewertet und an Charterer, Banken und Käufer präsentiert.</p></div>
+  <div class="tick reihe2">
+    <div class="tick-track">
+      <ul class="tick-gruppe" style="list-style:none">
+        <li class="chip"><span class="lab ais">DB</span><b>ship database</b><span class="score">59,000+ vessels</span></li>
+        <li class="chip"><span class="lab ais">Live</span><b>fresh positions</b><span class="score">5,600+ ships right now</span></li>
+        <li class="chip"><span class="lab typ">Value</span><b>price history</b><span class="score">refreshed by segment</span></li>
+        <li class="chip"><span class="lab typ">Watch</span><b>watchlist alert</b><span class="score">vessel reached port area</span></li>
+        <li class="chip"><span class="lab typ">OPEX</span><b>voyage estimate</b><span class="score">bunkers updated</span></li>
+        <li class="chip"><span class="lab ais">AI</span><b>assistant</b><span class="score">answers from the database</span></li>
+      </ul>
+      <ul class="tick-gruppe" style="list-style:none">
+        <li class="chip"><span class="lab ais">DB</span><b>ship database</b><span class="score">59,000+ vessels</span></li>
+        <li class="chip"><span class="lab ais">Live</span><b>fresh positions</b><span class="score">5,600+ ships right now</span></li>
+        <li class="chip"><span class="lab typ">Value</span><b>price history</b><span class="score">refreshed by segment</span></li>
+        <li class="chip"><span class="lab typ">Watch</span><b>watchlist alert</b><span class="score">vessel reached port area</span></li>
+        <li class="chip"><span class="lab typ">OPEX</span><b>voyage estimate</b><span class="score">bunkers updated</span></li>
+        <li class="chip"><span class="lab ais">AI</span><b>assistant</b><span class="score">answers from the database</span></li>
+      </ul>
+    </div>
   </div>
-</section>
+</div>
 
-<section class="wrap ziel">
-  <h2 class="sec-head rv" data-de="Für wen das gebaut ist" data-en="Built for">Für wen das gebaut ist</h2>
-  <div class="rv">
-    <div class="zeile"><div class="wer" data-de="Broker" data-en="Brokers">Broker</div><div class="was" data-de="Kandidaten fürs Handling finden, Zustand und Wert prüfen, Compare-Sheets für den Kunden ziehen." data-en="Find candidates for the sale list, check condition and value, pull comparison sheets for the client.">Kandidaten fürs Handling finden, Zustand und Wert prüfen, Compare-Sheets für den Kunden ziehen.</div></div>
-    <div class="zeile"><div class="wer" data-de="Reedereien" data-en="Shipowners">Reedereien</div><div class="was" data-de="Fremde Flotten beobachten, Konkurrenzpositionen tracken, Marktwerte der eigenen Schiffe im Auge behalten." data-en="Watch other fleets, track competitors' positions, keep an eye on market values of your own ships.">Fremde Flotten beobachten, Konkurrenzpositionen tracken, Marktwerte der eigenen Schiffe im Auge behalten.</div></div>
-    <div class="zeile"><div class="wer" data-de="Banken &amp; Investoren" data-en="Banks &amp; investors">Banken &amp; Investoren</div><div class="was" data-de="Buchwerte hinterfragen: Bewertung mit Konfidenz, Preishistorie, Alter und Zustand je Einzelschiff." data-en="Question book values: valuation with confidence, price history, age and condition per individual ship.">Buchwerte hinterfragen: Bewertung mit Konfidenz, Preishistorie, Alter und Zustand je Einzelschiff.</div></div>
-    <div class="zeile"><div class="wer" data-de="Charterer" data-en="Charterers">Charterer</div><div class="was" data-de="Verfügbare Einheiten nach Typ, Tragfähigkeit und Alter filtern, OPEX und Reisekosten durchrechnen." data-en="Filter available units by type, deadweight and age, work through OPEX and voyage costs.">Verfügbare Einheiten nach Typ, Tragfähigkeit und Alter filtern, OPEX und Reisekosten durchrechnen.</div></div>
-  </div>
-</section>
-
-<section id="demo" class="demo-band">
+<section class="sektion screens" id="inside">
   <div class="wrap">
-    <h2 class="sec-head rv" data-de="Demo-Zugang" data-en="Demo access">Demo-Zugang</h2>
+    <div class="bereich-kopf rv">
+      <span class="k-label">Inside the app</span>
+      <h2>Real screens.<br>Real data.</h2>
+      <p>Two views straight from the live database. Not mocked up, not staged.</p>
+    </div>
+    <div class="shots">
+      <figure class="shot rv" style="--d:0ms">
+        <div class="rahmen">
+          <div class="chrome"><span class="punkte" aria-hidden="true"><i></i><i></i><i></i></span><span class="adresse">vessels.gemivo.de</span></div>
+          <img src="/img/dashboard.jpg" alt="Maritime AI ship search with market ticker and database figures" width="2160" height="1350" loading="lazy">
+        </div>
+        <figcaption>Fleet overview</figcaption>
+      </figure>
+      <figure class="shot rv" style="--d:120ms">
+        <div class="rahmen">
+          <div class="chrome"><span class="punkte" aria-hidden="true"><i></i><i></i><i></i></span><span class="adresse">vessels.gemivo.de</span></div>
+          <img src="/img/profil.jpg" alt="Ship profile with technical details, financials and valuation" width="2160" height="1350" loading="lazy">
+        </div>
+        <figcaption>Ship profile</figcaption>
+      </figure>
+    </div>
+    <div class="duo">
+      <div class="rv">
+        <h3>Every ship as a full dossier.<span class="strich" aria-hidden="true"></span></h3>
+      </div>
+      <div>
+        <p class="rv">Value with confidence, net earnings per day, ROI, charter and OPEX rates. Engine, deadweight, speed, crew. Latest position with coordinates. Everything one click apart, <b>exportable as PDF</b>.</p>
+        <p class="rv" style="--d:90ms;margin-top:14px">And when twenty ships need to sit side by side: <b>compare, filter, build shortlists</b>. The AI assistant answers questions across the whole database.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sektion features" id="features">
+  <div class="wrap">
+    <div class="bereich-kopf rv">
+      <span class="k-label">What the licence includes</span>
+      <h2>Seven tools.<br>One workspace.</h2>
+    </div>
     <div class="grid">
-      <div class="card rv">
-        <h3 data-de="Anmelden unter vessels.gemivo.de" data-en="Sign in at vessels.gemivo.de">Anmelden unter vessels.gemivo.de</h3>
-        <p data-de="Vollzugriff auf Datenbank, Karte und KI-Chat. Keine Installation, läuft im Browser." data-en="Full access to the database, map and AI chat. No install, runs in the browser.">Vollzugriff auf Datenbank, Karte und KI-Chat. Keine Installation, läuft im Browser.</p>
+      <div class="karte rv" style="--d:0ms">
+        <span class="nr">01</span>
+        <h3>Ship database</h3>
+        <p>Type, DWT, year built, flag, MMSI, call sign. Enriched with owner, manager, ISM manager, classification society and Paris/Tokyo MOU rating.</p>
+      </div>
+      <div class="karte rv" style="--d:80ms">
+        <span class="nr">02</span>
+        <h3>Live map &amp; AIS</h3>
+        <p>Positions are fed around the clock from several AIS sources. Search, watch and follow fleets on the world map.</p>
+      </div>
+      <div class="karte rv" style="--d:160ms">
+        <span class="nr">03</span>
+        <h3>Ship valuation</h3>
+        <p>A value per ship from market and age data, including price history. The basis for purchases, sales and book values.</p>
+      </div>
+      <div class="karte rv" style="--d:0ms">
+        <span class="nr">04</span>
+        <h3>OPEX &amp; voyage calculator</h3>
+        <p>Daily and voyage costs per ship type: crew, insurance, repairs, bunkers. Scenarios compare directly.</p>
+      </div>
+      <div class="karte rv" style="--d:80ms">
+        <span class="nr">05</span>
+        <h3>AI chat</h3>
+        <p>"Which capesizes are over 15 years old and Paris MOU White?" The assistant answers from the database itself, not from the internet.</p>
+      </div>
+      <div class="karte rv" style="--d:160ms">
+        <span class="nr">06</span>
+        <h3>Watchlist &amp; newbuilds</h3>
+        <p>Watch fleets, track newbuilds, get Telegram alerts on critical changes. For brokers, banks and shipowners.</p>
+      </div>
+      <div class="karte breit rv" style="--d:60ms">
+        <div class="kopf">
+          <span class="tag">For shipowners</span>
+          <h3>Your own fleet, presented properly.</h3>
+        </div>
+        <p>Maintain your company fleet: upload your own ship photos, add condition and outfitting details. Produce a finished PDF dossier per ship or for the whole fleet, ready to present to charterers, banks and buyers.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sektion fuerwen">
+  <div class="wrap">
+    <div class="bereich-kopf rv">
+      <span class="k-label">Built for</span>
+      <h2>Who runs<br>on this data.</h2>
+    </div>
+    <div class="ziel-grid">
+      <div class="ziel rv" style="--d:0ms">
+        <span class="badge">S&amp;P</span>
+        <h3>Brokers</h3>
+        <p>Find candidates for the sale list, check condition and value, pull comparison sheets for the client.</p>
+      </div>
+      <div class="ziel rv" style="--d:80ms">
+        <span class="badge">Operations</span>
+        <h3>Shipowners</h3>
+        <p>Watch other fleets, track competitor positions, keep an eye on the market values of your own ships.</p>
+      </div>
+      <div class="ziel rv" style="--d:160ms">
+        <span class="badge">Risk</span>
+        <h3>Banks &amp; investors</h3>
+        <p>Question book values: valuation with confidence, price history, age and condition per individual ship.</p>
+      </div>
+      <div class="ziel rv" style="--d:240ms">
+        <span class="badge">Employment</span>
+        <h3>Charterers</h3>
+        <p>Filter available units by type, deadweight and age, work through OPEX and voyage costs.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sektion demo-band" id="demo">
+  <div class="wrap">
+    <div class="bereich-kopf rv">
+      <span class="k-label">Demo access</span>
+      <h2>Try it with<br>the full database.</h2>
+    </div>
+    <div class="demo-grid">
+      <div class="demo-card rv" style="--d:0ms">
+        <h3>Sign in at vessels.gemivo.de</h3>
+        <p>Full access to the database, the map and the AI chat. No installation, runs in the browser.</p>
         <div class="creds">
-          <div><span data-de="Benutzer:" data-en="User:">Benutzer:</span> <b>demo</b></div>
-          <div><span data-de="Passwort:" data-en="Password:">Passwort:</span> <b>MaritimeDemo2026!</b></div>
+          <div>User: <b>demo</b></div>
+          <div>Password: <b>MaritimeDemo2026!</b></div>
         </div>
-        <a class="btn solid" href="https://vessels.gemivo.de/login" data-de="Zur Demo-Anmeldung" data-en="Go to demo sign-in">Zur Demo-Anmeldung</a>
+        <a class="btn" href="https://vessels.gemivo.de/login">Go to demo sign-in</a>
       </div>
-      <div class="card rv">
-        <h3 data-de="Was die Demo zeigt" data-en="What the demo shows">Was die Demo zeigt</h3>
-        <p data-de="Der komplette Datenbestand: Schiffsprofile mit Veredlungsdaten, Bewertung, OPEX-Kalkulator, Watchlist und der KI-Chat über Ihre eigenen Fragen." data-en="The full database: ship profiles with enrichment data, valuation, OPEX calculator, watchlist and the AI chat on your own questions.">Der komplette Datenbestand: Schiffsprofile mit Veredlungsdaten, Bewertung, OPEX-Kalkulator, Watchlist und der KI-Chat über Ihre eigenen Fragen.</p>
+      <div class="demo-card rv" style="--d:120ms">
+        <h3>What the demo shows</h3>
+        <p>The complete database: ship profiles with enrichment data, valuation, the OPEX calculator, the watchlist and the AI chat on your own questions.</p>
         <div class="lizenz">
-          <strong data-de="Hinweis:" data-en="Note:">Hinweis:</strong> <span data-de="Live-AIS-Positionen in Echtzeit sind Teil der bezahlten Lizenz. Im Demo-Zugang sehen Sie den Datenbestand und die Funktionsweise. Den Live-Feed schalten wir mit Erwerb einer Lizenz frei." data-en="Live AIS positions in real time are part of the paid licence. The demo shows the database and how everything works. We switch on the live feed once you acquire a licence.">Live-AIS-Positionen in Echtzeit sind Teil der bezahlten Lizenz. Im Demo-Zugang sehen Sie den Datenbestand und die Funktionsweise. Den Live-Feed schalten wir mit Erwerb einer Lizenz frei.</span>
+          <strong>Note:</strong> Live AIS positions in real time are part of the paid licence. The demo shows the database and how everything works. We switch on the live feed once you acquire a licence.
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="wrap faq">
-  <h2 class="sec-head rv" data-de="Häufige Fragen" data-en="Common questions">Häufige Fragen</h2>
-  <div class="rv">
-    <div class="frage">
-      <details>
-        <summary data-de="Wie aktuell sind die Positionen?" data-en="How fresh are the positions?">Wie aktuell sind die Positionen?</summary>
-        <div class="antwort" data-de="Mehrere AIS-Quellen schreiben rund um die Uhr in die Datenbank. Wie viele Schiffe gerade einen frischen Stand haben, sehen Sie oben in den Kennzahlen. Der Echtzeit-Feed gehört zur Lizenz, die Demo zeigt den gespeicherten Bestand." data-en="Several AIS sources write into the database around the clock. The figures at the top show how many ships have a fresh fix right now. The real-time feed is part of the licence; the demo shows the stored data.">Mehrere AIS-Quellen schreiben rund um die Uhr in die Datenbank. Wie viele Schiffe gerade einen frischen Stand haben, sehen Sie oben in den Kennzahlen. Der Echtzeit-Feed gehört zur Lizenz, die Demo zeigt den gespeicherten Bestand.</div>
-      </details>
+<section class="sektion faq">
+  <div class="wrap">
+    <div class="bereich-kopf rv">
+      <span class="k-label">Common questions</span>
+      <h2>Before you ask.</h2>
     </div>
-    <div class="frage">
-      <details>
-        <summary data-de="Welche Schiffe sind drin?" data-en="Which ships are included?">Welche Schiffe sind drin?</summary>
-        <div class="antwort" data-de="23.761 Schiffe aller Typen: Bulk Carrier, Container, Tanker, LNG/LPG, General Cargo, RoRo und mehr. Knapp die Hälfte trägt zusätzlich Eigentümer, Manager und Klassifikationsdaten, die Zahl wächst täglich." data-en="23,761 ships of all types: bulk carriers, containers, tankers, LNG/LPG, general cargo, RoRo and more. Almost half additionally carry owner, manager and classification data, and that number grows daily.">23.761 Schiffe aller Typen: Bulk Carrier, Container, Tanker, LNG/LPG, General Cargo, RoRo und mehr. Knapp die Hälfte trägt zusätzlich Eigentümer, Manager und Klassifikationsdaten, die Zahl wächst täglich.</div>
-      </details>
-    </div>
-    <div class="frage">
-      <details>
-        <summary data-de="Kann ich meine eigene Flotte beobachten?" data-en="Can I keep an eye on my own fleet?">Kann ich meine eigene Flotte beobachten?</summary>
-        <div class="antwort" data-de="Ja. Schiffe auf die Watchlist legen, Telegram-Alerts bei kritischen Änderungen bekommen, Flottenansicht für Ihre Einheiten." data-en="Yes. Put ships on the watchlist, get Telegram alerts on critical changes, use the fleet view for your own units.">Ja. Schiffe auf die Watchlist legen, Telegram-Alerts bei kritischen Änderungen bekommen, Flottenansicht für Ihre Einheiten.</div>
-      </details>
-    </div>
-    <div class="frage">
-      <details>
-        <summary data-de="Können wir unsere eigene Flotte mit eigenen Fotos präsentieren?" data-en="Can we present our own fleet with our own photos?">Können wir unsere eigene Flotte mit eigenen Fotos präsentieren?</summary>
-        <div class="antwort" data-de="Ja. Sie legen die Flotte Ihrer Reederei an, laden eigene Schifffotos hoch und ergänzen Angaben zu Zustand und Ausstattung. Aus jedem Schiff oder der ganzen Flotte erzeugen Sie ein fertiges Dossier als PDF für Charterer, Banken und Käufer." data-en="Yes. You set up your shipping company's fleet, upload your own ship photos and add condition and outfitting details. From any ship or the whole fleet you produce a finished dossier as PDF for charterers, banks and buyers.">Ja. Sie legen die Flotte Ihrer Reederei an, laden eigene Schifffotos hoch und ergänzen Angaben zu Zustand und Ausstattung. Aus jedem Schiff oder der ganzen Flotte erzeugen Sie ein fertiges Dossier als PDF für Charterer, Banken und Käufer.</div>
-      </details>
-    </div>
-    <div class="frage">
-      <details>
-        <summary data-de="Wie läuft die Lizenz?" data-en="How does the licence work?">Wie läuft die Lizenz?</summary>
-        <div class="antwort" data-de="Pro Unternehmen, nach Umfang: Nutzerzahl, Live-AIS, Update-Tiefe. Preis auf Anfrage, wir melden uns mit einem konkreten Angebot." data-en="Per company, sized to your needs: number of users, live AIS, update depth. Price on request, we come back with a concrete offer.">Pro Unternehmen, nach Umfang: Nutzerzahl, Live-AIS, Update-Tiefe. Preis auf Anfrage, wir melden uns mit einem konkreten Angebot.</div>
-      </details>
+    <div class="rv">
+      <div class="frage">
+        <details>
+          <summary>How fresh are the positions?</summary>
+          <div class="antwort">Several AIS sources write into the database around the clock, with a refresh cycle of about five minutes. The figures at the top show how many ships have a live position right now. The real-time feed is part of the licence; the demo shows the stored data.</div>
+        </details>
+      </div>
+      <div class="frage">
+        <details>
+          <summary>Which ships are included?</summary>
+          <div class="antwort">More than 59,000 ships of all types: bulk carriers, container ships, tankers, LNG/LPG, general cargo, RoRo and more. A large share additionally carries owner, manager and classification data, and the numbers grow daily.</div>
+        </details>
+      </div>
+      <div class="frage">
+        <details>
+          <summary>Can I keep an eye on my own fleet?</summary>
+          <div class="antwort">Yes. Put ships on the watchlist, get Telegram alerts on critical changes and use the fleet view for your own units.</div>
+        </details>
+      </div>
+      <div class="frage">
+        <details>
+          <summary>Can we present our own fleet with our own photos?</summary>
+          <div class="antwort">Yes. Set up your company fleet, upload your own ship photos and add condition and outfitting details. From any ship or the whole fleet you produce a finished PDF dossier for charterers, banks and buyers.</div>
+        </details>
+      </div>
+      <div class="frage">
+        <details>
+          <summary>How does the licence work?</summary>
+          <div class="antwort">Per company, sized to your needs: number of users, live AIS, update depth. Price on request, we come back with a concrete offer.</div>
+        </details>
+      </div>
     </div>
   </div>
 </section>
 
-<section id="lizenz" class="wrap preis">
-  <h2 class="sec-head rv" style="max-width:max-content;margin-left:auto;margin-right:auto;" data-de="Lizenz" data-en="Licence">Lizenz</h2>
-  <div class="big rv" data-de="Preis auf Anfrage." data-en="Price on request.">Preis auf Anfrage.</div>
-  <p class="u rv" data-de="Maritime AI wird pro Unternehmen lizenziert. Umfang (Anzahl Nutzer, Live-AIS, Update-Tiefe) richtet sich nach Ihrem Bedarf. Schreiben Sie uns, wir melden uns mit einem konkreten Angebot." data-en="Maritime AI is licensed per company. Scope (number of users, live AIS, update depth) follows your needs. Write to us and we come back with a concrete offer.">Maritime AI wird pro Unternehmen lizenziert. Umfang (Anzahl Nutzer, Live-AIS, Update-Tiefe) richtet sich nach Ihrem Bedarf. Schreiben Sie uns, wir melden uns mit einem konkreten Angebot.</p>
-  <a class="btn solid rv" href="mailto:hallo@gemivo.de?subject=Maritime%20AI%20Lizenz%20anfragen" class="mail-cta" data-de="Lizenz anfragen" data-en="Request a licence">Lizenz anfragen</a>
+<section class="band">
+  <div class="wrap">
+    <h2 class="rv">Put 59,000 ships on your screen.</h2>
+    <p class="rv" style="--d:90ms">Demo access runs in the browser, licence price on request. The live AIS feed is one email away.</p>
+    <div class="band-cta rv" style="--d:180ms">
+      <a class="btn" href="https://vessels.gemivo.de/login">Open the demo</a>
+      <a class="ghost" href="mailto:hallo@gemivo.de?subject=Maritime%20AI%20licence%20request">Request a licence <span class="pfeil" aria-hidden="true">&rarr;</span></a>
+    </div>
+  </div>
 </section>
 
-<footer>
-  <div class="wrap row">
-    <div><span data-de="Maritime AI ist ein Produkt von" data-en="Maritime AI is a product of">Maritime AI ist ein Produkt von</span> <a href="https://gemivo.de">gemivo</a></div>
-    <div><a href="https://gemivo.de/impressum.html" data-de="Impressum" data-en="Imprint">Impressum</a> · hallo@gemivo.de</div>
+<footer class="footer">
+  <div class="wrap footer-in">
+    <span class="produkt">A <b>GE·MI·VO</b> product</span>
+    <nav>
+      <a href="https://gemivo.de">gemivo.de</a>
+      <a href="/vessel-tracking/">Vessel tracking</a>
+      <a href="https://vessels.gemivo.de/login">Demo sign-in</a>
+      <a href="https://gemivo.de/impressum.html">Imprint</a>
+    </nav>
   </div>
 </footer>
 
 <script>
-  // Sprachumschalter: data-de/data-en auf Textblättern, Standard Deutsch (ohne JS)
-  var langBtn = document.getElementById('langBtn');
-  function setLang(l){
-    document.documentElement.setAttribute('data-lang', l);
-    document.documentElement.setAttribute('lang', l === 'en' ? 'en' : 'de');
-    document.querySelectorAll('[data-de]').forEach(function(el){
-      el.textContent = (l === 'en') ? el.getAttribute('data-en') : el.getAttribute('data-de');
-      document.querySelectorAll('a.mail-cta').forEach(function(a){
-        a.href = 'mailto:hallo@gemivo.de?subject=' + (l === 'en' ? 'Maritime%20AI%20licence%20request' : 'Maritime%20AI%20Lizenz%20anfragen');
-      });
-    });
-    langBtn.textContent = (l === 'en') ? 'DE' : 'EN';
-    try { localStorage.setItem('mai-lang', l); } catch(e){}
-  }
-  var start = 'de';
-  try { start = localStorage.getItem('mai-lang') || 'de'; } catch(e){}
-  setLang(start);
-  langBtn.addEventListener('click', function(){
-    setLang(document.documentElement.getAttribute('data-lang') === 'en' ? 'de' : 'en');
-  });
+(function(){
+  var reduce = false;
+  try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){}
 
-  // dezente Reveals
-  var io = new IntersectionObserver(function(es){
-    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
-  }, { threshold: .12 });
-  document.querySelectorAll('.rv').forEach(function(el){ io.observe(el); });
+  function fertig(el){ el.textContent = parseInt(el.getAttribute('data-ziel'),10).toLocaleString('en-US'); }
+  function countUp(el){
+    var ziel = parseInt(el.getAttribute('data-ziel'),10), dauer = 1600, t0 = null;
+    if (reduce || !(window.requestAnimationFrame instanceof Function)) { fertig(el); return; }
+    function tick(t){
+      if (t0 === null) t0 = t;
+      var p = Math.min((t - t0) / dauer, 1);
+      var e = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(ziel * e).toLocaleString('en-US');
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  var counters = document.querySelectorAll('.count');
+  var reveals = document.querySelectorAll('.rv');
+
+  if (!('IntersectionObserver' in window)) {
+    counters.forEach(countUp);
+    reveals.forEach(function(el){ el.classList.add('an'); });
+    return;
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) { e.target.classList.add('an'); io.unobserve(e.target); }
+    });
+  }, {threshold:.15, rootMargin:'0px 0px -36px'});
+  reveals.forEach(function(el){ io.observe(el); });
+  var io2 = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) { countUp(e.target); io2.unobserve(e.target); }
+    });
+  }, {threshold:.5});
+  counters.forEach(function(el){ io2.observe(el); });
+})();
 </script>
 
 </body>
